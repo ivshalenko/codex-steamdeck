@@ -1,0 +1,30 @@
+# Credentials and personal state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+auth.json
+config.toml
+known_hosts*
+authorized_keys*
+*.sqlite*
+*.jsonl
+logs/
+cache/
+state/
+sessions/
+
+# Python / build output
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+node_modules/
+decky/dist/*.map
+
+# Downloaded Vosk models are large and have separate upstream licensing.
+models/*/
+!models/README.md

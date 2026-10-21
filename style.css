@@ -1,0 +1,136 @@
+#voice-panel {
+  background-image: none;
+  background-color: @canvas;
+  color: @text;
+  font-family: 'Adwaita Sans', 'Noto Sans', sans-serif;
+}
+#voice-panel label { color: inherit; }
+#voice-panel .titlebar { padding: 3px 0 10px; border-bottom: 1px solid @line; }
+#voice-panel .subtitle { color: @secondary; font-size: 12px; }
+#voice-panel .status-text { color: @secondary; font-size: 11px; }
+#voice-panel .status-dot { color: @accentText; font-size: 8px; }
+#voice-panel .status-dot.recording { color: #ff453a; }
+#voice-panel button {
+  background-image: none;
+  background-color: transparent;
+  color: @secondary;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  box-shadow: none;
+  text-shadow: none;
+  outline-style: none;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 0 12px;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+#voice-panel button:hover { background-color: @hover; color: @text; }
+#voice-panel button:active { background-color: @line; }
+#voice-panel button:focus { border-color: alpha(@accent, 0.65); }
+#voice-panel button:disabled { color: @muted; }
+#voice-panel .quiet { min-height: 30px; font-size: 12px; padding: 0 9px; }
+#voice-panel .icon-only { min-width: 27px; min-height: 30px; padding: 0 5px; color: @secondary; }
+#voice-panel .logo-emblem { background-color: transparent; border: none; border-radius: 0; padding: 0; }
+#voice-panel .theme-switch { background-color: @track; border: 1px solid alpha(@line, 0.7); border-radius: 10px; padding: 3px; }
+#voice-panel .theme-choice { font-size: 11px; min-height: 25px; padding: 0 9px; border-radius: 7px; color: @secondary; }
+#voice-panel .theme-choice:checked { background-color: @raised; color: @text; box-shadow: 0 1px 4px rgba(0,0,0,0.12); border-color: alpha(@line, 0.6); }
+#voice-panel .selected { background-color: @tint; color: @accentText; }
+#voice-panel .editor { background-color: @surface; border: 1px solid @line; border-radius: 17px; box-shadow: 0 3px 12px @shadow; }
+#voice-panel .editor:focus-within { border-color: @accent; box-shadow: 0 0 0 3px alpha(@accent,0.12); }
+#voice-panel textview, #voice-panel textview text { background-color: transparent; color: @text; font-size: 16px; caret-color: @accent; }
+#voice-panel textview text selection { background-color: alpha(@accent,0.28); color: @text; }
+#voice-panel .placeholder { color: @muted; font-size: 14px; }
+#voice-panel .microphone { background-color: @surface; border-color: @line; color: @text; font-size: 15px; font-weight: 600; border-radius: 17px; box-shadow: 0 3px 12px @shadow; }
+#voice-panel .microphone:hover { background-color: @tint; border-color: alpha(@accent,0.4); }
+#voice-panel .microphone.recording { background-color: @recording; border-color: @recordingLine; color: @recordingText; }
+#voice-panel .primary { background-image: linear-gradient(165deg, @metalTop 0%, @metalMid 50%, @metalBottom 100%); background-color: @user; color: @buttonText; border-color: @metalEdge; font-weight: 600; font-size: 15px; border-radius: 17px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 4px 12px @shadow; }
+#voice-panel .primary:hover { background-image: linear-gradient(165deg, shade(@metalTop,1.15), shade(@metalMid,1.15) 50%, shade(@metalBottom,1.15)); color: @buttonText; border-color: shade(@metalEdge,1.15); }
+#voice-panel .primary:active { background-image: none; background-color: @metalMid; }
+#voice-panel .primary:disabled { background-image: none; background-color: @disabled; color: @disabledText; border-color: @disabled; box-shadow: none; }
+#voice-panel .footer { color: @muted; font-size: 10px; padding-top: 1px; }
+#voice-panel .footer image { -gtk-icon-transform: scale(.8); }
+#voice-panel .language { color: @secondary; font-size: 9px; font-weight: 600; border: 1px solid @line; border-radius: 5px; padding: 1px 5px; }
+#voice-panel .clear { color: @secondary; font-size: 10px; min-height: 18px; border-radius: 5px; padding: 0 6px; }
+#voice-panel scrollbar { background: transparent; }
+#voice-panel scrollbar { min-width: 14px; padding: 0; margin: 0; }
+#voice-panel scrollbar trough { min-width: 14px; border: none; padding: 0; margin: 0; }
+#voice-panel scrollbar slider { background-color: @thumb; min-width: 10px; min-height: 22px; margin: 2px; border-radius: 6px; border: none; box-shadow: none; }
+#voice-panel scrollbar slider:hover { background-color: @secondary; }
+#voice-panel .chat-message { border: 1px solid @line; border-radius: 19px; box-shadow: 0 3px 14px @shadow; }
+#voice-panel .user-message { background-color: @user; background-image: linear-gradient(165deg, @metalTop 0%, @metalMid 48%, @metalBottom 100%); border-color: @metalEdge; box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 5px 16px @shadow; margin-left: 44px; }
+#voice-panel .assistant-message { background-color: @surface; margin-right: 20px; }
+#voice-panel .message-author { color: @accentText; font-size: 10px; font-weight: 700; }
+#voice-panel .message-body { color: @text; font-size: 16px; }
+#voice-panel .user-message .message-author { color: rgba(255,255,255,0.72); }
+#voice-panel .user-message .message-body { color: @userText; }
+#voice-panel .user-message .thread-date { color: rgba(255,255,255,0.82); font-size: 11px; }
+#voice-panel .user-message .quiet { color: @userText; background-color: rgba(255,255,255,0.08); }
+#voice-panel label selection { background-color: alpha(@accent,0.26); color: @text; }
+#voice-panel .activity { color: @secondary; font-size: 11px; }
+#voice-panel spinner { color: @accent; }
+menu, dialog, messagedialog { background-color: @surface; color: @text; }
+menu menuitem { color: @text; padding: 8px 14px; }
+menu menuitem:hover { background-color: @accent; color: white; }
+#voice-panel .sidebar { border-right: 1px solid @line; padding: 4px 14px 4px 0; }
+#voice-panel .sidebar-caption { color: @muted; font-size: 10px; }
+#voice-panel .sidebar list { background-color: transparent; }
+#voice-panel .sidebar row { border-radius: 10px; margin: 2px 2px 4px 0; border: 1px solid transparent; }
+#voice-panel .sidebar row:hover { background-color: @hover; }
+#voice-panel .sidebar row:selected { background-color: @tint; border-color: @line; }
+#voice-panel .thread-name { color: @text; font-size: 13px; font-weight: 500; }
+#voice-panel .thread-date { color: @muted; font-size: 10px; }
+#voice-panel .new-chat { background-color: @surface; color: @text; border-color: @line; min-height: 38px; }
+#voice-panel .chat-title { font-size: 13px; font-weight: 600; color: @secondary; padding: 4px 10px; }
+#voice-panel searchentry, #voice-panel combobox button { background-color: @surface; color: @text; border: 1px solid @line; border-radius: 9px; min-height: 30px; box-shadow: none; }
+#voice-panel searchentry selection { background-color: alpha(@accent,0.25); }
+
+/* Neutral desktop palette; no metallic gradients. */
+#voice-panel .primary { background-image: none; background-color: @accent; color: @buttonText; border-color: transparent; box-shadow: none; }
+#voice-panel .primary:hover { background-image: none; background-color: shade(@accent,0.88); color: @buttonText; }
+#voice-panel .user-message { background-image: none; background-color: @user; border-color: transparent; box-shadow: none; }
+#voice-panel .user-message .message-author, #voice-panel .user-message .thread-date { color: @secondary; }
+#voice-panel .keyboard { background-color: @surface; border-top: 1px solid @line; padding: 7px 4px 0; }
+#voice-panel .keyboard button { background-color: @raised; border: 1px solid @line; border-radius: 8px; color: @text; min-height: 31px; padding: 0 4px; font-size: 16px; }
+#voice-panel .keyboard button:hover { background-color: @hover; }
+#voice-panel .keyboard .key-tool { font-size: 12px; }
+
+#voice-panel .sidebar, #voice-panel .sidebar viewport, #voice-panel .sidebar list { background-color: @canvas; }
+
+#voice-panel searchentry { background-image: none; background-color: @surface; color: @text; caret-color: @text; }
+#voice-panel .sidebar row { background-image: none; background-color: transparent; }
+#voice-panel .sidebar row:selected { background-color: @tint; }
+#voice-panel .sidebar row:hover { background-color: @hover; }
+
+/* Sidebar controls and their bounded popovers share the app palette. */
+#voice-panel .sidebar-caption { color: @secondary; font-size: 12px; font-weight: 500; padding: 6px 3px 2px; }
+#voice-panel .thread-name { font-size: 13px; font-weight: 500; }
+#voice-panel .thread-date { font-size: 11px; color: @secondary; }
+#voice-panel .sidebar row { margin: 2px 2px 5px 0; }
+#voice-panel .compact-picker { background-image: none; background-color: @surface; border: 1px solid @line; border-radius: 10px; min-height: 38px; padding: 0 12px; color: @text; font-size: 13px; }
+#voice-panel .compact-picker:hover, #voice-panel .compact-picker:checked { background-color: @hover; border-color: @thumb; }
+#voice-panel .model-settings-button { min-height: 34px; font-size: 11px; padding: 0 9px; }
+#voice-panel .model-settings-popover, #voice-panel .model-settings-popover > contents { background-color: @surface; color: @text; border: 1px solid @line; border-radius: 12px; box-shadow: 0 4px 18px @shadow; }
+.selection-popover, .selection-popover > contents { background-image: none; background-color: @surface; color: @text; border: 1px solid @line; border-radius: 12px; box-shadow: 0 4px 18px @shadow; padding: 0; }
+.selection-popover viewport, .selection-popover box { background-color: transparent; }
+.selection-popover button { background-image: none; background-color: transparent; border: none; box-shadow: none; text-shadow: none; color: @text; border-radius: 7px; padding: 9px 10px; min-height: 22px; font-size: 13px; }
+.selection-popover button:hover, .selection-popover button:focus, .selection-popover .selected-option { background-color: @tint; }
+.selection-popover label { color: @text; }
+.selection-popover scrollbar { background-color: transparent; }
+.selection-popover scrollbar slider { background-color: @thumb; min-width: 8px; min-height: 24px; border-radius: 5px; }
+
+/* Large Steam Deck touch keyboard, four rows with wide utility keys. */
+#voice-panel .keyboard { padding: 10px 4px 2px; }
+#voice-panel .keyboard button { min-height: 58px; padding: 0 4px; border-radius: 10px; font-size: 24px; font-weight: 500; }
+#voice-panel .keyboard .key-tool { font-size: 17px; font-weight: 500; background-color: @hover; }
+#voice-panel .keyboard button:active { background-color: @accent; color: @buttonText; }
+#voice-panel .device-bar { padding: 1px 0 2px; }
+#voice-panel .device-title { color: @muted; font-size: 9px; font-weight: 700; letter-spacing: 1px; }
+#voice-panel .device-help { color: @secondary; font-size: 10px; }
+#voice-panel .device-picker { min-height: 34px; font-weight: 600; }
+#voice-panel .device-picker { min-height: 29px; font-size: 11px; }
+#voice-panel .device-picker button { min-height: 29px; padding: 0 7px; border-radius: 8px; }
+#voice-panel .theme-switch { padding: 2px; }
+#voice-panel .theme-choice { min-width: 27px; min-height: 24px; padding: 0 5px; }
+#voice-panel .device-strip { background-color: @track; border: 1px solid alpha(@line,0.7); border-radius: 9px; padding: 2px; }
+#voice-panel .device-choice { min-height: 25px; min-width: 43px; padding: 0 8px; border-radius: 7px; color: @secondary; font-size: 11px; }
+#voice-panel .device-choice:checked { background-color: @raised; color: @text; box-shadow: 0 1px 3px rgba(0,0,0,0.12); border-color: alpha(@line,0.6); }
