@@ -22,7 +22,9 @@ import providers
 from ui_extras import UILabel, translator, AppKeyboard, CompactPicker
 
 ROOT = Path(__file__).resolve().parent
-DRAFT = Path.home()/'.local/state/codex-steamdeck/draft.txt'
+STATE_DIR = Path.home()/'.local/state/deck-voice'
+if not STATE_DIR.exists():STATE_DIR=Path.home()/'.local/state/codex-steamdeck'
+DRAFT = STATE_DIR/'draft.txt'
 THREAD = DRAFT.parent/'thread-id'
 THEME = DRAFT.parent/'theme'
 CODEX = str(Path.home()/'.local/bin/codex')
@@ -219,7 +221,7 @@ class Panel(Gtk.Application):
         sidebar_scroll.set_size_request(240,-1)
         sidebar_scroll.add(sidebar)
         body.pack_start(sidebar_scroll,False,False,0)
-        provider_label=UILabel(label='Источник моделей',xalign=0);provider_label.get_style_context().add_class('sidebar-caption')
+        provider_label=UILabel(label='Выбрать ИИ-провайдера',xalign=0);provider_label.get_style_context().add_class('sidebar-caption')
         sidebar.pack_start(provider_label,False,False,0)
         self.provider_picker=CompactPicker()
         self.provider_titles=[('codex','Codex · ChatGPT'),('claude','Claude · Pro / Max'),('deepseek','DeepSeek · OpenRouter')]
@@ -227,6 +229,8 @@ class Panel(Gtk.Application):
         self.provider_picker.set_active_id('codex')
         self.provider_picker.connect('changed',self.provider_changed)
         sidebar.pack_start(self.provider_picker,False,False,0)
+        self.provider_controls=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=4)
+        sidebar.pack_start(self.provider_controls,False,False,0)
         self.new_chat_button=self.button('list-add-symbolic','Новый чат',self.new_chat,'new-chat')
         sidebar.pack_start(self.new_chat_button,False,False,0)
         self.chat_search=Gtk.SearchEntry()
@@ -286,10 +290,10 @@ class Panel(Gtk.Application):
             setattr(self,attribute,picker);model_settings.pack_start(picker,False,False,0)
         self.provider_action_button=self.button('preferences-system-symbolic',translator.text('Настроить DeepSeek / OpenRouter'),self.configure_openrouter,'quiet')
         self.provider_action_button.set_no_show_all(True)
-        model_settings.pack_start(self.provider_action_button,False,False,0)
+        self.provider_controls.pack_start(self.provider_action_button,False,False,0)
         self.claude_action_button=self.button('system-users-symbolic',translator.text('Войти в Claude Code'),self.launch_claude_login,'quiet')
         self.claude_action_button.set_no_show_all(True)
-        model_settings.pack_start(self.claude_action_button,False,False,0)
+        self.provider_controls.pack_start(self.claude_action_button,False,False,0)
         self.model_menu_popover.add(model_settings)
         self.model_menu_button.set_popover(self.model_menu_popover)
         # Popover children are not reliably made visible by the parent window's

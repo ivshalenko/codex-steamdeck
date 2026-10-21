@@ -5,13 +5,15 @@ class Plugin:
     async def _main(self):
         self.child=None;self.lock=threading.RLock();self.pending={};self.seq=0
         self.home=Path.home()
-        self.base=self.home/".local/share/codex-steamdeck/decky"
+        app_dir=self.home/".local/share/deck-voice"
+        if not (app_dir/"app.py").exists():app_dir=self.home/".local/share/codex-steamdeck"
+        self.base=app_dir/"decky"
         self.start_bridge()
     def start_bridge(self):
         with self.lock:
             if self.child and self.child.poll() is None:return
             env=dict(os.environ);env.update({"HOME":str(self.home),"XDG_RUNTIME_DIR":f"/run/user/{os.getuid()}","PYTHONNOUSERSITE":"1"})
-            self.child=subprocess.Popen([str(self.home/".local/share/codex-steamdeck/venv/bin/python"),"-u",str(self.base/"bridge.py")],
+            self.child=subprocess.Popen([str(self.base.parent/"venv/bin/python"),"-u",str(self.base/"bridge.py")],
                 cwd=str(self.base),env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True,bufsize=1)
             self.reader=threading.Thread(target=self.read_bridge,daemon=True);self.reader.start()
     def read_bridge(self):

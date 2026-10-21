@@ -5,10 +5,14 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from array import array
 import math
-sys.path.insert(0, str(Path.home()/'.local/share/codex-steamdeck'))
+APP_DIR=Path.home()/'.local/share/deck-voice'
+if not (APP_DIR/'app.py').exists():APP_DIR=Path.home()/'.local/share/codex-steamdeck'
+sys.path.insert(0, str(APP_DIR))
 from backend import Backend
 import providers
-ROOT=Path.home(); STATE=ROOT/'.local/state/codex-steamdeck'; STEAM=ROOT/'.local/share/Steam/userdata'
+ROOT=Path.home(); STATE=ROOT/'.local/state/deck-voice'
+if not STATE.exists():STATE=ROOT/'.local/state/codex-steamdeck'
+STEAM=ROOT/'.local/share/Steam/userdata'
 lock=threading.RLock(); connect_lock=threading.Lock(); preference_lock=threading.Lock(); jobs=ThreadPoolExecutor(max_workers=8)
 bridge=None; thread_id=''; preferences={}; selected_models={}; cache=[]; cache_time=0; active=False; outbox=[]; remote_host=''
 thread_caches={}; thread_cache_times={}; history_caches={}; history_cache_times={}; model_caches={}; account_caches={}
@@ -287,7 +291,7 @@ def voice_capture(language):
     try:
         from vosk import Model,KaldiRecognizer,SetLogLevel
         SetLogLevel(-1)
-        model_path=ROOT/'.local/share/codex-steamdeck/models'/('vosk-model-small-en-us-0.15' if language=='en' else 'vosk-model-small-ru-0.22')
+        model_path=APP_DIR/'models'/('vosk-model-small-en-us-0.15' if language=='en' else 'vosk-model-small-ru-0.22')
         recognizer=KaldiRecognizer(Model(str(model_path)),16000)
         runtime=f"/run/user/{os.getuid()}"
         env=dict(os.environ);env.update({'HOME':str(ROOT),'XDG_RUNTIME_DIR':runtime,'PULSE_SERVER':f'unix:{runtime}/pulse/native','PULSE_COOKIE':str(ROOT/'.config/pulse/cookie')})
@@ -467,7 +471,10 @@ def call(method,params):
         return {'stopped':True}
     if method=='video_frames':return {'frames':video_frames(params.get('path',''))}
     if method=='voice':return start_voice(params.get('language','en'))
-    if method=='open_window':subprocess.Popen([str(Path.home()/'.local/bin/codex-steamdeck')],start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);return {'opened':True}
+    if method=='open_window':
+        launcher=Path.home()/'.local/bin/deck-voice'
+        if not launcher.exists():launcher=Path.home()/'.local/bin/codex-steamdeck'
+        subprocess.Popen([str(launcher)],start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);return {'opened':True}
     raise ValueError('Неизвестная команда.')
 def handle(msg):
     try:write({'id':msg.get('id'),'result':call(msg.get('method',''),msg.get('params',{}))})
