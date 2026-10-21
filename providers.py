@@ -103,7 +103,7 @@ def openrouter_reply(model, history, text, images=()):
     request = urllib.request.Request(OPENROUTER_CHAT, data=body, headers={
         'Authorization': 'Bearer ' + key,
         'Content-Type': 'application/json',
-        'X-Title': 'Codex for Steam Deck',
+        'X-Title': 'Deck AI for Steam Deck',
     })
     try:
         with urllib.request.urlopen(request, timeout=180) as response:

@@ -14,8 +14,8 @@ gi.require_version("Gtk", "3.0")
 PY
 
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR" "$ICON_DIR"
-install -m 0644 "$SOURCE/app.py" "$SOURCE/backend.py" "$SOURCE/providers.py" "$SOURCE/ui_extras.py" "$SOURCE/style.css" "$SOURCE/themes.json" "$APP_DIR/"
-install -m 0644 "$SOURCE/codex-transparent.png" "$ICON_DIR/codex-steamdeck.png"
+install -m 0644 "$SOURCE/app.py" "$SOURCE/backend.py" "$SOURCE/providers.py" "$SOURCE/ui_extras.py" "$SOURCE/style.css" "$SOURCE/themes.json" "$SOURCE/deck-ai.png" "$APP_DIR/"
+install -m 0644 "$SOURCE/deck-ai.png" "$ICON_DIR/deck-ai.png"
 cp -a "$SOURCE/decky" "$APP_DIR/"
 rm -rf "$APP_DIR/decky/node_modules"
 rm -f "$APP_DIR/decky"/dist/*.map
@@ -33,13 +33,13 @@ chmod 0755 "$BIN_DIR/codex-steamdeck"
 cat > "$DESKTOP_DIR/codex-steamdeck.desktop" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Codex
-Comment=Codex companion for Steam Deck
+Name=Deck AI
+Comment=AI assistant for Steam Deck
 Exec=$BIN_DIR/codex-steamdeck
-Icon=codex-steamdeck
+Icon=deck-ai
 Terminal=false
 Categories=Utility;Accessibility;
 EOF
 chmod 0644 "$DESKTOP_DIR/codex-steamdeck.desktop"
-echo "Installed Codex for Steam Deck. Launch it from the application menu."
+echo "Installed Deck AI. Launch it from the application menu."
 echo "For offline voice dictation, run: $SOURCE/scripts/download-models.sh"

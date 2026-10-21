@@ -35,7 +35,7 @@ def clean_text(text):
 
 class Panel(Gtk.Application):
     def __init__(self):
-        super().__init__(application_id='local.deck.CodexVoice', flags=Gio.ApplicationFlags.FLAGS_NONE)
+        super().__init__(application_id='local.deck.DeckAI', flags=Gio.ApplicationFlags.FLAGS_NONE)
         self.recording = False
         self.busy = False
         self.stop_event = threading.Event()
@@ -124,13 +124,13 @@ class Panel(Gtk.Application):
             if not self.backend or not self.backend.connected:self.reconnect()
             return
         self.hold()
-        Gtk.Window.set_default_icon_from_file(str(ROOT/'codex-official.png'))
-        self.window = Gtk.ApplicationWindow(application=self, title='Codex')
-        self.window.set_wmclass('deckvoice', 'DeckVoice')
+        Gtk.Window.set_default_icon_from_file(str(ROOT/'deck-ai.png'))
+        self.window = Gtk.ApplicationWindow(application=self, title='Deck AI')
+        self.window.set_wmclass('deckai', 'DeckAI')
         self.window.set_decorated(False)
         self.window.connect('delete-event', self.close)
         self.window.set_name('voice-panel')
-        self.window.set_icon_from_file(str(ROOT/'codex-official.png'))
+        self.window.set_icon_from_file(str(ROOT/'deck-ai.png'))
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=9)
         box.set_margin_start(20); box.set_margin_end(20)
         box.set_margin_top(13); box.set_margin_bottom(11)
@@ -142,13 +142,13 @@ class Panel(Gtk.Application):
         logo_frame.set_shadow_type(Gtk.ShadowType.NONE)
         logo_frame.set_valign(Gtk.Align.CENTER)
         logo_frame.get_style_context().add_class('logo-emblem')
-        logo=Gtk.Image.new_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_scale(str(ROOT/'codex-official.png'),29,29,True))
+        logo=Gtk.Image.new_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_scale(str(ROOT/'deck-ai.png'),29,29,True))
         logo_frame.add(logo)
         header.pack_start(logo_frame,False,False,0)
         brand = Gtk.Label()
-        brand.set_markup('<span weight="bold" size="15000">Codex</span>')
+        brand.set_markup('<span weight="bold" size="15000">Deck AI</span>')
         header.pack_start(brand, False, False, 0)
-        subtitle = UILabel(label='Личный помощник')
+        subtitle = UILabel(label='ИИ-помощник')
         subtitle.get_style_context().add_class('subtitle')
         header.pack_start(subtitle, False, False, 7)
         header.pack_start(Gtk.Box(),True,True,0)

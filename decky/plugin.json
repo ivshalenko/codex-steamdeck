@@ -1,16 +1,16 @@
 {
-  "name": "Codex",
-  "author": "Codex for Steam Deck contributors",
+  "name": "Deck AI",
+  "author": "Deck AI contributors",
   "flags": [],
   "api_version": 2,
   "publish": {
     "tags": [
-      "codex",
+      "ai-assistant",
       "ai",
       "voice",
       "gaming"
     ],
-    "description": "Codex chats, model controls, offline dictation and game captures in Steam Deck Quick Access",
-    "image": "https://raw.githubusercontent.com/ilysenko/codex-steamdeck/main/codex-transparent.png"
+    "description": "Chat with Codex, Claude and DeepSeek; use model controls, offline dictation and game captures in Steam Deck Quick Access",
+    "image": "https://raw.githubusercontent.com/ilysenko/codex-steamdeck/main/deck-ai.png"
   }
 }

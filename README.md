@@ -1,8 +1,8 @@
-# Codex for Steam Deck
+# Deck AI for Steam Deck
 
-A community-built desktop companion and Decky Loader plugin for using your signed-in Codex account from Steam Deck Desktop Mode and Gaming Mode.
+A community-built multi-provider AI desktop app and Decky Loader plugin for Steam Deck Desktop Mode and Gaming Mode.
 
-The project is designed for Steam Deck. It reuses the Codex CLI and app-server already signed in on the device, so it does not ask you to paste an API key into the app. The desktop client provides a chat list, account controls, dark and light themes, an integrated on-screen keyboard, and offline voice dictation. The Decky plugin puts a compact chat panel in Steam's Quick Access menu and reconnects to the local Codex app-server after startup.
+The project is designed for Steam Deck. Choose between your signed-in Codex account, Claude Code with a Claude Pro/Max subscription, and DeepSeek through OpenRouter. The desktop client provides a chat list, provider controls, dark and light themes, an integrated on-screen keyboard, and offline voice dictation. The Decky plugin puts a compact multi-provider chat panel in Steam's Quick Access menu.
 
 ## Features
 
@@ -39,7 +39,7 @@ Clone or download this repository, open a terminal in its directory, and run:
 ./install.sh
 ```
 
-The installer creates an isolated Python environment, installs the app under `~/.local/share/codex-steamdeck`, and adds a **Codex** launcher to the application menu. It does not install Codex CLI, sign in to an account, or change existing Codex credentials.
+The installer creates an isolated Python environment, installs the app under `~/.local/share/codex-steamdeck`, and adds a **Deck AI** launcher to the application menu. It does not install provider CLIs, sign in to an account, or change existing credentials.
 
 For offline voice dictation, download the English and Russian Vosk models:
 
@@ -76,7 +76,7 @@ On a fresh install the interface and keyboard start in English. Choose **Interfa
 
 ## Русский
 
-Codex for Steam Deck — настольная оболочка и плагин Decky Loader для Steam Deck. Программа использует уже установленный и авторизованный Codex CLI; отдельный API-ключ в приложение вводить не нужно.
+Deck AI for Steam Deck — мультипровайдерная настольная оболочка и плагин Decky Loader для Steam Deck. Подключайте Codex, Claude через Claude Code или DeepSeek через OpenRouter.
 
 Возможности: список чатов, выбор модели, глубины рассуждений и скорости, управление аккаунтом Codex, тёмная и светлая темы, встроенная экранная клавиатура, локальная голосовая диктовка и компактная панель в Quick Access меню Steam. Плагин повторно подключается к локальному Codex app-server после запуска системы.
 

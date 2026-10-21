@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { callable, definePlugin } from "@decky/api";
 import { FaMicrophone, FaCamera, FaDesktop, FaUserCircle, FaSignOutAlt, FaExternalLinkAlt, FaPlus, FaLaptop } from "react-icons/fa";
-import logo from "../codex-official.png";
+import logo from "../deck-ai.png";
 import css from "./style.css";
 
 type Item = {id:string;role:"user"|"assistant";text:string};
@@ -63,7 +63,7 @@ function Panel() {
  const saveProviderKey=async()=>{if(!providerKey.trim())return;setProviderBusy(true);setError("");try{await setProviderKey(providerKey.trim());setProviderKeyInput("");setData(await refresh());setError("OpenRouter key saved in the system secret store.");}catch(e){setError(String(e));}finally{setProviderBusy(false);}};
  if(!data&&!error)return <div className="cdx-loading"><span className="cdx-orb"/>Connecting to Codex…</div>;
  return <div className="cdx-root">
-  <header className="cdx-header"><span className="cdx-icon"><img src={logo} alt="Codex"/></span><div className="cdx-brand">Codex<span>GAME MODE</span></div><span className={"cdx-state "+(data?.active?"cdx-working":"")}>{data?.active?"Working":data?.status||"Not connected"}</span><button className={"cdx-iconbutton "+(accountOpen?"cdx-account-active":"")} title="Codex account" aria-label="Codex account" onClick={()=>setAccountOpen(x=>!x)}><FaUserCircle/></button><button className="cdx-iconbutton" title="Open desktop app" onClick={()=>void openDesktop()}><FaDesktop/></button><button className="cdx-iconbutton" title="Refresh" onClick={()=>void refresh().then(setData)} aria-label="Refresh">↻</button></header>
+  <header className="cdx-header"><span className="cdx-icon"><img src={logo} alt="Deck AI"/></span><div className="cdx-brand">Deck AI<span>GAME MODE</span></div><span className={"cdx-state "+(data?.active?"cdx-working":"")}>{data?.active?"Working":data?.status||"Not connected"}</span><button className={"cdx-iconbutton "+(accountOpen?"cdx-account-active":"")} title="Codex account" aria-label="Codex account" onClick={()=>setAccountOpen(x=>!x)}><FaUserCircle/></button><button className="cdx-iconbutton" title="Open desktop app" onClick={()=>void openDesktop()}><FaDesktop/></button><button className="cdx-iconbutton" title="Refresh" onClick={()=>void refresh().then(setData)} aria-label="Refresh">↻</button></header>
   {accountOpen&&<section className="cdx-account"><div className="cdx-account-info"><FaUserCircle/><div><strong>{data?.account?.email||"No account connected"}</strong><small>{data?.account?.planType?"Plan · "+data.account.planType:data?.loginPending?"Waiting for sign-in in browser":"Signed in with ChatGPT"}</small></div></div><div className="cdx-account-actions">{data?.loginPending?<button disabled={accountBusy} onClick={()=>void cancelSignIn()}>Cancel sign-in</button>:<button disabled={accountBusy} onClick={()=>void signIn()}><FaExternalLinkAlt/>{data?.account?"Switch account":"Sign in"}</button>}{data?.account&&<button className="cdx-account-logout" disabled={accountBusy} onClick={()=>void signOut()}><FaSignOutAlt/>Sign out</button>}</div></section>}
   {data?.provider==="codex"&&<section className="cdx-devices" aria-label="Codex devices"><span>DEVICES</span><div className="cdx-device-list"><button className={!data?.remoteHost?"selected":""} disabled={hostBusy} onClick={()=>void connectHost("")}><FaDesktop/>Steam Deck</button>{(data?.sshHosts||[]).map(host=><button key={host} className={data?.remoteHost===host?"selected":""} disabled={hostBusy} onClick={()=>void connectHost(host)}><FaLaptop/>{host}</button>)}<button className="cdx-device-add" title="Add SSH host" onClick={()=>setHostEntryOpen(x=>!x)}><FaPlus/></button></div>{hostEntryOpen&&<div className="cdx-device-entry"><input aria-label="Codex SSH alias" placeholder="SSH alias, e.g. Mac" value={hostInput} onChange={e=>setHostInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")void connectHost();}}/><button disabled={hostBusy||!hostInput.trim()} onClick={()=>void connectHost()}>{hostBusy?"…":"Connect"}</button></div>}</section>}
   {error&&<div className="cdx-error"><span>{error}</span><button onClick={()=>setError("")}>×</button></div>}
@@ -83,4 +83,4 @@ function Panel() {
   </section>
  </div>;
 }
-export default definePlugin(()=>({name:"Codex",titleView:<div className="cdx-title">Codex <span>GAME MODE</span></div>,content:<Panel/>,icon:<img src={logo} alt="Codex"/>}));
+export default definePlugin(()=>({name:"Deck AI",titleView:<div className="cdx-title">Deck AI <span>GAME MODE</span></div>,content:<Panel/>,icon:<img src={logo} alt="Deck AI"/>}));

@@ -1,7 +1,7 @@
 {
   "name": "codex-steamdeck",
   "version": "1.0.0",
-  "description": "Codex companion for Steam Deck Gaming Mode",
+  "description": "Multi-provider AI assistant for Steam Deck Gaming Mode",
   "type": "module",
   "scripts": {
     "build": "rm -rf dist && rollup -c",
@@ -19,7 +19,7 @@
     "steam-deck",
     "deck"
   ],
-  "author": "Codex for Steam Deck contributors",
+  "author": "Deck AI contributors",
   "bugs": {
     "url": "https://github.com/ilysenko/codex-steamdeck/issues"
   },
