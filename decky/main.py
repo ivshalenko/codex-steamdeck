@@ -56,6 +56,8 @@ class Plugin:
     async def account_cancel_login(self):return await self._rpc("account_cancel_login",timeout=20)
     async def account_logout(self):return await self._rpc("account_logout",timeout=30)
     async def remote_host(self,host):return await self._rpc("remote_host",{"host":host},timeout=75)
+    async def set_provider(self,provider):return await self._rpc("provider",{"provider":provider},timeout=60)
+    async def set_provider_key(self,key):return await self._rpc("provider_key",{"key":key},timeout=20)
     async def _unload(self):
         try:
             with self.lock:

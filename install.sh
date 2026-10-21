@@ -14,7 +14,7 @@ gi.require_version("Gtk", "3.0")
 PY
 
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR" "$ICON_DIR"
-install -m 0644 "$SOURCE/app.py" "$SOURCE/backend.py" "$SOURCE/ui_extras.py" "$SOURCE/style.css" "$SOURCE/themes.json" "$APP_DIR/"
+install -m 0644 "$SOURCE/app.py" "$SOURCE/backend.py" "$SOURCE/providers.py" "$SOURCE/ui_extras.py" "$SOURCE/style.css" "$SOURCE/themes.json" "$APP_DIR/"
 install -m 0644 "$SOURCE/codex-transparent.png" "$ICON_DIR/codex-steamdeck.png"
 cp -a "$SOURCE/decky" "$APP_DIR/"
 rm -rf "$APP_DIR/decky/node_modules"

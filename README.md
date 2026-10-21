@@ -7,6 +7,8 @@ The project is designed for Steam Deck. It reuses the Codex CLI and app-server a
 ## Features
 
 - Browse and continue local Codex chats; select models, reasoning effort, and speed.
+- Switch between your signed-in Codex account, Claude Code using a Claude Pro/Max subscription, and DeepSeek models through OpenRouter.
+- Browse the current DeepSeek catalog from OpenRouter. Model prices are shown where the catalog provides them; OpenRouter requests require your own API key and may incur charges.
 - Sign in, view the current account, or sign out through Codex.
 - Use Russian or English for the interface. **English is the default on a fresh install.**
 - Dictate offline in Russian or English using Vosk speech models; audio is processed on the Deck.
@@ -25,6 +27,8 @@ No software license has been selected yet. The repository is public to view and 
 - Codex CLI installed and signed in on the Deck. The official Codex CLI installation guide is at <https://developers.openai.com/codex/cli/>.
 - Python 3, GTK 3 Python bindings, FFmpeg, PulseAudio-compatible microphone input, and a working audio input device.
 - Optional: Decky Loader for the Gaming Mode Quick Access plugin.
+- Optional: Claude Code installed and signed in with your Claude Pro/Max subscription to use Claude in the desktop companion. Sign in with `claude auth login`; do not use `--console` for a Pro/Max subscription.
+- Optional: an OpenRouter API key to use DeepSeek. The desktop app stores it in the system Secret Service (KWallet/libsecret), not in the repository or Codex config.
 - Internet access during setup to install Python packages and download speech models.
 
 ## Install the desktop companion
@@ -61,6 +65,7 @@ Install Codex CLI on the other computer and sign in there. Configure SSH on the 
 ## Privacy and security
 
 - Authentication is handled by the Codex CLI already installed on your machine.
+- Claude authentication and subscription usage are handled by Claude Code. DeepSeek prompts and chat history are sent to OpenRouter using your key; OpenRouter usage and pricing are controlled by your OpenRouter account.
 - Voice dictation uses local Vosk models; microphone audio is not sent to a transcription service.
 - Game screenshots and selected video frames are attached only when you choose to send a message containing them.
 - Do not commit personal SSH configuration, private keys, Codex state, logs, or local model files. The repository's ignore rules exclude common credential and machine-specific files.
@@ -84,8 +89,9 @@ Codex for Steam Deck — настольная оболочка и плагин D
 ## Development
 
 ```bash
-python3 -m py_compile app.py backend.py ui_extras.py
-cd decky && npm ci && npm run build
+python3 -m py_compile app.py backend.py providers.py ui_extras.py decky/bridge.py decky/main.py
+python3 -m unittest discover -s tests -v
+cd decky && npm ci && npm exec tsc -- --noEmit && npm run build
 ```
 
 See [`SECURITY.md`](SECURITY.md) to report a vulnerability. See [`CHANGELOG.md`](CHANGELOG.md) for releases.

@@ -7,12 +7,15 @@ from array import array
 import math
 sys.path.insert(0, str(Path.home()/'.local/share/codex-steamdeck'))
 from backend import Backend
+import providers
 ROOT=Path.home(); STATE=ROOT/'.local/state/codex-steamdeck'; STEAM=ROOT/'.local/share/Steam/userdata'
 lock=threading.RLock(); connect_lock=threading.Lock(); preference_lock=threading.Lock(); jobs=ThreadPoolExecutor(max_workers=8)
 bridge=None; thread_id=''; preferences={}; selected_models={}; cache=[]; cache_time=0; active=False; outbox=[]; remote_host=''
 thread_caches={}; thread_cache_times={}; history_caches={}; history_cache_times={}; model_caches={}; account_caches={}
 account_cache={'account':None};account_cache_time=0;account_login_id=''
 current_model=''; status='Подключаюсь к Codex…'
+provider='codex';provider_active=False;provider_status='Готов';provider_model_cache={'claude':[],'deepseek':[]};provider_model_cache_time={}
+provider_chats={'claude':{},'deepseek':{}};provider_thread_ids={'claude':'','deepseek':''}
 voice_state='idle';voice_text='';voice_error='';voice_stop=None;voice_thread=None;voice_language='en'
 def write(value):
     with lock:
@@ -51,7 +54,7 @@ def event(message):
         failed=next((j for j in reversed(outbox) if j['threadId']==tid and j.get('status')=='sending'),None)
         if failed:failed['status']='error';failed['error']=status;atomic(STATE/'decky-outbox.json',outbox)
 def load_state():
-    global thread_id,preferences,selected_models,outbox,remote_host
+    global thread_id,preferences,selected_models,outbox,remote_host,provider_chats,provider_thread_ids
     try:
         remote_host=(STATE/'remote-host').read_text().strip()
         thread_id=(STATE/('thread-id-remote-'+remote_host if remote_host else 'thread-id')).read_text().strip()
@@ -66,6 +69,11 @@ def load_state():
             if job.get('status')=='sending':job['status']='error';job['error']='Отправка прервалась. Проверьте чат и нажмите «Повторить», если сообщения там нет.'
         atomic(STATE/'decky-outbox.json',outbox)
     except (OSError,ValueError):outbox=[]
+    try:
+        saved=json.loads((STATE/'provider-chats.json').read_text())
+        for key in provider_chats:provider_chats[key]=saved.get('chats',{}).get(key,{})
+        provider_thread_ids.update(saved.get('selected',{}))
+    except (OSError,ValueError,TypeError):pass
 def connected():
     global bridge,status
     with connect_lock:
@@ -153,6 +161,20 @@ def models():
     while result.get('nextCursor'):
         result=bridge.request('model/list',{'limit':100,'includeHidden':True,'cursor':result['nextCursor']},timeout=20);data+=result.get('data',[])
     return [{'id':m.get('model') or m['id'],'name':(m.get('displayName') or m.get('model') or m['id'])+(' · служебная' if m.get('hidden') else ''),'efforts':[{'id':x['reasoningEffort'],'name':x['reasoningEffort']} for x in m.get('supportedReasoningEfforts',[])],'defaultEffort':m.get('defaultReasoningEffort') or (m.get('supportedReasoningEfforts') or [{}])[0].get('reasoningEffort'),'tiers':['default']+(['priority'] if 'fast' in (m.get('additionalSpeedTiers') or []) or any(t.get('id')=='priority' for t in (m.get('serviceTiers') or [])) else [])} for m in data]
+def model_list_for_provider(source):
+    global provider_model_cache,provider_model_cache_time
+    if provider_model_cache_time.get(source,0) and time.time()-provider_model_cache_time.get(source,0)<300:return provider_model_cache[source]
+    if source=='claude':
+        result=[{'id':'sonnet','name':'Claude Sonnet · latest','efforts':[],'defaultEffort':'','tiers':['default']}, {'id':'opus','name':'Claude Opus · latest','efforts':[],'defaultEffort':'','tiers':['default']}, {'id':'haiku','name':'Claude Haiku · latest','efforts':[],'defaultEffort':'','tiers':['default']}]
+    else:
+        result=[]
+        for m in providers.list_deepseek_models():
+            if m.get('inputPrice')==0 and m.get('outputPrice')==0:price='free'
+            elif m.get('inputPrice') is not None:price=f"${m['inputPrice']*1_000_000:.2f}/${m['outputPrice']*1_000_000:.2f} per 1M"
+            else:price='pricing unavailable'
+            result.append({'id':m['id'],'name':m['name']+' · '+price,'efforts':[],'defaultEffort':'','tiers':['default']})
+    provider_model_cache[source]=result;provider_model_cache_time[source]=time.time();return result
+def save_provider_chats():atomic(STATE/'provider-chats.json',{'chats':provider_chats,'selected':provider_thread_ids})
 def read_account(force=False):
     global account_cache,account_cache_time
     if remote_host in account_caches and not force and time.time()-account_cache_time<=10:
@@ -202,8 +224,19 @@ def get_snapshot():
     global current_model,active,status,thread_id,cache_screens,cache_media,cache_media_time,model_catalog,model_cache_time
     # A UI snapshot may arrive before the background reconnect loop has run.
     # Establish the app-server connection before model/thread RPCs below.
-    connected()
+    if provider=='codex':connected()
     now=time.time()
+    if provider in provider_chats:
+        if not remote_host and now-cache_media_time>12:
+            cache_screens=list_screenshots();cache_media=list_videos();cache_media_time=now
+        try:provider_models=model_list_for_provider(provider)
+        except Exception as exc:provider_models=provider_model_cache.get(provider,[]);provider_model_cache_time[provider]=now;provider_status='Не удалось обновить каталог: '+str(exc)[:140]
+        selected_id=provider_thread_ids.get(provider,'');chats=provider_chats[provider]
+        chat=chats.get(selected_id,{}) if selected_id else {}
+        messages=[{'id':item.get('id',''),'role':item.get('role','assistant'),'text':item.get('text','')} for item in chat.get('messages',[])]
+        selected_model=chat.get('model') or (provider_models[0]['id'] if provider_models else '')
+        account=read_account()
+        return {'ready':True,'status':provider_status,'provider':provider,'account':account.get('account'),'loginPending':bool(account_login_id),'remoteHost':remote_host,'sshHosts':ssh_hosts(),'threads':[{'id':x['id'],'name':x.get('name') or 'New chat','updatedAt':x.get('updatedAt') or x.get('createdAt') or 0} for x in sorted(chats.values(),key=lambda x:x.get('updatedAt',0),reverse=True)],'threadId':selected_id,'messages':messages,'active':provider_active,'models':provider_models,'model':selected_model,'effort':'','tier':'default','videos':cache_media if not remote_host else [],'screenshots':cache_screens if not remote_host else [],'outbox':[],'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
     if not remote_host and now-cache_media_time>12:
         cache_screens=list_screenshots();cache_media=list_videos();cache_media_time=now
     if remote_host in model_caches and now-model_cache_time>60:
@@ -244,7 +277,7 @@ def get_snapshot():
     models_list=model_catalog;saved_model=selected_models.get(thread_id) or (selected_models.get('') if not thread_id else None) or current_model
     if not saved_model and models_list:saved_model=models_list[0]['id']
     pref=preferences.get(thread_id,{}).get(saved_model,{}) if thread_id else {}
-    return {'ready':True,'status':status,'account':account.get('account'),'loginPending':bool(account_login_id),'remoteHost':remote_host,'sshHosts':ssh_hosts(),'threads':[{'id':t['id'],'name':t.get('name') or t.get('preview') or 'Новый чат','updatedAt':t.get('updatedAt') or t.get('createdAt') or 0} for t in cache],'threadId':thread_id,'messages':messages,'active':active,'models':models_list,'model':saved_model,'effort':pref.get('effort'),'tier':pref.get('tier','default'),'videos':cache_media if not remote_host else [],'screenshots':cache_screens if not remote_host else [],'outbox':outbox[-8:],'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
+    return {'ready':True,'status':status,'provider':'codex','account':account.get('account'),'loginPending':bool(account_login_id),'remoteHost':remote_host,'sshHosts':ssh_hosts(),'threads':[{'id':t['id'],'name':t.get('name') or t.get('preview') or 'Новый чат','updatedAt':t.get('updatedAt') or t.get('createdAt') or 0} for t in cache],'threadId':thread_id,'messages':messages,'active':active,'models':models_list,'model':saved_model,'effort':pref.get('effort'),'tier':pref.get('tier','default'),'videos':cache_media if not remote_host else [],'screenshots':cache_screens if not remote_host else [],'outbox':outbox[-8:],'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
 cache_screens=[];cache_media=[];cache_media_time=0;model_catalog=[];model_cache_time=0
 
 def voice_capture(language):
@@ -286,6 +319,10 @@ def start_voice(language):
     voice_thread=threading.Thread(target=voice_capture,args=(voice_language,),daemon=True);voice_thread.start()
     return {'voiceState':voice_state}
 def save_settings(model,effort,tier):
+    if provider in provider_chats:
+        chat=provider_chats[provider].get(provider_thread_ids.get(provider,''))
+        if chat and model:chat['model']=model;save_provider_chats()
+        return {'saved':True}
     if not model:return {'saved':False}
     with preference_lock:
         try:selected_models.update(json.loads((STATE/'model-preferences.json').read_text()))
@@ -297,10 +334,28 @@ def save_settings(model,effort,tier):
         atomic(STATE/'runtime-preferences.json',preferences)
     return {'saved':True}
 def send_message(text,images,model,effort,tier):
-    global thread_id,outbox,status
+    global thread_id,outbox,status,provider_active,provider_status
     if not isinstance(text,str) or not text.strip():raise ValueError('Введите сообщение.')
     if len(text)>30000:raise ValueError('Сообщение слишком длинное (лимит 30 000 символов).')
     selected=[allowed_image(p) for p in (images or [])[:5]]
+    if provider in provider_chats:
+        if provider_active:raise RuntimeError('Дождитесь ответа текущей модели.')
+        if not model:raise RuntimeError('Список моделей не загрузился. Обновите каталог и повторите попытку.')
+        ident=provider_thread_ids.get(provider,'')
+        chat=provider_chats[provider].get(ident)
+        if not chat:
+            ident=str(uuid.uuid4());now=int(time.time());chat={'id':ident,'provider':provider,'name':'New chat','createdAt':now,'updatedAt':now,'messages':[]};provider_chats[provider][ident]=chat;provider_thread_ids[provider]=ident
+        if provider=='claude' and selected:raise ValueError('Claude Code не принимает вложения из Steam в этой версии. Откройте настольный Codex и приложите файл там.')
+        prior=[{'role':item['role'],'content':item['text']} for item in chat.get('messages',[]) if item.get('role') in ('user','assistant')]
+        message=text.strip();chat['messages'].append({'id':str(uuid.uuid4()),'role':'user','text':message})
+        if chat.get('name') in ('','New chat','Новый чат'):chat['name']=message.splitlines()[0][:100]
+        chat['updatedAt']=int(time.time());chat['model']=model or chat.get('model')
+        save_provider_chats()
+        job={'provider':provider,'threadId':ident,'model':chat['model'],'text':message,'prior':prior,'images':[str(x) for x in selected],'resume':bool(chat.get('claudeStarted'))}
+        provider_active=True;provider_status=('Claude Code' if provider=='claude' else 'DeepSeek')+' отвечает…'
+        if provider=='claude':chat['claudeStarted']=True;save_provider_chats()
+        jobs.submit(dispatch_provider_job,job)
+        return {'queued':True,'threadId':ident}
     if remote_host and selected:raise ValueError('Передача локальных скриншотов на удалённый компьютер пока не включена. Текстовые сообщения и чаты работают.')
     if not bridge or not bridge.connected:connected()
     if not thread_id:
@@ -320,6 +375,16 @@ def send_message(text,images,model,effort,tier):
     job={'id':str(uuid.uuid4()),'threadId':thread_id,'host':remote_host,'text':text.strip(),'images':[str(x) for x in selected],'model':model,'effort':effort,'tier':tier or 'default','createdAt':int(time.time()),'status':'queued'}
     outbox.append(job);atomic(STATE/'decky-outbox.json',outbox);status='Сообщение в очереди';dispatch()
     return {'queued':True,'threadId':thread_id,'jobId':job['id']}
+def dispatch_provider_job(job):
+    global provider_active,provider_status
+    source=job['provider'];ident=job['threadId'];chat=provider_chats.get(source,{}).get(ident)
+    try:
+        if source=='deepseek':answer=providers.openrouter_reply(job['model'],job['prior'],job['text'],job.get('images',[]))
+        else:answer=providers.claude_code_reply(job['model'],ident,job['text'],str(ROOT),job.get('resume',False))
+        chat['messages'].append({'id':str(uuid.uuid4()),'role':'assistant','text':answer});provider_status=('Claude' if source=='claude' else 'DeepSeek')+' ответил'
+    except Exception as exc:
+        error=str(exc)[:450];chat['messages'].append({'id':str(uuid.uuid4()),'role':'assistant','text':'Error: '+error});provider_status=error
+    chat['updatedAt']=int(time.time());save_provider_chats();provider_active=False
 def dispatch_job(job):
     global active,status,thread_id
     try:
@@ -346,9 +411,17 @@ def dispatch():
     job=next((j for j in outbox if j['status']=='queued' and j.get('host','')==remote_host),None)
     if job:job['status']='sending';active=True;atomic(STATE/'decky-outbox.json',outbox);jobs.submit(dispatch_job,job)
 def call(method,params):
-    global thread_id,cache_time,status,active,remote_host,bridge,model_cache_time,account_cache_time,cache_media_time,model_catalog,account_cache
+    global thread_id,cache_time,status,active,remote_host,bridge,model_cache_time,account_cache_time,cache_media_time,model_catalog,account_cache,provider,provider_active,provider_status
     params=params or {}
     if method=='snapshot':return get_snapshot()
+    if method=='provider':
+        target=str(params.get('provider','codex'))
+        if target not in ('codex','claude','deepseek'):raise ValueError('Неизвестный источник моделей.')
+        if provider_active:raise RuntimeError('Дождитесь ответа текущей модели перед переключением.')
+        provider=target;provider_status='Готов';return get_snapshot()
+    if method=='provider_key':
+        if provider!='deepseek':raise ValueError('Выберите DeepSeek через OpenRouter.')
+        providers.save_openrouter_key(str(params.get('key','')));provider_model_cache_time['deepseek']=0;return {'saved':True}
     if method=='remote_host':
         host=str(params.get('host','')).strip()
         if host and (len(host)>120 or not __import__('re').fullmatch(r'[A-Za-z0-9_.@-]+',host)):
@@ -364,11 +437,18 @@ def call(method,params):
         return get_snapshot()
     if method=='refresh':cache_time=0;return get_snapshot()
     if method=='select_thread':
+        if provider in provider_chats:
+            ident=str(params['id'])
+            if ident not in provider_chats[provider]:raise ValueError('Чат не найден.')
+            provider_thread_ids[provider]=ident;save_provider_chats();provider_status='Готов';return get_snapshot()
         thread_id=str(params['id']);cache_time=0;atomic(STATE/('thread-id-remote-'+remote_host if remote_host else 'thread-id'),thread_id+'\n');status='Готов';active=False
         try:bridge.select_thread(thread_id)
         except Exception as exc:status=str(exc)[:160]
         cache_time=0;return get_snapshot()
-    if method=='new_thread':thread_id='';atomic(STATE/('thread-id-remote-'+remote_host if remote_host else 'thread-id'),'\n');status='Новый чат';active=False;cache_time=0;return get_snapshot()
+    if method=='new_thread':
+        if provider in provider_chats:
+            ident=str(uuid.uuid4());now=int(time.time());provider_chats[provider][ident]={'id':ident,'provider':provider,'name':'New chat','createdAt':now,'updatedAt':now,'messages':[]};provider_thread_ids[provider]=ident;save_provider_chats();provider_status='New chat';return get_snapshot()
+        thread_id='';atomic(STATE/('thread-id-remote-'+remote_host if remote_host else 'thread-id'),'\n');status='Новый чат';active=False;cache_time=0;return get_snapshot()
     if method=='settings':return save_settings(params.get('model'),params.get('effort'),params.get('tier'))
     if method=='account_login':return start_account_login()
     if method=='account_cancel_login':return cancel_account_login()
@@ -380,6 +460,7 @@ def call(method,params):
         if job['status']=='sending':raise ValueError('Это сообщение уже отправляется.')
         job['status']='queued';job.pop('error',None);atomic(STATE/'decky-outbox.json',outbox);dispatch();return {'queued':True}
     if method=='stop':
+        if provider in provider_chats:return {'stopped':False}
         turns=bridge.request('thread/read',{'threadId':thread_id,'includeTurns':True},timeout=20).get('thread',{}).get('turns',[])
         turn=next((t for t in reversed(turns) if t.get('status')=='inProgress'),None)
         if turn:bridge.request('turn/interrupt',{'threadId':thread_id,'turnId':turn['id']});active=False;status='Ответ остановлен'
@@ -393,7 +474,9 @@ def handle(msg):
     except Exception as exc:write({'id':msg.get('id'),'error':str(exc)[:550]})
 def pump():
     while True:
-        try:connected();dispatch();time.sleep(1)
+        try:
+            if provider=='codex':connected();dispatch();time.sleep(1)
+            else:time.sleep(2)
         except Exception:time.sleep(5)
 def main():
     load_state();threading.Thread(target=pump,daemon=True).start()

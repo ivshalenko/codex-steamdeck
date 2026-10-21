@@ -9,6 +9,7 @@ from pathlib import Path
 import signal
 import shlex
 import subprocess
+import shutil
 import threading
 import time
 import uuid
@@ -17,6 +18,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, Gio, Pango, GdkPixbuf
 from backend import Backend, RpcError
+import providers
 from ui_extras import UILabel, translator, AppKeyboard, CompactPicker
 
 ROOT = Path(__file__).resolve().parent
@@ -64,6 +66,7 @@ class Panel(Gtk.Application):
         # can paint immediately while the live app-server refresh runs.
         self.history_cache={}
         self.device_thread_caches={'':dict(self.thread_cache)}
+        self.codex_thread_cache=dict(self.thread_cache)
         self.loading_thread_id=None
         self.thread_cursor=None
         self.loading_threads=False
@@ -71,6 +74,17 @@ class Panel(Gtk.Application):
         try:self.model_by_thread=json.loads((DRAFT.parent/'model-preferences.json').read_text())
         except (OSError,ValueError):pass
         self.available_models=[]
+        self.provider='codex'
+        self.external_threads={'claude':{},'deepseek':{}}
+        self.external_thread_ids={'claude':'','deepseek':''}
+        self.external_models={'claude':[{'id':'sonnet','name':'Claude Sonnet · актуальная версия'}, {'id':'opus','name':'Claude Opus · актуальная версия'}, {'id':'haiku','name':'Claude Haiku · актуальная версия'}], 'deepseek':[]}
+        try:
+            provider_state=json.loads((DRAFT.parent/'provider-chats.json').read_text())
+            for key in self.external_threads:
+                self.external_threads[key]=provider_state.get('chats',{}).get(key,{})
+                self.external_thread_ids[key]=provider_state.get('selected',{}).get(key,'')
+        except (OSError,ValueError,TypeError):pass
+        self.codex_thread_id=self.thread_id
         self.current_model=None
         self.current_effort=None
         self.current_tier=None
@@ -141,12 +155,12 @@ class Panel(Gtk.Application):
         self.device_strip=Gtk.Box(spacing=3)
         self.device_strip.get_style_context().add_class('device-strip')
         header.pack_start(self.device_strip,False,False,0)
-        add_device=self.button('list-add-symbolic',None,self.prompt_remote_host,'icon-only')
-        add_device.set_tooltip_text('Подключить компьютер по SSH')
-        header.pack_start(add_device,False,False,0)
-        refresh_devices=self.button('view-refresh-symbolic',None,self.refresh_device_list,'icon-only')
-        refresh_devices.set_tooltip_text('Обновить список устройств из SSH-конфигурации')
-        header.pack_start(refresh_devices,False,False,0)
+        self.add_device_button=self.button('list-add-symbolic',None,self.prompt_remote_host,'icon-only')
+        self.add_device_button.set_tooltip_text('Подключить компьютер по SSH')
+        header.pack_start(self.add_device_button,False,False,0)
+        self.refresh_devices_button=self.button('view-refresh-symbolic',None,self.refresh_device_list,'icon-only')
+        self.refresh_devices_button.set_tooltip_text('Обновить список устройств из SSH-конфигурации')
+        header.pack_start(self.refresh_devices_button,False,False,0)
         self.refresh_device_list()
         self.status_dot = UILabel(label='●')
         self.status_dot.get_style_context().add_class('status-dot')
@@ -205,6 +219,14 @@ class Panel(Gtk.Application):
         sidebar_scroll.set_size_request(240,-1)
         sidebar_scroll.add(sidebar)
         body.pack_start(sidebar_scroll,False,False,0)
+        provider_label=UILabel(label='Источник моделей',xalign=0);provider_label.get_style_context().add_class('sidebar-caption')
+        sidebar.pack_start(provider_label,False,False,0)
+        self.provider_picker=CompactPicker()
+        self.provider_titles=[('codex','Codex · ChatGPT'),('claude','Claude · Pro / Max'),('deepseek','DeepSeek · OpenRouter')]
+        for ident,title in self.provider_titles:self.provider_picker.append(ident,translator.text(title))
+        self.provider_picker.set_active_id('codex')
+        self.provider_picker.connect('changed',self.provider_changed)
+        sidebar.pack_start(self.provider_picker,False,False,0)
         self.new_chat_button=self.button('list-add-symbolic','Новый чат',self.new_chat,'new-chat')
         sidebar.pack_start(self.new_chat_button,False,False,0)
         self.chat_search=Gtk.SearchEntry()
@@ -262,6 +284,12 @@ class Panel(Gtk.Application):
             for renderer in picker.get_cells():
                 if isinstance(renderer,Gtk.CellRendererText):renderer.set_property('ellipsize',Pango.EllipsizeMode.END);renderer.set_property('width-chars',21)
             setattr(self,attribute,picker);model_settings.pack_start(picker,False,False,0)
+        self.provider_action_button=self.button('preferences-system-symbolic',translator.text('Настроить DeepSeek / OpenRouter'),self.configure_openrouter,'quiet')
+        self.provider_action_button.set_no_show_all(True)
+        model_settings.pack_start(self.provider_action_button,False,False,0)
+        self.claude_action_button=self.button('system-users-symbolic',translator.text('Войти в Claude Code'),self.launch_claude_login,'quiet')
+        self.claude_action_button.set_no_show_all(True)
+        model_settings.pack_start(self.claude_action_button,False,False,0)
         self.model_menu_popover.add(model_settings)
         self.model_menu_button.set_popover(self.model_menu_popover)
         # Popover children are not reliably made visible by the parent window's
@@ -551,6 +579,7 @@ class Panel(Gtk.Application):
         self.select_device(alias)
 
     def select_device(self,host):
+        if self.provider!='codex':return
         host=host.strip()
         if host==self.remote_host:return
         if not re.fullmatch(r'[A-Za-z0-9_.@-]{0,120}',host):self.message('Введите SSH-алиас без пробелов.');return
@@ -576,6 +605,7 @@ class Panel(Gtk.Application):
         self.history_ready=False;self.connecting=False;self.reconnect()
 
     def refresh_threads(self, more=False):
+        if self.provider!='codex':return True
         if self.loading_threads or not self.backend or not self.backend.connected:return True
         self.loading_threads=True
         def load():
@@ -593,8 +623,10 @@ class Panel(Gtk.Application):
 
     def threads_loaded(self, result):
         self.loading_threads=False
-        for thread in result.get('data',[]):self.thread_cache[thread['id']]=thread
-        self.device_thread_caches[self.remote_host]=dict(self.thread_cache)
+        cache=self.thread_cache if self.provider=='codex' else self.device_thread_caches.setdefault(self.remote_host,dict(self.codex_thread_cache))
+        for thread in result.get('data',[]):cache[thread['id']]=thread
+        self.device_thread_caches[self.remote_host]=dict(cache)
+        if self.provider=='codex':self.codex_thread_cache=dict(cache)
         self.thread_cursor=result.get('nextCursor')
         self.more_chats_button.get_child().show_all()
         self.more_chats_button.set_visible(bool(self.thread_cursor))
@@ -609,7 +641,8 @@ class Panel(Gtk.Application):
         previous=adjustment.get_value()
         for child in self.thread_list.get_children():child.destroy()
         search=self.chat_search.get_text().casefold().strip()
-        threads=sorted(self.thread_cache.values(),key=lambda t:t.get('updatedAt',0),reverse=True)
+        source_threads=self.thread_cache if self.provider=='codex' else {ident:{'id':ident,'name':chat.get('name','Новый чат'),'updatedAt':chat.get('updatedAt',0),'createdAt':chat.get('createdAt',0)} for ident,chat in self.external_threads[self.provider].items()}
+        threads=sorted(source_threads.values(),key=lambda t:t.get('updatedAt',0),reverse=True)
         for thread in threads:
             title=self.thread_title(thread)
             if search and search not in title.casefold():continue
@@ -634,6 +667,11 @@ class Panel(Gtk.Application):
         if thread_id==self.thread_id:return
         if self.busy or self.sending or self.connecting:
             self.message('Закончите ввод или отправку перед сменой чата.');return
+        if self.provider in self.external_threads:
+            chat=self.external_threads[self.provider].get(thread_id)
+            if not chat:return
+            self.thread_id=thread_id;self.external_thread_ids[self.provider]=thread_id
+            self.save_provider_chats();self.render_external_history(chat);self.render_thread_list();return
         if not self.backend or not self.backend.connected:return
         self.save_draft(self.text.get_buffer())
         self.loading_thread_id=thread_id
@@ -676,6 +714,7 @@ class Panel(Gtk.Application):
     def finish_thread_switch(self,result,thread):
         self.loading_thread_id=None
         self.thread_id=thread['id']
+        if self.provider=='codex':self.codex_thread_id=self.thread_id
         path_thread=self.thread_file();path_thread.parent.mkdir(parents=True,exist_ok=True,mode=0o700);path_thread.write_text(self.thread_id);path_thread.chmod(0o600)
         path=self.draft_path(self.thread_id)
         self.text.get_buffer().set_text(path.read_text() if path.exists() else '')
@@ -693,6 +732,8 @@ class Panel(Gtk.Application):
 
     def new_chat(self,*_):
         if self.busy or self.sending or self.connecting:return
+        if self.provider in self.external_threads:
+            self.save_draft(self.text.get_buffer());self.create_external_chat();return
         if not self.backend or not self.backend.connected:return
         self.save_draft(self.text.get_buffer())
         self.begin_thread_switch()
@@ -723,7 +764,164 @@ class Panel(Gtk.Application):
         self.save_empty_threads();self.save_outbox();self.render_thread_list()
         done.set()
 
+    def save_provider_chats(self):
+        path=DRAFT.parent/'provider-chats.json';path.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+        temporary=path.with_suffix('.json.tmp')
+        fd=os.open(temporary,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
+        with os.fdopen(fd,'w') as stream:json.dump({'chats':self.external_threads,'selected':self.external_thread_ids},stream,ensure_ascii=False)
+        os.replace(temporary,path)
+
+    def provider_changed(self,picker):
+        if self._updating_model:return
+        target=picker.get_active_id() or 'codex'
+        if target==self.provider:return
+        if self.busy or self.sending or self.connecting:
+            self._updating_model=True;picker.set_active_id(self.provider);self._updating_model=False
+            self.message('Дождитесь завершения текущего запроса перед сменой источника.');return
+        if self.provider in self.external_thread_ids:self.external_thread_ids[self.provider]=self.thread_id or ''
+        else:self.codex_thread_id=self.thread_id
+        self.provider=target
+        local_codex=target=='codex'
+        self.device_strip.set_visible(local_codex);self.add_device_button.set_visible(local_codex);self.refresh_devices_button.set_visible(local_codex)
+        self.chat_search.set_text('')
+        self.available_models=[]
+        self.current_model=None
+        self.thread_list.set_sensitive(True);self.new_chat_button.set_sensitive(True)
+        if target=='codex':
+            self.thread_id=''
+            self.thread_cache=dict(self.device_thread_caches.get(self.remote_host,self.codex_thread_cache))
+            target_id=self.codex_thread_id
+            self.provider_action_button.hide()
+            self.claude_action_button.hide()
+            self.more_chats_button.set_visible(bool(self.thread_cursor))
+            if target_id and self.backend and self.backend.connected:
+                self.loading_thread_id=target_id;self.begin_thread_switch();self.refresh_selected_thread(target_id)
+            elif self.backend and self.backend.connected:
+                self.connecting=False;self.history_ready=True;self.thread_id='';self.render_thread_list();self.new_chat()
+            else:self.reconnect()
+            return
+        self.thread_id=self.external_thread_ids.get(target,'')
+        self.thread_cache={ident:{'id':ident,'name':chat.get('name','Новый чат'),'updatedAt':chat.get('updatedAt',0),'createdAt':chat.get('createdAt',0)} for ident,chat in self.external_threads[target].items()}
+        self.provider_action_button.set_visible(target=='deepseek')
+        self.claude_action_button.set_visible(target=='claude')
+        self.more_chats_button.hide()
+        if target=='claude' and not providers.claude_code_available():
+            self.message('Для Claude Pro/Max нужен Claude Code. Откройте меню Claude и установите Claude Code по инструкции Anthropic.')
+        if target=='deepseek':self.load_models()
+        else:
+            self.available_models=[{'id':item['id'],'model':item['id'],'displayName':item['name'],'supportedReasoningEfforts':[]} for item in self.external_models['claude']]
+            self.update_model_picker()
+        self.render_thread_list()
+        if self.thread_id and self.thread_id in self.external_threads[target]:self.render_external_history(self.external_threads[target][self.thread_id])
+        else:self.new_chat()
+
+    def launch_claude_login(self,*_):
+        binary=providers.claude_code_available()
+        if not binary:
+            subprocess.Popen(['/usr/bin/xdg-open','https://code.claude.com/docs/en/getting-started'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
+            self.message('Открыл официальную инструкцию установки Claude Code. После установки выполните вход через «Войти в Claude Code».');return
+        terminal=shutil.which('konsole') or shutil.which('xterm')
+        if not terminal:
+            self.message('Откройте терминал и выполните: claude auth login');return
+        args=[terminal,'-e',binary,'auth','login'] if terminal.endswith('konsole') else [terminal,'-e',binary,'auth','login']
+        try:subprocess.Popen(args,start_new_session=True);self.message('Выполните вход в открывшемся окне Claude Code по тарифу Claude Pro/Max.')
+        except OSError:self.message('Не удалось открыть вход. В терминале выполните: claude auth login')
+
+    def configure_openrouter(self,*_):
+        dialog=Gtk.Dialog(title='DeepSeek через OpenRouter',transient_for=self.window,flags=Gtk.DialogFlags.MODAL)
+        dialog.add_buttons('Отмена',Gtk.ResponseType.CANCEL,'Сохранить ключ',Gtk.ResponseType.OK)
+        dialog.set_default_size(430,-1)
+        box=dialog.get_content_area();box.set_spacing(10);box.set_margin_top(14);box.set_margin_bottom(14);box.set_margin_start(14);box.set_margin_end(14)
+        note=Gtk.Label(label='Введите API-ключ OpenRouter. Он сохранится в системном хранилище секретов SteamOS и не попадёт в файлы проекта.',xalign=0);note.set_line_wrap(True);box.pack_start(note,False,False,0)
+        entry=Gtk.Entry();entry.set_visibility(False);entry.set_placeholder_text('sk-or-v1-…');entry.set_activates_default(True);box.pack_start(entry,False,False,0)
+        try:
+            current=providers.read_openrouter_key()
+            entry.set_placeholder_text('Ключ уже сохранён · введите новый для замены' if current else 'sk-or-v1-…')
+        except providers.ProviderError:pass
+        dialog.set_default_response(Gtk.ResponseType.OK);box.show_all()
+        if dialog.run()==Gtk.ResponseType.OK:
+            try:
+                providers.save_openrouter_key(entry.get_text())
+                self.message('Ключ сохранён в системном хранилище секретов. Загружаю каталог DeepSeek…')
+                self.load_models()
+            except providers.ProviderError as exc:self.message(str(exc))
+        dialog.destroy()
+
+    def refresh_provider_model_list(self,models):
+        if self.provider!='deepseek':return False
+        self.external_models['deepseek']=models
+        def price(model):
+            if model.get('inputPrice')==0 and model.get('outputPrice')==0:return 'бесплатно'
+            if model.get('inputPrice') is None:return 'цена не указана'
+            return f"${model['inputPrice']*1_000_000:.2f}/${model['outputPrice']*1_000_000:.2f} за 1M токенов"
+        self.available_models=[{'id':m['id'],'model':m['id'],'displayName':m['name']+' · '+price(m),'supportedReasoningEfforts':[]} for m in models]
+        self.update_model_picker()
+
+    def create_external_chat(self):
+        ident=str(uuid.uuid4());now=int(time.time())
+        chat={'id':ident,'provider':self.provider,'name':'Новый чат','createdAt':now,'updatedAt':now,'model':self.model_picker.get_active_id(),'messages':[]}
+        self.external_threads[self.provider][ident]=chat;self.external_thread_ids[self.provider]=ident;self.thread_id=ident
+        self.save_provider_chats()
+        self.thread_cache[ident]={'id':ident,'name':chat['name'],'createdAt':now,'updatedAt':now}
+        self.render_thread_list();self.render_external_history(chat)
+
+    def render_external_history(self,chat):
+        for child in self.chat.get_children():child.destroy()
+        self.messages={};self.pending_messages={};self.engine_active=False;self.turn_id=None
+        self.current_model=chat.get('model')
+        self.chat_title.set_text(chat.get('name') or 'Новый чат')
+        self.update_model_picker()
+        for item in chat.get('messages',[]):
+            kind='userMessage' if item.get('role')=='user' else 'agentMessage'
+            self.add_item({'id':item.get('id') or str(uuid.uuid4()),'type':kind,'content':[{'type':'text','text':item.get('text','')}], 'text':item.get('text','')})
+        self.set_working(False)
+
+    def external_send(self,text):
+        chat=self.external_threads[self.provider].get(self.thread_id)
+        if not chat:raise RuntimeError('Сначала создайте чат этого источника.')
+        self.sending=True;self.send_button.set_sensitive(False)
+        self.message('Отправляю запрос…')
+        selected=self.model_picker.get_active_id() or chat.get('model')
+        if not selected:raise providers.ProviderError('Сначала загрузите список моделей этого источника.')
+        prior=[{'role':item['role'],'content':item['text']} for item in chat.get('messages',[]) if item.get('role') in ('user','assistant')]
+        user={'id':str(uuid.uuid4()),'role':'user','text':text}
+        chat['messages'].append(user);chat['updatedAt']=int(time.time())
+        if chat.get('name') in ('','Новый чат'):
+            chat['name']=text.splitlines()[0][:100]
+        chat['model']=selected
+        self.external_thread_ids[self.provider]=chat['id'];self.save_provider_chats()
+        self.thread_cache[chat['id']]={'id':chat['id'],'name':chat['name'],'createdAt':chat['createdAt'],'updatedAt':chat['updatedAt']}
+        self.render_thread_list();self.render_external_history(chat)
+        self.set_working(True)
+        self.text.get_buffer().set_text('')
+        provider=self.provider;session=chat['id'];working_dir=str(Path.home());resume=bool(chat.get('claudeStarted'))
+        if provider=='claude':chat['claudeStarted']=True;self.save_provider_chats()
+        def worker():
+            try:
+                if provider=='deepseek':answer=providers.openrouter_reply(selected,prior,text)
+                else:answer=providers.claude_code_reply(selected,session,text,working_dir,resume)
+                error=''
+            except Exception as exc:answer='';error=str(exc)
+            GLib.idle_add(self.external_reply_finished,provider,session,answer,error)
+        threading.Thread(target=worker,daemon=True).start()
+
+    def external_reply_finished(self,provider,session,answer,error):
+        chat=self.external_threads.get(provider,{}).get(session)
+        if not chat:return False
+        if answer:chat['messages'].append({'id':str(uuid.uuid4()),'role':'assistant','text':answer})
+        else:chat['messages'].append({'id':str(uuid.uuid4()),'role':'assistant','text':'Ошибка: '+error})
+        chat['updatedAt']=int(time.time());self.save_provider_chats()
+        if self.provider==provider and self.thread_id==session:self.render_external_history(chat)
+        self.sending=False;self.send_button.set_sensitive(True)
+        self.message(error or ('Ответ Claude готов' if provider=='claude' else 'Ответ DeepSeek готов'))
+        return False
+
     def load_models(self):
+        if self.provider=='deepseek':
+            def load_external():
+                try:models=providers.list_deepseek_models();GLib.idle_add(self.refresh_provider_model_list,models)
+                except Exception as exc:GLib.idle_add(self.message,'Не удалось загрузить DeepSeek: '+str(exc))
+            threading.Thread(target=load_external,daemon=True).start();return
         def load():
             try:
                 models=[];cursor=None
@@ -738,6 +936,7 @@ class Panel(Gtk.Application):
         threading.Thread(target=load,daemon=True).start()
 
     def models_loaded(self,models):
+        if self.provider!='codex':return False
         self.available_models=models
         self.update_model_picker()
 
@@ -748,6 +947,7 @@ class Panel(Gtk.Application):
         if not selected:
             default=next((model for model in self.available_models if model.get('isDefault')),None)
             if default:selected=default.get('model') or default['id']
+            elif self.available_models:selected=self.available_models[0].get('model') or self.available_models[0]['id']
         known=set()
         for model in self.available_models:
             ident=model.get('model') or model['id']
@@ -781,7 +981,8 @@ class Panel(Gtk.Application):
             self.speed_picker.append('priority','Fast · приоритет');tiers.add('priority')
         tier=prefs.get('tier') or (self.current_tier if selected==self.current_model else None) or 'default'
         self.speed_picker.set_active_id(tier if tier in tiers else 'default')
-        self.effort_picker.set_sensitive(bool(efforts));self.speed_picker.set_sensitive(len(tiers)>1)
+        codex_source=self.provider=='codex'
+        self.effort_picker.set_sensitive(codex_source and bool(efforts));self.speed_picker.set_sensitive(codex_source and len(tiers)>1)
         self.update_model_menu_label(selected,model,effort,tier,labels)
         self._updating_model=False
 
@@ -795,7 +996,7 @@ class Panel(Gtk.Application):
         model_name=next((m.get('displayName') or (m.get('model') or m['id']) for m in self.available_models if (m.get('model') or m['id'])==selected),selected or 'Выбрать модель')
         effort_name=translator.text(labels.get(effort,effort)) if effort else 'авто'
         tier_name='Fast' if tier=='priority' else 'обычная'
-        self.model_menu_label.set_text(f'{model_name}  ·  {effort_name}  ·  {tier_name}')
+        self.model_menu_label.set_text(model_name if self.provider!='codex' else f'{model_name}  ·  {effort_name}  ·  {tier_name}')
 
     def runtime_changed(self,*_):
         if self._updating_model:return
@@ -813,7 +1014,10 @@ class Panel(Gtk.Application):
         if model:
             self.model_by_thread[self.thread_id]=model
             (DRAFT.parent/'model-preferences.json').write_text(json.dumps(self.model_by_thread))
-            self.message('Модель для следующего сообщения: '+model)
+            chat=self.external_threads.get(self.provider,{}).get(self.thread_id)
+            if chat:chat['model']=model;self.save_provider_chats()
+            provider_name={'codex':'Codex','claude':'Claude','deepseek':'DeepSeek'}[self.provider]
+            self.message('Модель для следующего сообщения: '+provider_name+' · '+model)
             self.update_runtime_pickers()
 
     def draft_path(self,thread_id):
@@ -824,14 +1028,23 @@ class Panel(Gtk.Application):
         backend = Backend(lambda event:GLib.idle_add(self.on_event,event),lambda:GLib.idle_add(self.disconnected),self.remote_host)
         self.backend = backend
         try:
-            empty=self.empty_threads.get(self.thread_id)
-            result, thread = backend.connect(None if empty else self.thread_id)
+            codex_id=self.codex_thread_id if self.provider!='codex' else self.thread_id
+            empty=self.empty_threads.get(codex_id)
+            result, thread = backend.connect(None if self.provider!='codex' or empty else codex_id)
             account=backend.request('account/read',{},timeout=12).get('account')
             GLib.idle_add(self.update_account_menu,account)
+            if self.provider!='codex':GLib.idle_add(self.external_backend_connected);return
             if empty:result,thread={'model':empty.get('model')},empty
             GLib.idle_add(self.load_history, result, thread)
         except Exception as exc:
             GLib.idle_add(self.connection_failed,str(exc))
+
+    def external_backend_connected(self):
+        self.connecting=False;self.history_ready=True
+        self.reconnect_button.set_sensitive(False);self.reconnect_button.hide()
+        self.thread_list.set_sensitive(True);self.new_chat_button.set_sensitive(True)
+        self.set_working(False)
+        return False
 
     def connection_failed(self, error):
         self.connecting = False
@@ -879,6 +1092,7 @@ class Panel(Gtk.Application):
         self.current_model=result.get('model') or thread.get('model')
         self.current_effort=result.get('reasoningEffort') or thread.get('reasoningEffort')
         self.current_tier=result.get('serviceTier') or 'default'
+        if self.provider=='codex':self.codex_thread_id=thread['id']
         self.thread_cache[thread['id']]={key:value for key,value in thread.items() if key!='turns'}
         if self.remote_host:self.remote_history_digest=json.dumps(thread.get('turns',[]),sort_keys=True,ensure_ascii=False,default=str)
         self.chat_title.set_text(self.thread_title(thread))
@@ -947,7 +1161,8 @@ class Panel(Gtk.Application):
             frame.get_style_context().add_class('chat-message')
             frame.get_style_context().add_class('user-message' if kind=='userMessage' else 'assistant-message')
             content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=7,margin=14)
-            heading = Gtk.Label(label='ВЫ' if kind=='userMessage' else 'CODEX')
+            assistant_name={'claude':'CLAUDE','deepseek':'DEEPSEEK','codex':'CODEX'}.get(getattr(self,'provider','codex'),'CODEX')
+            heading = Gtk.Label(label='ВЫ' if kind=='userMessage' else assistant_name)
             heading.set_xalign(0); heading.get_style_context().add_class('message-author')
             content.pack_start(heading,False,False,0)
             label = Gtk.Label()
@@ -1122,7 +1337,9 @@ class Panel(Gtk.Application):
         button = Gtk.Button(); button.get_style_context().add_class(style)
         row = Gtk.Box(spacing=8, halign=Gtk.Align.CENTER)
         row.pack_start(Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.LARGE_TOOLBAR if style == 'primary' else Gtk.IconSize.MENU), False, False, 0)
-        if label: row.pack_start(UILabel(label=label), False, False, 0)
+        if label:
+            button.title_label=UILabel(label=label)
+            row.pack_start(button.title_label, False, False, 0)
         button.add(row); button.connect('clicked', callback)
         if style == 'icon-only': button.set_tooltip_text('Закрыть панель')
         return button
@@ -1218,6 +1435,13 @@ class Panel(Gtk.Application):
 
     def change_language(self, code):
         translator.set_language(code)
+        self.provider_picker.remove_all()
+        self._updating_model=True
+        for ident,title in self.provider_titles:self.provider_picker.append(ident,translator.text(title))
+        self.provider_picker.set_active_id(self.provider)
+        self._updating_model=False
+        self.provider_action_button.title_label.set_text(translator.text('Настроить DeepSeek / OpenRouter'))
+        self.claude_action_button.title_label.set_text(translator.text('Войти в Claude Code'))
         self.chat_search.set_placeholder_text(translator.text('Найти чат'))
         for item in self.app_menu.get_children():
             source=getattr(item,'translation_source',None)
@@ -1323,6 +1547,13 @@ class Panel(Gtk.Application):
             self.message('Сообщение уже отправляется…'); return
         if self.busy:
             self.message('Сначала закончите запись.'); return
+        if self.provider in self.external_threads:
+            buffer = self.text.get_buffer()
+            text = clean_text(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False))
+            if not text:return
+            try:self.external_send(text)
+            except Exception as exc:self.sending=False;self.send_button.set_sensitive(True);self.message(str(exc))
+            return
         if not self.backend or not self.backend.connected or not self.history_ready:
             self.message('Сначала подключитесь к Codex. Черновик сохранён.'); return
         buffer = self.text.get_buffer()
