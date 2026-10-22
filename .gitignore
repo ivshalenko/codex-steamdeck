@@ -28,3 +28,6 @@ decky/dist/*.map
 # Downloaded Vosk models are large and have separate upstream licensing.
 models/*/
 !models/README.md
+
+# Locally generated release archives
+build/

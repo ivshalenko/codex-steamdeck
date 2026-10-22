@@ -1,6 +1,6 @@
 {
   "name": "codex-steamdeck",
-  "version": "1.0.0",
+  "version": "1.0.0-rc.2",
   "description": "Multi-provider AI assistant for Steam Deck Gaming Mode",
   "type": "module",
   "scripts": {

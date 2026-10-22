@@ -5,9 +5,10 @@ from pathlib import Path
 import subprocess
 import threading
 import shlex
+import shutil
 from websockets.sync.client import unix_connect
 
-CODEX = str(Path.home()/'.local/bin/codex')
+CODEX = shutil.which('codex') or str(Path.home()/'.local/bin/codex')
 
 class RpcError(RuntimeError):
     def __init__(self,message,code=None,data=None):

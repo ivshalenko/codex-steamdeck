@@ -1,10 +1,11 @@
 """App-local multilingual input; never injects keys into other applications."""
 import json
 import weakref
+from decky.runtime_paths import resolve_state_dir
 from pathlib import Path
 from gi.repository import Gtk, Gdk
 
-STATE=Path.home()/'.local/state/codex-steamdeck/language'
+STATE=resolve_state_dir()/'language'
 EN={
 'Без рассуждений':'No reasoning','Минимальная':'Minimal','Низкая · быстрее':'Low · faster','Средняя · баланс':'Medium · balanced','Очень высокая':'Very high','Максимальная':'Maximum',
 'Модель':'Model','Чаты':'Chats','В работе':'Working','Готов':'Ready','Не удалось сохранить черновик на диск.':'Could not save your draft.',
@@ -13,7 +14,7 @@ EN={
 'Глубина обработки':'Reasoning effort','Скорость':'Speed','Текущий разговор':'Current conversation','Подключаюсь к вашему диалогу…':'Connecting to your conversation…',
 'Остановить':'Stop','Подключиться':'Connect','Что сделаем сегодня? Напишите или продиктуйте…':'What shall we do? Type or dictate…','Говорить':'Dictate','Закончить':'Finish',
 'Отправить':'Send','Распознавание на устройстве':'On-device speech recognition','Проверьте текст перед отправкой':'Review your text before sending','Очистить':'Clear',
-'Загружаю историю разговора…':'Loading conversation history…','Открываю чат…':'Opening chat…','Codex работает…':'Codex is working…',
+'Загружаю историю разговора…':'Loading conversation history…','Открываю чат…':'Opening chat…','Deck AI работает…':'Deck AI is working…',
 'Продолжите разговор голосом или текстом':'Continue by voice or text','Выполняю действие на устройстве…':'Working on your device…','Сохраняю изменения…':'Saving changes…',
 'Не удалось подключиться. Нажмите «Подключиться».':'Could not connect. Press Connect.','Черновик сохранён. Нажмите «Подключиться».':'Draft saved. Press Connect.',
 'Распознаю…':'Transcribing…','Подготовка микрофона…':'Preparing microphone…','● Слушаю · нажмите «Закончить»':'● Listening · press Finish',
@@ -23,6 +24,8 @@ EN={
 'Обычная':'Standard','Низкая':'Low','Средняя':'Medium','Высокая':'High','Повторить':'Retry','Вставить':'Paste','Пробел':'Space','Скрыть':'Hide',
 'Скрыть окно':'Hide window','Свернуть':'Minimize','Завершить приложение':'Quit application',
 'Аккаунт':'Account','Аккаунт: проверка…':'Account: checking…','Вход не выполнен':'Not signed in','Войти или сменить аккаунт':'Sign in or switch account','Выйти из аккаунта':'Sign out','Войти через ChatGPT':'Sign in with ChatGPT','Страница входа открыта в браузере.':'The sign-in page opened in your browser.','Вы вышли из аккаунта Codex.':'You signed out of Codex.','Не удалось открыть браузер.':'Could not open the browser.',
+'Подключить ИИ-провайдера или устройство':'Connect an AI provider or device','Подключить Codex на другом компьютере':'Connect Codex on another computer','Подключить Claude Pro / Max':'Connect Claude Pro / Max','Подключить DeepSeek через OpenRouter':'Connect DeepSeek via OpenRouter',
+'Подключить DeepSeek через TokenHarbor':'Connect DeepSeek via TokenHarbor','DeepSeek · TokenHarbor':'DeepSeek · TokenHarbor','Настроить TokenHarbor':'Set up TokenHarbor',
 'Источник моделей':'Model provider','Выбрать ИИ-провайдера':'Choose AI provider','Codex · ChatGPT':'Codex · ChatGPT','Claude · Pro / Max':'Claude · Pro / Max','DeepSeek · OpenRouter':'DeepSeek · OpenRouter','Настроить DeepSeek / OpenRouter':'Set up DeepSeek / OpenRouter','Войти в Claude Code':'Sign in to Claude Code','Отправляю запрос…':'Sending request…','Ответ Claude готов':'Claude replied','Ответ DeepSeek готов':'DeepSeek replied',
 'УСТРОЙСТВО CODEX':'CODEX DEVICE','Этот Steam Deck · локальные чаты':'This Steam Deck · local chats','Подключить компьютер':'Connect a computer','Список Mac и Windows берётся из SSH-конфигурации Steam Deck.':'Mac and Windows devices are listed from the Steam Deck SSH configuration.','Выберите компьютер из SSH-конфигурации. На нём нужен Codex с активным входом.':'Choose a computer from SSH configuration. Codex must be installed and signed in there.','Других устройств пока нет. Добавьте SSH-хост кнопкой «Подключить компьютер».':'No other devices yet. Add an SSH host with “Connect a computer”.','Подключить удалённый Codex':'Connect remote Codex','Добавьте устройство или выберите готовый SSH-алиас.':'Add a device or choose an existing SSH alias.','Имя в Codex':'Codex device name','например, macbook':'for example, macbook','Адрес компьютера':'Computer address','IP или имя в сети':'IP address or network name','Пользователь SSH':'SSH user','учётная запись Mac/Windows':'Mac/Windows account','Путь к SSH-ключу':'SSH key path','Для нового подключения укажите адрес и пользователя. На втором компьютере включите SSH и разрешите вход по вашему публичному ключу; Codex CLI должен быть установлен и авторизован.':'For a new connection, enter the address and user. Enable SSH on the other computer and authorize your public key; Codex CLI must be installed and signed in.','Отмена':'Cancel','Подключить':'Connect','Проверьте адрес и имя пользователя SSH.':'Check the SSH address and username.','Укажите короткое имя устройства латиницей.':'Enter a short device name using Latin characters.','Проверьте путь к SSH-ключу.':'Check the SSH key path.','Обновить список SSH-устройств из ~/.ssh/config':'Refresh SSH devices from ~/.ssh/config',
 }

@@ -1,17 +1,178 @@
-.cdx-root{height:100%;min-height:500px;display:flex;flex-direction:column;gap:10px;padding:9px 12px 13px;box-sizing:border-box;color:#ececec;font-family:Inter,"Noto Sans",system-ui,sans-serif;background:#171717;--cdx-border:rgba(255,255,255,.095);--cdx-raised:#222}
-.cdx-root button,.cdx-root select,.cdx-root textarea,.cdx-root input{font:inherit;color:inherit}.cdx-root button{border:1px solid var(--cdx-border);background:#252525;border-radius:11px;cursor:pointer}.cdx-root button:active{background:#3a3a3a}.cdx-header{display:flex;align-items:center;gap:9px;min-height:34px;border-bottom:1px solid var(--cdx-border);padding-bottom:7px}.cdx-icon{display:grid;place-items:center;width:30px;height:30px;background:transparent;border-radius:9px;font-size:17px}.cdx-brand{font-size:16px;font-weight:650;line-height:1.1}.cdx-brand span,.cdx-title span{display:block;color:#8d8d8d;font-size:8px;font-weight:600;letter-spacing:.12em;margin-top:2px}.cdx-state{margin-left:auto;color:#bcbcbc;font-size:11px;max-width:95px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cdx-state:before{content:"";display:inline-block;width:6px;height:6px;background:#56b979;border-radius:50%;margin:0 6px 1px 0}.cdx-working:before{background:#ddac51}.cdx-iconbutton{width:30px;height:30px;display:grid;place-items:center;color:#bbb!important;font-size:17px}.cdx-title{font-weight:650;letter-spacing:.01em}.cdx-selects{display:flex;flex-direction:column;gap:6px}.cdx-provider-label{display:flex;flex-direction:column;gap:3px;color:#929292;font-size:9px;font-weight:650;letter-spacing:.06em;text-transform:uppercase}.cdx-key-entry{display:flex;gap:5px}.cdx-key-entry input{min-width:0;flex:1;background:#202020;border:1px solid var(--cdx-border);border-radius:9px;padding:7px 9px;font-size:11px;outline:none}.cdx-key-entry button,.cdx-claude-login{min-height:34px;padding:0 9px;font-size:10px;white-space:normal}.cdx-key-note{color:#888;font-size:9px;line-height:1.3}.cdx-chatrow,.cdx-modelrow,.cdx-controls{display:flex;gap:6px}.cdx-root select{appearance:none;background:#222;border:1px solid var(--cdx-border);border-radius:9px;min-height:36px;padding:5px 28px 5px 10px;font-size:12px;min-width:0;flex:1;background-image:linear-gradient(45deg,transparent 50%,#999 50%),linear-gradient(135deg,#999 50%,transparent 50%);background-position:calc(100% - 13px) 15px,calc(100% - 9px) 15px;background-size:4px 4px;background-repeat:no-repeat}.cdx-chatrow .cdx-small{width:36px;flex:none;font-size:19px}.cdx-controls select{font-size:11px}.cdx-chat{min-height:70px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:2px 3px 6px;scrollbar-width:thin;scrollbar-color:#4b4b4b transparent}.cdx-msg{border:1px solid var(--cdx-border);border-radius:14px;padding:9px 10px;font-size:12px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;background:#202020}.cdx-msg.user{background:#2c2c2c}.cdx-msg small{display:block;color:#aaa;font-size:9px;letter-spacing:.08em;font-weight:700;margin-bottom:4px}.cdx-typing{font-size:11px;color:#aaa;padding:3px 5px}.cdx-typing i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#aaa;margin-right:7px;animation:cdxdot 1s infinite alternate}@keyframes cdxdot{to{opacity:.25}}.cdx-tools{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--cdx-border);padding-top:8px}.cdx-media{display:grid;grid-template-columns:minmax(0,1fr) 38px;gap:5px}.cdx-media select{min-height:32px;font-size:10px;padding-left:8px}.cdx-small{min-height:34px;font-size:11px;display:grid;place-items:center}.cdx-frames{font-size:10px}.cdx-attachments{display:flex;gap:4px;overflow-x:auto}.cdx-attachments button{font-size:10px;padding:4px 7px;white-space:nowrap}.cdx-root textarea{resize:vertical;min-height:58px;max-height:130px;border:1px solid var(--cdx-border);background:#202020;border-radius:12px;padding:9px;font-size:13px;line-height:1.4;outline:none}.cdx-root textarea:focus{border-color:#666}.cdx-compose{display:flex;align-items:center;gap:5px;min-height:36px}.cdx-voice,.cdx-send,.cdx-stop{height:34px;padding:0 10px;font-size:11px;display:flex;align-items:center;gap:6px}.cdx-voice.active{background:#573334}.cdx-hint{font-size:9px;color:#858585;flex:1}.cdx-send{background:#eee!important;color:#161616!important;font-weight:650;border-color:transparent!important}.cdx-send:disabled{opacity:.4}.cdx-stop{font-size:10px;color:#ffaaaa!important}.cdx-error{display:flex;gap:7px;align-items:center;padding:7px 8px;border-radius:8px;background:#572f32;color:#ffdede;font-size:11px;line-height:1.35}.cdx-error span{flex:1}.cdx-error button{width:25px;height:25px}.cdx-loading{display:grid;min-height:200px;place-items:center;align-content:center;gap:12px;color:#aaa;font-size:13px}.cdx-orb{width:26px;height:26px;border:2px solid #777;border-top-color:white;border-radius:50%;animation:cdxspin .9s linear infinite}@keyframes cdxspin{to{transform:rotate(360deg)}}
-.cdx-icon img{width:24px;height:24px;object-fit:contain;border-radius:6px}
-.cdx-account-active{color:#fff!important;background:#343434!important}.cdx-account{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border:1px solid var(--cdx-border);border-radius:12px;background:#202020}.cdx-account-info{display:flex;align-items:center;gap:8px;min-width:0;color:#bbb;font-size:17px}.cdx-account-info div{display:flex;flex-direction:column;gap:3px;min-width:0}.cdx-account-info strong{font-size:11px;color:#eee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cdx-account-info small{font-size:9px;color:#929292}.cdx-account-actions{display:flex;gap:5px;flex:none}.cdx-account-actions button{display:flex;align-items:center;gap:5px;padding:0 8px;min-height:30px;font-size:10px}.cdx-account-actions .cdx-account-logout{color:#e8aaaa}
-.cdx-remote{display:flex;flex-direction:column;gap:5px;padding:8px 9px;border:1px solid var(--cdx-border);border-radius:11px;background:#202020}.cdx-remote>label{font-size:10px;font-weight:650;color:#ddd}.cdx-remote>div{display:flex;gap:5px}.cdx-remote input{min-width:0;flex:1;height:33px;padding:0 8px;border:1px solid var(--cdx-border);border-radius:8px;background:#171717;color:inherit;font:inherit;font-size:10px}.cdx-remote button{padding:0 9px;font-size:10px}.cdx-remote small{font-size:9px;color:#999;line-height:1.35}
-.cdx-devices{display:flex;flex-direction:column;gap:5px;padding:3px 1px}.cdx-devices>span{font-size:8px;font-weight:700;letter-spacing:.12em;color:#8e8e8e;padding-left:3px}.cdx-device-list{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none}.cdx-device-list::-webkit-scrollbar{display:none}.cdx-device-list button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:31px;padding:0 10px;white-space:nowrap;font-size:10px;color:#c9c9c9;background:#1f1f1f;border-color:#393939}.cdx-device-list button.selected{background:#393939;color:#fff;border-color:#626262}.cdx-device-list .cdx-device-add{width:32px;flex:none;padding:0;color:#aaa}.cdx-device-entry{display:flex;gap:5px}.cdx-device-entry input{min-width:0;flex:1;height:31px;padding:0 8px;border:1px solid var(--cdx-border);border-radius:8px;background:#171717;color:inherit;font:inherit;font-size:10px}.cdx-device-entry button{padding:0 9px;font-size:10px}
-.cdx-model-settings summary{display:flex;align-items:center;gap:7px;min-height:34px;padding:0 10px;border:1px solid var(--cdx-border);border-radius:9px;background:#222;color:#ddd;font-size:11px;list-style:none;cursor:pointer;white-space:nowrap;overflow:hidden}
-.cdx-model-settings summary::-webkit-details-marker{display:none}
-.cdx-model-settings summary:after{content:"⌄";margin-left:auto;color:#999}
-.cdx-model-settings summary span{overflow:hidden;text-overflow:ellipsis}
-.cdx-model-settings summary span:first-child{flex:1;text-align:left}
-.cdx-model-settings summary span+span{color:#aaa;font-size:10px}
-.cdx-model-settings[open] summary{border-color:#666;border-radius:9px 9px 0 0}
-.cdx-model-settings-menu{display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid var(--cdx-border);border-top:0;border-radius:0 0 9px 9px;background:#1c1c1c}
-.cdx-model-settings-menu label{display:flex;flex-direction:column;gap:3px;min-width:0;color:#999;font-size:9px}
-.cdx-model-settings-menu .cdx-controls label{flex:1}
-.cdx-model-settings-menu select{min-height:32px;font-size:11px}
+/* The Quick Access panel is about 300px wide. Keep all rules local to Deck AI. */
+.dai-root{--dai-line:rgba(255,255,255,.12);--dai-muted:#aab6c3;display:flex;flex-direction:column;gap:8px;box-sizing:border-box;width:100%;max-width:100%;height:clamp(300px,calc(100vh - 180px),580px);min-height:0;padding:0 12px 10px;color:#f0f4f8;font-size:14px;line-height:1.4;overflow:hidden}
+.dai-root *{box-sizing:border-box}.dai-root h3{font-size:14px;font-weight:650;margin:0 0 9px}.dai-root p{margin:0}.dai-tabs{display:flex;gap:4px;flex-shrink:0;border-bottom:1px solid var(--dai-line);padding-bottom:7px}.dai-tab{flex:1;min-width:0}.dai-root .dai-button{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-width:0;min-height:38px;height:auto;padding:8px 9px;border-radius:3px;font-size:13px;line-height:1.3;white-space:normal;overflow-wrap:anywhere;box-shadow:none}.dai-tab .dai-button{background:transparent;color:var(--dai-muted);padding:9px 4px;font-size:12px;gap:5px}.dai-tab.selected .dai-button{background:#34495d;color:white}.dai-root .dai-button:focus,.dai-root .dai-button.gpfocus,.dai-root .dai-focused{outline:2px solid #fff;outline-offset:-2px;background:#dce8f1;color:#152638}.dai-root .dai-primary{background:#1a77b9;color:white}.dai-root .dai-button:disabled{opacity:.4}.dai-status{display:flex;align-items:center;gap:6px;min-height:18px;font-size:11px;color:var(--dai-muted);flex-shrink:0}.dai-status>span:nth-child(2){overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0}.dai-status small{max-width:75px;overflow:hidden;text-overflow:ellipsis}.dai-dot{height:6px;width:6px;border-radius:50%;background:#69c49a;flex-shrink:0}.dai-dot.offline{background:#e59980}.dai-dot.working{background:#e4c56e}.dai-page{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}.dai-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 2px 10px;scrollbar-width:thin}.dai-stack{display:flex;flex-direction:column;gap:10px}.dai-section{display:flex;flex-direction:column;gap:10px;padding:4px 0 14px;border-bottom:1px solid var(--dai-line);flex-shrink:0}.dai-section:last-child{border:0}.dai-section h3{color:#fff;margin:0}.dai-field{display:flex;flex-direction:column;gap:5px;min-width:0}.dai-label{font-size:12px;color:var(--dai-muted)}.dai-field>div{min-width:0;max-width:100%}.dai-muted{font-size:12px;color:var(--dai-muted);line-height:1.45}.dai-account{overflow-wrap:anywhere}.dai-login-url{overflow-wrap:anywhere;font-size:11px;user-select:text}.dai-messages{flex:1;min-height:65px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;display:flex;flex-direction:column;gap:9px;padding:3px 2px 10px}.dai-message{flex-shrink:0;padding:10px;border-radius:4px;background:rgba(255,255,255,.045);overflow-wrap:anywhere;white-space:pre-wrap;font-size:14px;line-height:1.5;user-select:text}.dai-message.user{background:rgba(100,165,220,.12)}.dai-message small{display:block;font-size:10px;font-weight:650;color:var(--dai-muted);margin-bottom:4px}.dai-empty{margin:auto 0;text-align:center;padding:12px 3px;color:var(--dai-muted)}.dai-empty>svg{font-size:23px;opacity:.7;margin:0 0 8px}.dai-empty h3{color:#fff;margin-bottom:5px}.dai-empty p{font-size:13px;line-height:1.6;margin-bottom:12px}.dai-composer{display:flex;flex-direction:column;gap:8px;flex-shrink:0;border-top:1px solid var(--dai-line);padding-top:9px}.dai-compose-actions{display:flex;gap:5px}.dai-compose-actions>.dai-button{flex:1;padding:9px 4px;font-size:12px}.dai-compose-actions>.dai-button svg{flex-shrink:0}.dai-attachments{display:flex;flex-direction:column;gap:4px;max-height:80px;overflow-y:auto}.dai-attachments .dai-button{font-size:11px;min-height:30px;justify-content:flex-start}.dai-banner{display:flex;flex-direction:column;gap:5px;flex-shrink:0;padding:7px;background:#502f36;border-radius:3px;font-size:12px}.dai-banner>span{max-height:65px;overflow-y:auto;overflow-wrap:anywhere}.dai-banner .dai-button{min-height:26px;padding:4px;font-size:11px}.dai-notice{font-size:11px;color:#a9cddb;flex-shrink:0;max-height:40px;overflow-y:auto}.dai-history-item .dai-button{flex-direction:column;align-items:flex-start;text-align:left;padding:10px}.dai-history-item.selected{border-left:3px solid #66b5ef}.dai-history-item small{font-size:10px;color:var(--dai-muted)}.dai-failed{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#ffc9b7}
+@media(max-height:600px){.dai-root{height:clamp(260px,calc(100vh - 140px),460px);gap:5px}.dai-root .dai-button{min-height:34px}.dai-composer{gap:5px;padding-top:6px}}
+
+.dai-stack-content{display:flex;flex-direction:column;gap:10px;flex-shrink:0}.dai-message-list{display:flex;flex-direction:column;gap:9px;min-height:100%;flex-shrink:0}.dai-settings-grid{flex-shrink:0}
+
+.dai-root .dai-button{box-sizing:border-box!important}
+.dai-tab:first-child{flex:.8}.dai-tab:last-child{flex:1.25}.dai-tab .dai-button{white-space:nowrap}.dai-tab .dai-button svg{flex-shrink:0}
+/* Gaming Mode's .DialogButton rules have higher specificity than desktop
+   styles. Override only this plugin's dimensions so Steam cannot impose its
+   160px minimum on each control in the 300px Quick Access column. */
+.dai-root .dai-button.DialogButton{width:100%!important;min-width:0!important;max-width:100%!important;min-height:38px!important;height:auto!important;padding:8px 6px!important;font-size:13px!important;line-height:1.3!important;border-radius:4px!important}
+.dai-root .dai-tab .dai-button.DialogButton{font-size:12px!important;padding:8px 4px!important;background:transparent!important;color:var(--dai-muted)!important}
+.dai-root .dai-tab.selected .dai-button.DialogButton{background:#34495d!important;color:#fff!important}
+.dai-root .dai-button.dai-primary{background:#1a77b9!important;color:#fff!important}
+.dai-root .dai-button.DialogButton.gpfocus,.dai-root .dai-button.DialogButton:focus{background:#dce8f1!important;color:#152638!important}
+.dai-viewbar{display:flex;align-items:center;gap:6px;flex-shrink:0;min-width:0}.dai-viewbar>.dai-status{flex:1;min-width:0}.dai-root .dai-viewbar>.dai-button.DialogButton{width:126px!important;flex-shrink:0;font-size:11px!important;min-height:32px!important;padding:6px 4px!important}
+/* Full-screen UI uses Steam's 854x534 CSS viewport on a 1280x800 Deck.
+   Reserve its top/bottom bars and keep primary controls visible together. */
+.dai-draft-field{min-width:0;width:100%}
+.dai-root.dai-fullscreen{position:fixed;inset:40px 0;width:100vw;max-width:none;height:calc(100vh - 80px);max-height:none;min-height:0;margin:0;padding:10px 16px;background:#101923;gap:6px;font-size:12px;line-height:1.35}
+.dai-full-header{display:flex;align-items:center;gap:8px;flex-shrink:0;min-width:0}
+.dai-full-brand{flex:1;min-width:0;display:flex;align-items:center;gap:12px}
+.dai-full-brand h1{font-size:18px;line-height:1.2;margin:0;white-space:nowrap}
+.dai-full-brand span{font-size:11px;color:var(--dai-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dai-root.dai-fullscreen .dai-button.DialogButton{font-size:12px!important;min-height:32px!important;padding:6px 8px!important;line-height:1.3!important}
+.dai-root.dai-fullscreen .dai-full-header>.dai-button.DialogButton{width:106px!important;flex:none}
+.dai-fullscreen>.dai-tabs{max-width:540px;padding-bottom:5px;gap:6px}
+.dai-root.dai-fullscreen .dai-tab .dai-button.DialogButton{font-size:12px!important;padding:6px!important;min-height:30px!important}
+.dai-fullscreen>.dai-viewbar{display:none}
+.dai-fullscreen .dai-page{width:100%;max-width:1200px;margin:0 auto}
+.dai-fullscreen .dai-scroll{padding:0 2px 2px}
+.dai-fullscreen .dai-message{padding:9px 12px;font-size:13px;line-height:1.45}
+.dai-fullscreen .dai-message-list{gap:7px}
+.dai-fullscreen .dai-message small{font-size:10px;margin-bottom:3px}
+.dai-fullscreen .dai-messages{padding:2px 2px 8px}
+.dai-fullscreen .dai-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;padding-top:7px}
+.dai-fullscreen .dai-composer>.dai-attachments,.dai-fullscreen .dai-composer>.dai-muted{grid-column:1/-1}
+.dai-fullscreen .dai-compose-actions{gap:5px;justify-content:flex-end}
+.dai-root.dai-fullscreen .dai-compose-actions>.dai-button.DialogButton{width:auto!important;flex:none;padding:6px 9px!important}
+.dai-fullscreen .dai-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}
+.dai-settings-column{display:flex;flex-direction:column;gap:9px;min-width:0}
+.dai-fullscreen .dai-section,.dai-fullscreen .dai-section:last-child{padding:10px;border:1px solid var(--dai-line);border-radius:5px;background:rgba(255,255,255,.025);gap:7px;min-width:0}
+.dai-fullscreen .dai-section h3{font-size:14px;line-height:1.25;margin:0}
+.dai-model-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.dai-fullscreen .dai-label{font-size:11px;line-height:1.25}
+.dai-fullscreen .dai-field{gap:4px;min-width:0}
+.dai-fullscreen .dai-field>button[role=combobox]{width:100%!important;max-width:100%!important;min-width:0!important;min-height:32px!important;height:32px!important;padding:5px 8px!important;font-size:12px!important;line-height:1.3!important;box-sizing:border-box!important}
+.dai-fullscreen .DialogDropDown_CurrentDisplay{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px!important;line-height:1.3!important}
+.dai-fullscreen .dai-field>button[role=combobox] svg{width:14px;height:14px;flex-shrink:0}
+.dai-fullscreen input.DialogInput{font-size:12px!important;line-height:1.3!important;height:32px!important;min-height:32px!important;max-width:100%;box-sizing:border-box!important;padding:6px 8px!important}
+.dai-fullscreen .DialogInput_Wrapper{min-width:0;width:100%;margin:0}
+.dai-fullscreen .dai-muted{font-size:11px;line-height:1.35}
+.dai-connection-bar{display:flex;align-items:center;gap:8px;min-width:0}
+.dai-connection-bar>.dai-muted{flex:1;min-width:0;overflow-wrap:anywhere}
+.dai-root.dai-fullscreen .dai-connection-bar>.dai-button.DialogButton{width:140px!important;flex:none;font-size:11px!important}
+.dai-host-entry{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:6px;align-items:center}
+.dai-account-meta{display:flex;align-items:center;gap:8px;min-width:0}
+.dai-account-meta>.dai-account{flex:1;min-width:0;font-size:12px}
+.dai-account-actions{display:flex;gap:6px;flex-wrap:wrap}
+.dai-account-actions>.dai-button{flex:1;min-width:0}
+.dai-account-actions>.dai-login-url{width:100%;font-size:10px}
+@media(max-width:650px){.dai-root.dai-fullscreen{padding:8px;gap:5px}.dai-fullscreen .dai-settings-grid{grid-template-columns:minmax(0,1fr)}.dai-full-brand span{display:none}.dai-root.dai-fullscreen .dai-full-header>.dai-button.DialogButton{width:96px!important}.dai-fullscreen .dai-composer{grid-template-columns:minmax(0,1fr)}.dai-fullscreen .dai-compose-actions{justify-content:stretch}.dai-root.dai-fullscreen .dai-compose-actions>.dai-button.DialogButton{flex:1}}
+
+/* Scale reading text without enlarging navigation in the narrow Steam panel. */
+.dai-root .dai-message{font-size:calc(14px * var(--dai-text-scale,1))}
+.dai-root.dai-fullscreen .dai-message{font-size:calc(13px * var(--dai-text-scale,1))}
+.dai-root .dai-message small{font-size:calc(10px * var(--dai-text-scale,1))}
+.dai-root .dai-label,.dai-root .dai-muted{font-size:calc(12px * var(--dai-text-scale,1))}
+.dai-root.dai-fullscreen .dai-label,.dai-root.dai-fullscreen .dai-muted{font-size:calc(11px * var(--dai-text-scale,1))}
+.dai-root .dai-section h3{font-size:calc(14px * var(--dai-text-scale,1))}
+.dai-root input.DialogInput,.dai-root .DialogDropDown_CurrentDisplay{font-size:calc(12px * var(--dai-text-scale,1))!important;line-height:1.3!important}
+.dai-root input.DialogInput{min-height:calc(20px + 12px * var(--dai-text-scale,1))!important;height:auto!important}
+.dai-root .dai-field>button[role=combobox]{min-height:calc(20px + 12px * var(--dai-text-scale,1))!important;height:auto!important}
+.dai-scale-controls{display:flex;align-items:center;gap:6px;min-width:0}
+.dai-scale-value{flex:1;min-width:44px;text-align:center;font-size:calc(13px * var(--dai-text-scale,1));font-variant-numeric:tabular-nums}
+.dai-root .dai-scale-controls>.dai-button.DialogButton{width:52px!important;flex:none}
+.dai-root .dai-scale-controls>.dai-button.DialogButton:last-child{width:70px!important}
+
+/* Smaller text also frees vertical space for the conversation. Keep enlarged
+   text independent so navigation stays usable in the narrow Quick Access UI. */
+.dai-root{--dai-density:min(1,var(--dai-text-scale,1));gap:calc(8px * var(--dai-density))}
+.dai-root .dai-tabs{gap:calc(4px * var(--dai-density));padding-bottom:calc(7px * var(--dai-density))}
+.dai-root .dai-button.DialogButton{font-size:calc(13px * var(--dai-density))!important;min-height:calc(38px * var(--dai-density))!important;padding:calc(8px * var(--dai-density)) calc(6px * var(--dai-density))!important;gap:calc(6px * var(--dai-density))}
+.dai-root .dai-tab .dai-button.DialogButton{font-size:calc(12px * var(--dai-density))!important;padding:calc(8px * var(--dai-density)) calc(4px * var(--dai-density))!important}
+.dai-root .dai-viewbar>.dai-button.DialogButton{width:calc(126px * var(--dai-density))!important;min-height:calc(32px * var(--dai-density))!important;font-size:calc(11px * var(--dai-density))!important}
+.dai-root .dai-composer{gap:calc(8px * var(--dai-density));padding-top:calc(9px * var(--dai-density))}
+.dai-root .dai-message{padding:calc(10px * var(--dai-density));line-height:1.4}
+.dai-root .dai-message-list{gap:calc(9px * var(--dai-density))}
+.dai-root input.DialogInput{min-height:calc(32px * var(--dai-density))!important;padding:calc(6px * var(--dai-density)) calc(8px * var(--dai-density))!important}
+.dai-root.dai-fullscreen{gap:calc(6px * var(--dai-density));padding:calc(10px * var(--dai-density)) 16px}
+.dai-root.dai-fullscreen .dai-button.DialogButton{font-size:calc(12px * var(--dai-density))!important;min-height:calc(32px * var(--dai-density))!important;padding:calc(6px * var(--dai-density)) calc(8px * var(--dai-density))!important}
+.dai-root.dai-fullscreen .dai-tab .dai-button.DialogButton{min-height:calc(30px * var(--dai-density))!important}
+.dai-root.dai-fullscreen .dai-composer{gap:calc(6px * var(--dai-density));padding-top:calc(7px * var(--dai-density))}
+.dai-root.dai-fullscreen .dai-message{padding:calc(9px * var(--dai-density)) calc(12px * var(--dai-density))}
+.dai-root.dai-fullscreen .dai-message-list{gap:calc(7px * var(--dai-density))}
+.dai-root .dai-empty p{font-size:calc(13px * var(--dai-text-scale,1))}
+
+/* Keep the top and bottom chat controls shallow in both Decky views. */
+.dai-root .dai-message{font-size:calc(13px * var(--dai-text-scale,1))}
+.dai-root.dai-fullscreen .dai-message{font-size:calc(12px * var(--dai-text-scale,1))}
+.dai-root .dai-tabs{padding-bottom:calc(4px * var(--dai-density))}
+.dai-root .dai-tab .dai-button.DialogButton,
+.dai-root .dai-compose-actions>.dai-button.DialogButton,
+.dai-root.dai-fullscreen .dai-tab .dai-button.DialogButton,
+.dai-root.dai-fullscreen .dai-compose-actions>.dai-button.DialogButton{min-height:22px!important;padding:3px 5px!important;font-size:calc(11px * var(--dai-density))!important;line-height:1.2!important;gap:4px}
+.dai-root .dai-viewbar>.dai-button.DialogButton{min-height:22px!important;padding:3px 4px!important}
+.dai-root.dai-fullscreen .dai-full-header>.dai-button.DialogButton{min-height:22px!important;padding:3px 6px!important;font-size:calc(11px * var(--dai-density))!important}
+.dai-root .dai-compose-actions{gap:4px}
+.dai-root .dai-composer{gap:4px;padding-top:4px}
+.dai-root.dai-fullscreen .dai-composer{gap:4px;padding-top:4px}
+.dai-root .dai-composer input.DialogInput{min-height:24px!important;padding:4px 6px!important}
+
+/* Settings use four aligned cards: service and connection, then personal
+   preferences and account. Card rows share their height rather than drifting. */
+.dai-fullscreen .dai-settings-grid{grid-template-areas:"model connection" "personal account";gap:12px;align-items:stretch;width:100%}
+.dai-fullscreen .dai-settings-column{display:contents}
+.dai-fullscreen .dai-model-settings{grid-area:model}
+.dai-fullscreen .dai-connection-settings{grid-area:connection}
+.dai-fullscreen .dai-text-settings{grid-area:personal}
+.dai-fullscreen .dai-account-settings{grid-area:account}
+.dai-fullscreen .dai-section,.dai-fullscreen .dai-section:last-child{padding:12px;gap:10px;border-color:rgba(170,190,210,.16);background:#16212d;border-radius:7px}
+.dai-fullscreen .dai-section h3{padding-bottom:8px;border-bottom:1px solid var(--dai-line);font-size:12px;color:#dce8f3;letter-spacing:.15px}
+.dai-fullscreen .dai-model-fields{gap:10px 12px}
+.dai-fullscreen .dai-personal-fields{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;align-items:start}
+.dai-fullscreen .dai-scale-controls{gap:4px;min-height:32px}
+.dai-root.dai-fullscreen .dai-scale-controls>.dai-button.DialogButton{width:36px!important;min-height:30px!important;padding:5px 4px!important}
+.dai-root.dai-fullscreen .dai-scale-controls>.dai-button.DialogButton:last-child{width:48px!important}
+.dai-fullscreen .dai-scale-value{min-width:30px;font-size:11px}
+.dai-fullscreen .dai-connection-bar{min-height:30px}
+.dai-fullscreen .dai-account-meta{min-height:32px;flex-wrap:wrap}
+.dai-fullscreen .dai-account-meta>.dai-account{font-size:11px}
+.dai-fullscreen .dai-account-actions{margin-top:auto}
+.dai-fullscreen .dai-field>button[role=combobox]{background:#223243!important;border-radius:4px!important}
+.dai-fullscreen .dai-settings input.DialogInput{background:#223243!important;border-radius:4px!important}
+@media(max-width:650px){.dai-fullscreen .dai-settings-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"model" "connection" "personal" "account"}.dai-fullscreen .dai-personal-fields{grid-template-columns:minmax(0,1fr)}}
+
+/* Fill Decky's actual content slot, including after reopening or resizing.
+   Its generated wrappers otherwise add 16px padding and a viewport clamp. */
+div:has(> div > .dai-root:not(.dai-fullscreen)){display:flex!important;flex-direction:column!important;height:100%!important;min-height:0!important;box-sizing:border-box!important}
+div:has(> div > .dai-root:not(.dai-fullscreen))>div:not(:has(>.dai-root)){flex-shrink:0}
+div:has(> .dai-root:not(.dai-fullscreen)){display:flex!important;flex-direction:column!important;flex:1!important;min-height:0!important;height:auto!important;padding-top:0!important;overflow:hidden}
+.dai-root:not(.dai-fullscreen){height:100%!important;max-height:none!important;min-height:0!important;flex:1;padding-bottom:4px}
+.dai-root:not(.dai-fullscreen)>.dai-page{flex:1;min-height:0}
+.dai-root:not(.dai-fullscreen) .dai-messages{flex:1;min-height:0}
+.dai-root:not(.dai-fullscreen) .dai-composer{margin-top:auto;flex-shrink:0}
+
+/* Decky's sticky title casts a shadow below its layout box. Keep tabs clear
+   of that overlay while the outer panel still fills the available height. */
+.dai-root:not(.dai-fullscreen){padding-top:16px}
+
+.dai-game-setting{display:flex;align-items:center;gap:8px;border-top:1px solid var(--dai-line);padding-top:8px;margin-top:2px}
+.dai-game-setting>.dai-muted{flex:1;min-width:0}
+.dai-root.dai-fullscreen .dai-game-setting>.dai-button.DialogButton{width:82px!important;flex:none}
+.dai-game-context h3{display:flex;align-items:center;gap:6px}
+
+/* Dictation has its own preview; only finalized speech enters the draft. */
+.dai-voice-preview{display:flex;align-items:flex-start;gap:7px;padding:7px 8px;background:rgba(211,55,65,.12);border:1px solid rgba(239,86,96,.45);border-radius:4px;flex-shrink:0;min-width:0;grid-column:1/-1}
+.dai-record-dot{width:7px;height:7px;flex:none;background:#ff5362;border-radius:50%;margin-top:3px;box-shadow:0 0 5px rgba(255,83,98,.45)}
+.dai-voice-preview>div{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.dai-voice-preview strong{font-size:10px;color:#ff9ca4;line-height:1.2}
+.dai-voice-preview>div>span{font-size:calc(12px * var(--dai-text-scale,1));line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere;max-height:54px;overflow-y:auto;color:#f5e9eb}
+.dai-root .dai-button.DialogButton.dai-recording{background:#aa2635!important;color:#fff!important;box-shadow:inset 0 0 0 1px #ff7a86!important;opacity:1}
+.dai-root .dai-button.DialogButton.dai-recording:focus,.dai-root .dai-button.DialogButton.dai-recording.gpfocus{background:#cf3546!important;outline:2px solid #fff;outline-offset:-2px}
+
+.dai-game-check{flex:none;min-width:0}
+.dai-root .dai-game-check>.dai-button.DialogButton{width:62px!important;min-height:22px!important;padding:3px 4px!important;font-size:10px!important;gap:4px}
+.dai-check-box{display:inline-flex;align-items:center;justify-content:center;width:12px;height:12px;border:1px solid currentColor;border-radius:2px;font-size:11px;line-height:1;flex:none}
+.dai-game-check[aria-checked=true] .dai-check-box{background:#64b9ef;color:#122432;border-color:#64b9ef}
+
+.dai-message{position:relative}
+.dai-message-tools{position:absolute;top:3px;right:4px;opacity:0;pointer-events:none;transition:opacity .1s}
+.dai-message:hover .dai-message-tools,.dai-message:focus-within .dai-message-tools,.dai-message.dai-focused .dai-message-tools,.dai-message.gpfocus .dai-message-tools{opacity:1;pointer-events:auto}
+.dai-root .dai-message-tools .dai-button.DialogButton,.dai-root.dai-fullscreen .dai-message-tools .dai-button.DialogButton{width:auto!important;min-height:18px!important;padding:2px 5px!important;font-size:9px!important;gap:3px;background:#26394b}
+.dai-latest{flex:none;align-self:center;padding:3px 0}
+.dai-root .dai-latest .dai-button.DialogButton{width:auto!important;min-height:22px!important;padding:3px 8px!important;font-size:10px!important}
+.dai-queue-state{grid-column:1/-1}

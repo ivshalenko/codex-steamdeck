@@ -1,12 +1,13 @@
-import asyncio, json, os, subprocess, threading, time
+import asyncio, json, os, subprocess, threading, time, sys
 from pathlib import Path
 import decky
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from runtime_paths import resolve_app_dir
 class Plugin:
     async def _main(self):
         self.child=None;self.lock=threading.RLock();self.pending={};self.seq=0
         self.home=Path.home()
-        app_dir=self.home/".local/share/deck-voice"
-        if not (app_dir/"app.py").exists():app_dir=self.home/".local/share/codex-steamdeck"
+        app_dir=resolve_app_dir(self.home)
         self.base=app_dir/"decky"
         self.start_bridge()
     def start_bridge(self):
@@ -15,26 +16,29 @@ class Plugin:
             env=dict(os.environ);env.update({"HOME":str(self.home),"XDG_RUNTIME_DIR":f"/run/user/{os.getuid()}","PYTHONNOUSERSITE":"1"})
             self.child=subprocess.Popen([str(self.base.parent/"venv/bin/python"),"-u",str(self.base/"bridge.py")],
                 cwd=str(self.base),env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True,bufsize=1)
-            self.reader=threading.Thread(target=self.read_bridge,daemon=True);self.reader.start()
-    def read_bridge(self):
-        child=self.child
+            self.reader=threading.Thread(target=self.read_bridge,args=(self.child,),daemon=True);self.reader.start()
+    def read_bridge(self,child):
         try:
             for line in child.stdout:
                 try:message=json.loads(line)
                 except ValueError:continue
-                with self.lock:future=self.pending.pop(message.get("id"),None)
+                with self.lock:
+                    future=self.pending.get(message.get("id"))
+                    if future and future.get("child") is child:self.pending.pop(message.get("id"),None)
+                    else:future=None
                 if future:future["response"]=message;future["event"].set()
         except Exception:pass
         finally:
             with self.lock:
-                for future in self.pending.values():future["response"]={"error":"Подключение к Codex прервано"};future["event"].set()
-                self.pending.clear()
+                for ident,future in list(self.pending.items()):
+                    if future.get("child") is child:
+                        future["response"]={"error":"Подключение к Deck AI прервано"};future["event"].set();self.pending.pop(ident,None)
     async def _rpc(self,method,params=None,timeout=35):
         return await asyncio.to_thread(self.rpc_sync,method,params or {},timeout)
     def rpc_sync(self,method,params,timeout):
         self.start_bridge()
         with self.lock:
-            self.seq+=1;ident=self.seq;future={"event":threading.Event()};self.pending[ident]=future
+            self.seq+=1;ident=self.seq;future={"event":threading.Event(),"child":self.child};self.pending[ident]=future
             try:self.child.stdin.write(json.dumps({"id":ident,"method":method,"params":params},ensure_ascii=False)+"\n");self.child.stdin.flush()
             except Exception:self.pending.pop(ident,None);raise RuntimeError("Не удалось связаться с Codex.")
         if not future["event"].wait(timeout):

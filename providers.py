@@ -16,17 +16,19 @@ from pathlib import Path
 OPENROUTER_MODELS = 'https://openrouter.ai/api/v1/models'
 OPENROUTER_CHAT = 'https://openrouter.ai/api/v1/chat/completions'
 SECRET_LABEL = 'codex-steamdeck-openrouter'
+TOKENHARBOR_CHAT = 'https://tokenharbor.ai/v1/chat/completions'
+TOKENHARBOR_MODEL = 'deepseek-v4.1-flash:free'
 
 
 class ProviderError(RuntimeError):
     pass
 
 
-def _secret_tool(*args, secret=None):
+def _secret_tool(*args, secret=None, account='openrouter'):
     tool = shutil.which('secret-tool')
     if not tool:
         raise ProviderError('Не найдено системное хранилище секретов (secret-tool). Установите libsecret-tools и откройте приложение снова.')
-    command = [tool, *args, 'application', 'codex-steamdeck', 'account', 'openrouter']
+    command = [tool, *args, 'application', 'codex-steamdeck', 'account', account]
     try:
         result = subprocess.run(command, input=secret, text=True, capture_output=True, timeout=12, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
@@ -53,6 +55,61 @@ def read_openrouter_key():
 
 def clear_openrouter_key():
     _secret_tool('clear')
+
+
+def save_tokenharbor_key(value):
+    value = value.strip()
+    if not value or len(value) > 512 or any(ch.isspace() for ch in value):
+        raise ProviderError('Проверьте формат API-ключа TokenHarbor.')
+    _secret_tool('store', '--label', 'codex-steamdeck-tokenharbor', secret=value, account='tokenharbor')
+
+
+def read_tokenharbor_key():
+    return _secret_tool('lookup', account='tokenharbor')
+
+
+def tokenharbor_models():
+    return [{'id': TOKENHARBOR_MODEL, 'name': 'DeepSeek V4.1 Flash · бесплатно',
+             'inputPrice': 0.0, 'outputPrice': 0.0}]
+
+
+def tokenharbor_reply(model, history, text, images=()):
+    key = read_tokenharbor_key()
+    if not key:
+        raise ProviderError('Добавьте API-ключ TokenHarbor в настройках источника DeepSeek.')
+    if model != TOKENHARBOR_MODEL:
+        raise ProviderError('Неизвестная модель TokenHarbor.')
+    messages = list(history)
+    user_text = text
+    if images:
+        raise ProviderError('TokenHarbor сейчас подключён для текстовых запросов.')
+    messages.append({'role': 'user', 'content': user_text})
+    body = json.dumps({'model': model, 'messages': messages, 'stream': False}).encode()
+    request = urllib.request.Request(TOKENHARBOR_CHAT, data=body, headers={
+        'Authorization': 'Bearer ' + key,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Deck-AI-for-Steam-Deck',
+    })
+    try:
+        with urllib.request.urlopen(request, timeout=180) as response:
+            result = json.load(response)
+    except urllib.error.HTTPError as exc:
+        if exc.code in (401, 403):
+            raise ProviderError('TokenHarbor отклонил API-ключ. Проверьте ключ в настройках.') from None
+        if exc.code == 429:
+            raise ProviderError('TokenHarbor временно ограничил запрос. Повторите позже.') from None
+        raise ProviderError(f'TokenHarbor не выполнил запрос (HTTP {exc.code}).') from None
+    except (OSError, ValueError, urllib.error.URLError) as exc:
+        raise ProviderError('Не удалось получить ответ от TokenHarbor. Проверьте подключение.') from exc
+    try:
+        answer = result['choices'][0]['message'].get('content')
+    except (KeyError, IndexError, TypeError):
+        raise ProviderError('TokenHarbor вернул ответ в неподдерживаемом формате.') from None
+    if isinstance(answer, list):
+        answer = '\n'.join(part.get('text', '') for part in answer if isinstance(part, dict))
+    if not isinstance(answer, str) or not answer.strip():
+        raise ProviderError('Модель TokenHarbor вернула пустой ответ.')
+    return answer.strip()
 
 
 def list_deepseek_models():

@@ -1,0 +1,2 @@
+# Optional, offline multilingual final-pass model runtime tested for 1.0 RC.
+faster-whisper==1.2.1
