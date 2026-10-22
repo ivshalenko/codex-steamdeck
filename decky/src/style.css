@@ -183,3 +183,13 @@ div:has(> .dai-root:not(.dai-fullscreen)){display:flex!important;flex-direction:
 .dai-image-button img{display:block;width:auto;max-width:100%;max-height:160px;object-fit:contain}
 .dai-fullscreen .dai-image-button img{max-height:240px}
 .dai-image-expanded{display:block;max-width:100%;max-height:65vh;object-fit:contain;margin:auto}
+
+.dai-queue-summary{grid-column:1/-1;min-width:0}
+.dai-root .dai-queue-summary .dai-button.DialogButton{min-height:20px!important;padding:2px 5px!important;font-size:10px!important}
+.dai-queue-item{display:flex;flex-direction:column;gap:5px;min-width:0}
+.dai-queue-item strong,.dai-queue-item small{overflow-wrap:anywhere}
+.dai-queue-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:calc(11px * var(--dai-text-scale,1));line-height:1.4}
+
+.dai-root .dai-queue-item>strong{font-size:12px;line-height:1.3}
+.dai-root .dai-queue-item>small{font-size:10px;line-height:1.3}
+.dai-root .dai-queue-item .dai-button.DialogButton{min-height:24px!important;padding:3px 5px!important;font-size:11px!important}

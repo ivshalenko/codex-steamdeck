@@ -4,6 +4,7 @@ import { DialogButton, Dropdown, Focusable, TextField, ConfirmModal, showModal, 
 import { FaMicrophone, FaComment, FaHistory, FaCog, FaExpand, FaCompress, FaArrowLeft, FaGamepad, FaCopy } from "react-icons/fa";
 import logo from "../deck-ai.png";
 import css from "./style.css";
+import { queueCounts, queueStatus, type QueueJob } from "./queue";
 import { speechLanguages } from "./speech-languages";
 import { updateDictation, restoreDictation, bindDictation } from "./dictation";
 import { readGameContext, withGameContext, gameScreenshots } from "./game-context";
@@ -12,7 +13,7 @@ type Attachment={id:string;name:string;preview:string;available:boolean;kind:"im
 type Item = {id:string;role:"user"|"assistant";text:string;attachments?:Attachment[]};
 type Media = {path:string;name:string;when?:number};
 type Model = {id:string;name:string;efforts:{id:string;name:string}[];defaultEffort:string;tiers:string[]};
-type Snapshot = {ready:boolean;status:string;provider:string;account?:{email?:string;planType?:string}|null;loginPending?:boolean;remoteHost?:string;sshHosts:string[];threads:{id:string;name:string;updatedAt:number}[];threadId:string;messages:Item[];active:boolean;models:Model[];model:string;effort:string;tier:string;screenshots:Media[];videos:Media[];outbox:{id:string;status:string;error?:string;text:string}[];speechVersion?:number;speechReady?:boolean;voiceId?:string;voiceState:string;voiceText:string;voiceError:string};
+type Snapshot = {ready:boolean;status:string;provider:string;account?:{email?:string;planType?:string}|null;loginPending?:boolean;remoteHost?:string;sshHosts:string[];threads:{id:string;name:string;updatedAt:number}[];threadId:string;messages:Item[];active:boolean;models:Model[];model:string;effort:string;tier:string;screenshots:Media[];videos:Media[];outbox:QueueJob[];queueTotal?:number;speechVersion?:number;speechReady?:boolean;voiceId?:string;voiceState:string;voiceText:string;voiceError:string};
 const snapshot=callable<[],Snapshot>("get_snapshot");
 const refresh=callable<[],Snapshot>("refresh");
 const selectThread=callable<[id:string],Snapshot>("select_thread");
@@ -106,7 +107,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const [tab,setTab]=useState<Tab>(initialTab);
  useEffect(()=>{
   if(!fullscreen)return;
-  const change=(next:Tab)=>{setTab(next);setMediaOpen(false);};
+  const change=(next:Tab)=>{setTab(next);setMediaOpen(false);setQueueOpen(false);};
   fullscreenViews.add(change);
   return()=>{fullscreenViews.delete(change);};
  },[fullscreen]);
@@ -117,11 +118,14 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const [voicePolling,setVoicePolling]=useState(false);
  const actionLock=useRef(false);
  const [error,setError]=useState("");
+ const [connectionError,setConnectionError]=useState("");
  const [notice,setNotice]=useState("");
  const [showLatest,setShowLatest]=useState(false);
  useEffect(()=>{if(!notice)return;const timer=setTimeout(()=>setNotice(""),4000);return()=>clearTimeout(timer);},[notice]);
  const [lang,setLang]=useState(()=>localStorage.getItem("codex-game-voice")||"ru");
  const [mediaOpen,setMediaOpen]=useState(false);
+ const [queueOpen,setQueueOpen]=useState(false);
+ const [expandedJob,setExpandedJob]=useState("");
  const [images,setImagesState]=useState<Media[]>(()=>session.attachments.get(draftId.current)||[]);
  const setImages=(update:Media[]|((old:Media[])=>Media[]))=>setImagesState(old=>{
   const next=typeof update==="function"?update(old):update;
@@ -134,6 +138,8 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const [historyQuery,setHistoryQuery]=useState("");
  const lastVoice=useRef(session.voiceText);const lastVoiceError=useRef(session.voiceError);
  const inFlight=useRef(false);const mounted=useRef(true);
+ const queueRef=useRef<HTMLDivElement>(null);
+ useEffect(()=>{if(queueOpen)requestAnimationFrame(()=>{const el=queueRef.current;if(el){el.scrollTop=0;el.querySelector<HTMLButtonElement>("button")?.focus();}});},[queueOpen]);
  const chatRef=useRef<HTMLDivElement>(null);const followTail=useRef(true);
  const accept=useCallback((incoming:Snapshot)=>{
   setVoicePolling(["recording","stopping","processing"].includes(incoming.voiceState));
@@ -160,7 +166,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const load=useCallback(async()=>{
   if(inFlight.current)return;
   inFlight.current=true;
-  try{const next=await snapshot();if(mounted.current)accept(next);}catch(e){if(mounted.current)setError(String(e));}finally{inFlight.current=false;}
+  try{const next=await snapshot();if(mounted.current){accept(next);setConnectionError("");}}catch{if(mounted.current)setConnectionError("Связь с Deck AI прервалась. Повторяю подключение…");}finally{inFlight.current=false;}
  },[accept]);
  useEffect(()=>{mounted.current=true;void load();const timer=setInterval(()=>void load(),voicePolling?500:2500);return()=>{mounted.current=false;clearInterval(timer);};},[load,voicePolling]);
  useEffect(()=>{const el=chatRef.current;if(el&&followTail.current)el.scrollTop=el.scrollHeight;},[data?.messages,tab]);
@@ -226,7 +232,8 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const signIn=()=>void run(async()=>{const result=await accountLogin();setLoginUrl(result.url);setNotice(result.opened?"Откройте страницу входа и завершите авторизацию.":"Ссылка для входа показана ниже.");await load();});
  const disconnect=!data?.ready;
  return <Focusable style={{"--dai-text-scale":textScale} as CSSProperties} data-text-scale={textScale} className={"dai-root"+(fullscreen?" dai-fullscreen":"")} onCancel={event=>{
-  if(mediaOpen){event.stopPropagation();setMediaOpen(false);}
+  if(queueOpen){event.stopPropagation();setQueueOpen(false);}
+  else if(mediaOpen){event.stopPropagation();setMediaOpen(false);}
   else if(fullscreen){event.stopPropagation();closeFullscreen();}
  }}><style>{css}</style>
   {fullscreen&&<Focusable className="dai-full-header" flow-children="horizontal">
@@ -236,14 +243,29 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
    <Action onClick={()=>closeFullscreen(false)}><FaArrowLeft/>К игре</Action>
   </Focusable>}
   <Focusable className="dai-tabs" flow-children="horizontal" role="tablist" aria-label="Deck AI">
-   {([["chat","Чат",<FaComment/>],["history","История",<FaHistory/>],["settings","Настройки",<FaCog/>]] as const).map(([id,label,icon])=><div key={id} role="tab" aria-selected={tab===id} className={"dai-tab "+(tab===id?"selected":"")}><Action disabled={busy} onClick={()=>{if(id==="settings"&&!fullscreen)openFullscreen("settings");else{setTab(id);setMediaOpen(false);}}}>{icon}<span>{label}</span></Action></div>)}
+   {([["chat","Чат",<FaComment/>],["history","История",<FaHistory/>],["settings","Настройки",<FaCog/>]] as const).map(([id,label,icon])=><div key={id} role="tab" aria-selected={tab===id} className={"dai-tab "+(tab===id?"selected":"")}><Action disabled={busy} onClick={()=>{if(id==="settings"&&!fullscreen)openFullscreen("settings");else{setTab(id);setMediaOpen(false);setQueueOpen(false);}}}>{icon}<span>{label}</span></Action></div>)}
   </Focusable>
   <div className="dai-viewbar"><div className="dai-status"><span className={"dai-dot "+(disconnect?"offline":data?.active?"working":"")}/><span>{!data?"Подключение…":data.ready?(data.active?"Deck AI работает…":gameStatus):"Нет соединения"}</span>{data?.remoteHost&&<small>{data.remoteHost}</small>}</div>{!fullscreen&&<GameCheckbox checked={gameContextEnabled} onChange={toggleGameContext}/>}{!fullscreen&&<Action disabled={busy} onClick={()=>openFullscreen(tab)}><FaExpand/>На весь экран</Action>}</div>
-  {error&&<div className="dai-banner" role="alert"><span>{error}</span><Action onClick={()=>setError("")}>Закрыть</Action></div>}
+  {(error||connectionError)&&<div className="dai-banner" role="alert"><span>{error||connectionError}</span><Action onClick={()=>{setError("");setConnectionError("");}}>Закрыть</Action></div>}
   {notice&&<div className="dai-notice" role="status">{notice}</div>}
   <div className="dai-page" role="tabpanel" aria-label={tab==="chat"?"Чат":tab==="history"?"История":"Настройки"}>
   {tab==="chat"&&<>
-   {mediaOpen?<GameScroll className="dai-scroll dai-stack"><div className="dai-stack-content">
+   {queueOpen?<GameScroll key="queue" ref={queueRef} className="dai-scroll dai-stack dai-queue-view"><div className="dai-stack-content">
+    <Action onClick={()=>setQueueOpen(false)}>← К сообщению</Action>
+    <h3>Очередь запросов · {data?.queueTotal??data?.outbox.length??0}</h3>
+    <p className="dai-muted">Ожидающие запросы ещё не отправлены. Запросы выполняются по очереди; занятый чат ждёт завершения текущего ответа.</p>
+    <p className="dai-muted">В этом чате ожидают: {queueCounts(data?.outbox||[],data?.threadId||"").current}. В других чатах: {queueCounts(data?.outbox||[],data?.threadId||"").other}.</p>
+    {(data?.queueTotal||0)>(data?.outbox.length||0)&&<p className="dai-muted">Показаны последние {data?.outbox.length} запросов.</p>}
+    {!data?.outbox.length&&<p className="dai-muted">Очередь пуста.</p>}
+    {data?.outbox.map(job=><section className="dai-section dai-queue-item" key={job.id}>
+     <strong>{queueStatus(job)}</strong>
+     <small className="dai-muted">{job.threadId===data.threadId?"Этот чат":(data.threads.find(thread=>thread.id===job.threadId)?.name||"Другой чат").slice(0,80)}{job.createdAt?" · "+new Date(job.createdAt*1000).toLocaleString():""}</small>
+     <p className="dai-queue-text">{expandedJob===job.id?job.text:job.text.slice(0,180)+(job.text.length>180?"…":"")}</p>
+     {job.text.length>180&&<Action onClick={()=>setExpandedJob(expandedJob===job.id?"":job.id)}>{expandedJob===job.id?"Свернуть текст":"Весь текст запроса"}</Action>}
+     {job.error&&<p className="dai-muted">{job.error}</p>}
+     {job.threadId&&<Action disabled={busy} onClick={()=>void run(async()=>{accept(await selectThread(job.threadId!));setQueueOpen(false);})}>Открыть чат</Action>}
+    </section>)}
+   </div></GameScroll>:mediaOpen?<GameScroll className="dai-scroll dai-stack"><div className="dai-stack-content">
     <Action onClick={()=>setMediaOpen(false)}>← К сообщению</Action>
     <section className="dai-section dai-game-context"><h3><FaGamepad/> Контекст игры</h3>
      <p className="dai-muted">{game?game.name:"Сейчас Steam не сообщает о запущенной игре."}</p>
@@ -269,7 +291,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     {showLatest&&<div className="dai-latest"><Action onClick={jumpToLatest}>↓ К последнему сообщению</Action></div>}
     <div className="dai-composer">
      {data?.outbox.some(job=>job.status==="recovering")&&<p className="dai-muted dai-queue-state" role="status">Проверяю состояние отправленного запроса…</p>}
-     {data?.outbox.some(job=>job.status==="queued")&&<p className="dai-muted dai-queue-state" role="status">В очереди · {data.outbox.filter(job=>job.status==="queued").length}{data.outbox.length===8?"+":""} · после текущего ответа</p>}
+     {!!data?.outbox.length&&<div className="dai-queue-summary"><Action onClick={()=>setQueueOpen(true)}>Очередь · {data.queueTotal??data.outbox.length} · посмотреть</Action></div>}
      {images.length>0&&<div className="dai-attachments">{images.map((image,i)=><Action key={image.path+":"+i} onClick={()=>setImages(old=>old.filter((_,n)=>n!==i))}>× {image.name}</Action>)}</div>}
      {(recording||voiceProcessing)&&<div className="dai-voice-preview" role="status" aria-live="polite"><span className="dai-record-dot" aria-hidden="true"/><div><strong>{recording?"● Запись · распознанный текст":"Завершаю распознавание…"}</strong><span role="textbox" aria-label="Распознанная речь" aria-readonly="true">{(data?.voiceId!==session.discardedVoice?data?.voiceText:"")||(["ru","en","ru-fast","en-fast"].includes(lang)?"Здесь появится распознанная речь":"Записываю. Текст появится после «Стоп».")}</span></div></div>}
      <div className="dai-draft-field"><TextField disabled={recording||voiceProcessing} value={draft} placeholder="Спросить об игре…" onChange={e=>editDraft(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();submit();}}}/></div>

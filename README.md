@@ -68,7 +68,7 @@ The multilingual model also supports English. Choose a language or automatic det
 - The **Игра** checkbox adds only the running game's name. With it off, Deck AI sends your text without game metadata or instructions. Screenshots are attached only when selected.
 - The recording button turns red. A separate line previews speech; **Стоп** moves recognized text into the draft. Russian/English use the streaming recognizer without a second pass in Decky. **Очистить** clears the unsent draft; chat history stays intact. Other languages need the multilingual model and may take several seconds after stopping.
 - Select a message to reveal **Копировать**. When reading older messages, use **К последнему сообщению** to resume following the response.
-- Queued messages and errors remain visible. A successful click shows **Запрос принят · в очереди**; queued requests wait for the current response to finish. After a backend restart, in-flight sends are checked against server turn IDs; an ambiguous send requires checking the chat before retrying.
+- Queued messages and errors remain visible. A successful click shows **Запрос принят · в очереди**; queued requests wait for the current response to finish. **Очередь · посмотреть** shows saved requests, their status and originating chat; it separates waiting requests in the current chat from other chats. After a backend restart, in-flight sends are checked against server turn IDs; an ambiguous send requires checking the chat before retrying.
 
 ## Install the Decky plugin
 

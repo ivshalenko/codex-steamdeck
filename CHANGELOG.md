@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add an inspectable Decky queue with per-chat waiting counts, timestamps, full request text and navigation to the originating chat.
+- Flag long-running work for review and clear transient connection errors after recovery.
+
 - Show inline image attachments in Decky and desktop chat history, including image-only messages and assistant image links.
 - Open thumbnails in a bounded image viewer; keep owned copies of sent images so temporary frame cleanup cannot remove them from history.
 - Show unavailable images and file attachments by name without fetching external URLs.

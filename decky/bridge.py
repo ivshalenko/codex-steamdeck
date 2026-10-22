@@ -306,7 +306,7 @@ def _get_snapshot():
         messages=[{'id':item.get('id',''),'role':item.get('role','assistant'),'text':display_text(item.get('text','')),'attachments':attachments(item)} for item in chat.get('messages',[])]
         selected_model=chat.get('model') or (provider_models[0]['id'] if provider_models else '')
         account=read_account()
-        return {'ready':True,'status':provider_status,'provider':provider,'account':account.get('account'),'loginPending':bool(account_login_id),'remoteHost':remote_host,'sshHosts':ssh_hosts(),'threads':[{'id':x['id'],'name':x.get('name') or 'New chat','updatedAt':x.get('updatedAt') or x.get('createdAt') or 0} for x in sorted(chats.values(),key=lambda x:x.get('updatedAt',0),reverse=True)],'threadId':selected_id,'messages':messages,'active':provider_active,'models':provider_models,'model':selected_model,'effort':'','tier':'default','videos':cache_media if not remote_host else [],'screenshots':cache_screens if not remote_host else [],'outbox':[],'speechVersion':2,'speechReady':multilingual_ready(APP_DIR),'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
+        return {'ready':True,'status':provider_status,'provider':provider,'account':account.get('account'),'loginPending':bool(account_login_id),'remoteHost':remote_host,'sshHosts':ssh_hosts(),'threads':[{'id':x['id'],'name':x.get('name') or 'New chat','updatedAt':x.get('updatedAt') or x.get('createdAt') or 0} for x in sorted(chats.values(),key=lambda x:x.get('updatedAt',0),reverse=True)],'threadId':selected_id,'messages':messages,'active':provider_active,'models':provider_models,'model':selected_model,'effort':'','tier':'default','videos':cache_media if not remote_host else [],'screenshots':cache_screens if not remote_host else [],'outbox':[],'queueTotal':0,'speechVersion':2,'speechReady':multilingual_ready(APP_DIR),'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
     if not remote_host and now-cache_media_time>12:
         cache_screens=list_screenshots();cache_media=list_videos();cache_media_time=now
     if remote_host in model_caches and now-model_cache_time>60:
@@ -347,7 +347,7 @@ def _get_snapshot():
     models_list=model_catalog;saved_model=selected_models.get(thread_id) or (selected_models.get('') if not thread_id else None) or current_model
     if not saved_model and models_list:saved_model=models_list[0]['id']
     pref=preferences.get(thread_id or '',{}).get(saved_model,{})
-    return {'ready':True,'status':status,'provider':'codex','account':account.get('account'),'loginPending':bool(account_login_id),'remoteHost':remote_host,'sshHosts':ssh_hosts(),'threads':[{'id':t['id'],'name':t.get('name') or t.get('preview') or 'Новый чат','updatedAt':t.get('updatedAt') or t.get('createdAt') or 0} for t in cache],'threadId':thread_id,'messages':messages,'active':active,'models':models_list,'model':saved_model,'effort':pref.get('effort'),'tier':pref.get('tier','default'),'videos':cache_media if not remote_host else [],'screenshots':cache_screens if not remote_host else [],'outbox':outbox[-8:],'speechVersion':2,'speechReady':multilingual_ready(APP_DIR),'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
+    return {'ready':True,'status':status,'provider':'codex','account':account.get('account'),'loginPending':bool(account_login_id),'remoteHost':remote_host,'sshHosts':ssh_hosts(),'threads':[{'id':t['id'],'name':t.get('name') or t.get('preview') or 'Новый чат','updatedAt':t.get('updatedAt') or t.get('createdAt') or 0} for t in cache],'threadId':thread_id,'messages':messages,'active':active,'models':models_list,'model':saved_model,'effort':pref.get('effort'),'tier':pref.get('tier','default'),'videos':cache_media if not remote_host else [],'screenshots':cache_screens if not remote_host else [],'outbox':outbox[-200:],'queueTotal':len(outbox),'speechVersion':2,'speechReady':multilingual_ready(APP_DIR),'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
 snapshot_cache={}
 def get_snapshot():
     # A failed backend must not remove settings, provider selection, drafts or
@@ -367,7 +367,7 @@ def get_snapshot():
             'models':previous.get('models',[]),'model':previous.get('model',''),
             'effort':previous.get('effort',''),'tier':previous.get('tier','default'),
             'screenshots':previous.get('screenshots',[]),'videos':previous.get('videos',[]),
-            'outbox':outbox[-8:],'speechVersion':2,'speechReady':multilingual_ready(APP_DIR),'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
+            'outbox':outbox[-200:],'queueTotal':len(outbox),'speechVersion':2,'speechReady':multilingual_ready(APP_DIR),'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
 cache_screens=[];cache_media=[];cache_media_time=0;model_catalog=[];model_cache_time=0
 
 def voice_capture(language):
@@ -529,6 +529,7 @@ def dispatch_job(job):
         # A fast answer can complete before the start RPC returns.
         if job not in outbox or job.get('status')!='sending':return
         job['turnId']=result.get('turn',{}).get('id')
+        job['startedAt']=int(time.time())
         job.pop('freshThread',None)
         job['status']='sending';job.pop('error',None);active=True;status='Deck AI работает…';atomic(STATE/'decky-outbox.json',outbox)
     except Exception as exc:
