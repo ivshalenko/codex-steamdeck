@@ -19,6 +19,14 @@ class DeckyBridgeTests(unittest.TestCase):
         bridge.provider_chats={'claude':{},'deepseek':{},'tokenharbor':{}}
         bridge.provider_thread_ids={'claude':'','deepseek':'','tokenharbor':''}
 
+    def test_image_only_history_is_not_dropped(self):
+        thread={'turns':[{'items':[{'id':'image','type':'userMessage','content':[{'type':'localImage','path':'/home/test/a.png'}]}]}]}
+        with patch.object(bridge,'attachments',return_value=[{'name':'a.png','preview':'data:image/png;base64,AA=='}]):
+            messages=bridge.extract_messages(thread)
+        self.assertEqual(len(messages),1)
+        self.assertEqual(messages[0]['text'],'')
+        self.assertEqual(messages[0]['attachments'][0]['name'],'a.png')
+
     def test_completed_background_chat_releases_queue(self):
         bridge.thread_id='visible';job={'id':'j','threadId':'background','turnId':'turn','status':'sending'};bridge.outbox=[job]
         with patch.object(bridge.threading,'Thread'):

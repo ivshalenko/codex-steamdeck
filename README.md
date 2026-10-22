@@ -12,6 +12,7 @@ The project is designed for Steam Deck. Choose between your signed-in Codex acco
 - Sign in, view the current account, or sign out through Codex.
 - Use Russian or English for the interface. **English is the default on a fresh install.**
 - Dictate offline with Russian/English live previews and an optional multilingual Whisper final pass (99 supported languages). Audio stays on the Deck.
+- View image attachments directly in chat history; select a thumbnail to enlarge it. Sent images are kept in private app state, and unavailable files are labeled rather than silently hidden.
 - Type with the integrated keyboard. It includes English, Russian, German, French, Spanish, Ukrainian, and Italian layouts.
 - Switch between dark and light themes.
 - Use the Decky Quick Access plugin for chats, model controls and dictation.
@@ -89,7 +90,7 @@ Third-party dependency notices are included in `decky/THIRD_PARTY_NOTICES.txt`. 
 - Authentication is handled by the Codex CLI already installed on your machine.
 - Claude authentication and subscription usage are handled by Claude Code. DeepSeek prompts and chat history are sent to OpenRouter using your key; OpenRouter usage and pricing are controlled by your OpenRouter account.
 - Voice dictation uses local Vosk models and optionally a local multilingual Whisper model; microphone audio is not sent to a transcription service.
-- Game screenshots and selected video frames are attached only when you choose to send a message containing them.
+- Game screenshots and selected video frames are attached only when you choose to send a message containing them. Sent images are copied into private app state for chat previews and are preserved by uninstall. Image previews use local files or embedded image data; external image URLs are not fetched automatically.
 - Do not commit personal SSH configuration, private keys, Codex state, logs, or local model files. The repository's ignore rules exclude common credential and machine-specific files.
 
 ## Languages

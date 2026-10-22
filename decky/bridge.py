@@ -11,6 +11,7 @@ APP_DIR=resolve_app_dir()
 MODULES_DIR=Path(__file__).resolve().parents[1]
 if not (MODULES_DIR/'backend.py').is_file():MODULES_DIR=APP_DIR
 sys.path.insert(0,str(MODULES_DIR))
+from chat_media import attachments,archive_image,display_text
 from backend import Backend
 import providers
 from speech_accuracy import multilingual_ready
@@ -179,7 +180,9 @@ def extract_messages(thread):
                 text=text.split('<environment_context>')[0].strip()
             elif item.get('type')=='agentMessage':text=item.get('text','').strip()
             else:continue
-            if text:items.append({'id':item.get('id',''),'role':'user' if item.get('type')=='userMessage' else 'assistant','text':text})
+            media=attachments(item)
+            text=display_text(text)
+            if text or media:items.append({'id':item.get('id',''),'role':'user' if item.get('type')=='userMessage' else 'assistant','text':text,'attachments':media})
     return items[-24:]
 def list_screenshots():
     found=[]
@@ -205,7 +208,7 @@ def list_videos():
 def allowed_image(path):
     p=Path(path).resolve(strict=True)
     generated=STATE/'game-frames'
-    if not (p.is_relative_to(STEAM.resolve()) or p.is_relative_to(generated.resolve())) or not p.is_file() or p.suffix.lower() not in ('.png','.jpg','.jpeg','.webp'):raise ValueError('Выбирайте изображение из скриншотов Steam или сохранённых кадров игры.')
+    if not (p.is_relative_to(STEAM.resolve()) or p.is_relative_to(generated.resolve()) or p.is_relative_to((STATE/'chat-attachments').resolve())) or not p.is_file() or p.suffix.lower() not in ('.png','.jpg','.jpeg','.webp'):raise ValueError('Выбирайте изображение из скриншотов Steam или сохранённых кадров игры.')
     if p.stat().st_size>30_000_000:raise ValueError('Изображение слишком большое (лимит 30 МБ).')
     return p
 def video_frames(path):
@@ -300,7 +303,7 @@ def _get_snapshot():
         except Exception as exc:provider_models=provider_model_cache.get(provider,[]);provider_model_cache_time[provider]=now;provider_status='Не удалось обновить каталог: '+str(exc)[:140]
         selected_id=provider_thread_ids.get(provider,'');chats=provider_chats[provider]
         chat=chats.get(selected_id,{}) if selected_id else {}
-        messages=[{'id':item.get('id',''),'role':item.get('role','assistant'),'text':item.get('text','')} for item in chat.get('messages',[])]
+        messages=[{'id':item.get('id',''),'role':item.get('role','assistant'),'text':display_text(item.get('text','')),'attachments':attachments(item)} for item in chat.get('messages',[])]
         selected_model=chat.get('model') or (provider_models[0]['id'] if provider_models else '')
         account=read_account()
         return {'ready':True,'status':provider_status,'provider':provider,'account':account.get('account'),'loginPending':bool(account_login_id),'remoteHost':remote_host,'sshHosts':ssh_hosts(),'threads':[{'id':x['id'],'name':x.get('name') or 'New chat','updatedAt':x.get('updatedAt') or x.get('createdAt') or 0} for x in sorted(chats.values(),key=lambda x:x.get('updatedAt',0),reverse=True)],'threadId':selected_id,'messages':messages,'active':provider_active,'models':provider_models,'model':selected_model,'effort':'','tier':'default','videos':cache_media if not remote_host else [],'screenshots':cache_screens if not remote_host else [],'outbox':[],'speechVersion':2,'speechReady':multilingual_ready(APP_DIR),'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
@@ -452,7 +455,7 @@ def send_message(text,images,model,effort,tier):
     global thread_id,outbox,status,provider_active,provider_status
     if not isinstance(text,str) or not text.strip():raise ValueError('Введите сообщение.')
     if len(text)>30000:raise ValueError('Сообщение слишком длинное (лимит 30 000 символов).')
-    selected=[allowed_image(p) for p in (images or [])[:5]]
+    selected=[archive_image(allowed_image(p),STATE) for p in (images or [])[:5]]
     if provider in provider_chats:
         if provider_active:raise RuntimeError('Дождитесь ответа текущей модели.')
         if not model:raise RuntimeError('Список моделей не загрузился. Обновите каталог и повторите попытку.')
@@ -462,7 +465,7 @@ def send_message(text,images,model,effort,tier):
             ident=str(uuid.uuid4());now=int(time.time());chat={'id':ident,'provider':provider,'name':'New chat','createdAt':now,'updatedAt':now,'messages':[]};provider_chats[provider][ident]=chat;provider_thread_ids[provider]=ident
         if provider=='claude' and selected:raise ValueError('Claude Code не принимает вложения из Steam в этой версии. Откройте настольный Codex и приложите файл там.')
         prior=[{'role':item['role'],'content':item['text']} for item in chat.get('messages',[]) if item.get('role') in ('user','assistant')]
-        message=text.strip();chat['messages'].append({'id':str(uuid.uuid4()),'role':'user','text':message})
+        message=text.strip();chat['messages'].append({'id':str(uuid.uuid4()),'role':'user','text':message,'images':[str(x) for x in selected]})
         if chat.get('name') in ('','New chat','Новый чат'):chat['name']=message.splitlines()[0][:100]
         chat['updatedAt']=int(time.time());chat['model']=model or chat.get('model')
         save_provider_chats()

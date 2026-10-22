@@ -8,7 +8,7 @@ SECRET_PATTERNS=[re.compile(rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----
 
 def source_files(root=ROOT):
     root=Path(root)
-    exact={'app.py','backend.py','providers.py','ui_extras.py','speech_accuracy.py','speech-languages.json','style.css','themes.json','deck-ai.png','requirements.txt','requirements-speech.txt','VERSION','README.md','CHANGELOG.md','SECURITY.md','LICENSE','install.sh','uninstall.sh','.gitignore'}
+    exact={'app.py','chat_media.py','backend.py','providers.py','ui_extras.py','speech_accuracy.py','speech-languages.json','style.css','themes.json','deck-ai.png','requirements.txt','requirements-speech.txt','VERSION','README.md','CHANGELOG.md','SECURITY.md','LICENSE','install.sh','uninstall.sh','.gitignore'}
     directories={'scripts','tests','.github'}
     plugin_root={'THIRD_PARTY_NOTICES.txt','main.py','bridge.py','runtime_paths.py','README.md','package.json','package-lock.json','plugin.json','rollup.config.mjs','tsconfig.json','deck-ai.png'}
     files=[]

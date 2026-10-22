@@ -8,7 +8,8 @@ import { speechLanguages } from "./speech-languages";
 import { updateDictation, restoreDictation, bindDictation } from "./dictation";
 import { readGameContext, withGameContext, gameScreenshots } from "./game-context";
 
-type Item = {id:string;role:"user"|"assistant";text:string};
+type Attachment={id:string;name:string;preview:string;available:boolean;kind:"image"|"file"};
+type Item = {id:string;role:"user"|"assistant";text:string;attachments?:Attachment[]};
 type Media = {path:string;name:string;when?:number};
 type Model = {id:string;name:string;efforts:{id:string;name:string}[];defaultEffort:string;tiers:string[]};
 type Snapshot = {ready:boolean;status:string;provider:string;account?:{email?:string;planType?:string}|null;loginPending?:boolean;remoteHost?:string;sshHosts:string[];threads:{id:string;name:string;updatedAt:number}[];threadId:string;messages:Item[];active:boolean;models:Model[];model:string;effort:string;tier:string;screenshots:Media[];videos:Media[];outbox:{id:string;status:string;error?:string;text:string}[];speechVersion?:number;speechReady?:boolean;voiceId?:string;voiceState:string;voiceText:string;voiceError:string};
@@ -34,6 +35,11 @@ const providerNames:Record<string,string>={codex:"Codex · ChatGPT",claude:"Clau
 const draftKey=(id?:string)=>"codex-game-draft:"+(id||"new");
 function Action({children,onClick,disabled=false,primary=false,recording=false}:{children:ReactNode;onClick:()=>void;disabled?:boolean;primary?:boolean;recording?:boolean}) {
  return <DialogButton className={"dai-button"+(primary?" dai-primary":"")+(recording?" dai-recording":"")} disabled={disabled} onClick={onClick}>{children}</DialogButton>;
+}
+function MessageAttachments({items}:{items:Attachment[]}){
+ return <div className="dai-message-attachments">{items.map(item=><div className="dai-message-attachment" key={item.id}>
+  {item.preview?<DialogButton className="dai-image-button" onClick={()=>showModal(<ConfirmModal strTitle={item.name.length>48?item.name.slice(0,45)+"…":item.name} strOKButtonText="Закрыть" bAlertDialog><img className="dai-image-expanded" style={{display:"block",maxWidth:"100%",maxHeight:"55vh",width:"auto",height:"auto",objectFit:"contain",margin:"auto"}} src={item.preview} alt={item.name}/></ConfirmModal>)}><img src={item.preview} alt={item.name}/></DialogButton>:<span className="dai-muted">📎 {item.name} · {item.kind==="image"?"изображение недоступно":"файл"}</span>}
+ </div>)}</div>;
 }
 function GameCheckbox({checked,onChange}:{checked:boolean;onChange:()=>void}){
  return <div className="dai-game-check" role="checkbox" aria-checked={checked} aria-label="Игра"><DialogButton className="dai-button" onClick={onChange}><span className="dai-check-box" aria-hidden="true">{checked?"✓":""}</span>Игра</DialogButton></div>;
@@ -257,7 +263,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
    </div></GameScroll>:<>
     <GameScroll className="dai-messages" ref={chatRef} onScroll={()=>{const el=chatRef.current;if(el){followTail.current=el.scrollHeight-el.scrollTop-el.clientHeight<60;setShowLatest(!followTail.current);}}}>
      <div className="dai-message-list">{!data?.messages.length&&<div className="dai-empty"><FaComment/><h3>Помощь прямо в игре</h3><p>Задайте вопрос текстом или голосом.<br/>Можно добавить скриншот.</p>{disconnect&&<Action onClick={()=>void run(async()=>accept(await refresh()))} disabled={busy}>{busy?"Подключение…":"Подключиться"}</Action>}</div>}
-     {data?.messages.map((message,i)=><Focusable key={message.id||i} className={"dai-message "+message.role} focusClassName="dai-focused"><small>{message.role==="user"?"Вы":providerNames[data.provider]?.split(" · ")[0]||"AI"}</small><div>{message.text}</div><div className="dai-message-tools"><Action onClick={()=>copyMessage(message.text)}><FaCopy/>Копировать</Action></div></Focusable>)}
+     {data?.messages.map((message,i)=><Focusable key={message.id||i} className={"dai-message "+message.role} focusClassName="dai-focused"><small>{message.role==="user"?"Вы":providerNames[data.provider]?.split(" · ")[0]||"AI"}</small><div>{message.text}</div>{!!message.attachments?.length&&<MessageAttachments items={message.attachments}/>}<div className="dai-message-tools"><Action onClick={()=>copyMessage(message.text)}><FaCopy/>Копировать</Action></div></Focusable>)}
      {data?.outbox.filter(x=>x.status==="error").map(x=><div className="dai-failed" key={x.id}><p>{x.error||"Не удалось отправить"}</p><Action disabled={busy} onClick={()=>void run(async()=>{await retry(x.id);await load();})}>Повторить отправку</Action></div>)}
     </div></GameScroll>
     {showLatest&&<div className="dai-latest"><Action onClick={jumpToLatest}>↓ К последнему сообщению</Action></div>}

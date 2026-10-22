@@ -4,7 +4,7 @@ import argparse,hashlib,json,os,shlex,shutil,sys,tempfile
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'decky'))
 from runtime_paths import resolve_app_dir
-ROOT_FILES=('app.py','backend.py','providers.py','ui_extras.py','speech_accuracy.py','speech-languages.json','style.css','themes.json','deck-ai.png','requirements.txt','requirements-speech.txt','VERSION','README.md','CHANGELOG.md','SECURITY.md','uninstall.sh')
+ROOT_FILES=('app.py','chat_media.py','backend.py','providers.py','ui_extras.py','speech_accuracy.py','speech-languages.json','style.css','themes.json','deck-ai.png','requirements.txt','requirements-speech.txt','VERSION','README.md','CHANGELOG.md','SECURITY.md','uninstall.sh')
 PLUGIN_FILES=('THIRD_PARTY_NOTICES.txt','main.py','bridge.py','runtime_paths.py','plugin.json','package.json','deck-ai.png')
 SCRIPTS=('download-models.sh','deck-ai-steam','check-environment.py','manage-install.py')
 

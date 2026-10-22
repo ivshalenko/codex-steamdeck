@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Show inline image attachments in Decky and desktop chat history, including image-only messages and assistant image links.
+- Open thumbnails in a bounded image viewer; keep owned copies of sent images so temporary frame cleanup cannot remove them from history.
+- Show unavailable images and file attachments by name without fetching external URLs.
+
 ## 1.0.0-rc.2 — Release candidate
 
 - Fix the first queued send in a new Codex chat before turn history is available.

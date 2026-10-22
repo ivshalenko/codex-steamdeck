@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Standalone Codex client with offline dictation for Steam Deck."""
 import json
+import base64
 import math
 from array import array
 import os
@@ -23,6 +24,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, Gio, Pango, GdkPixbuf
 from backend import Backend, RpcError
 import providers
+from chat_media import attachments,display_text
 from ui_extras import UILabel, translator, AppKeyboard, CompactPicker
 
 ROOT = Path(__file__).resolve().parent
@@ -953,7 +955,7 @@ class Panel(Gtk.Application):
         self.update_model_picker()
         for item in chat.get('messages',[]):
             kind='userMessage' if item.get('role')=='user' else 'agentMessage'
-            self.add_item({'id':item.get('id') or str(uuid.uuid4()),'type':kind,'content':[{'type':'text','text':item.get('text','')}], 'text':item.get('text','')})
+            self.add_item({'id':item.get('id') or str(uuid.uuid4()),'type':kind,'content':[{'type':'text','text':item.get('text','')}], 'text':item.get('text',''),'images':item.get('images',[])})
         self.set_working(False)
 
     def external_send(self,text):
@@ -1237,12 +1239,14 @@ class Panel(Gtk.Application):
         kind = item.get('type')
         if kind not in ('userMessage','agentMessage'): return
         ident = item['id']
+        media=attachments(item)
         if kind == 'userMessage':
             text = '\n'.join(p.get('text','') for p in item.get('content',[]) if p.get('type')=='text')
             # Environment metadata is not a chat message.
             text = re.sub(r'<environment_context>.*?</environment_context>','',text,flags=re.S).strip()
-            if not text: return
+            if not text and not media: return
         else: text = item.get('text','')
+        text=display_text(text)
         pending_id = item.get('clientId')
         if kind=='userMessage' and pending_id not in self.pending_messages:
             if ident in self.pending_messages: pending_id=ident
@@ -1269,11 +1273,39 @@ class Panel(Gtk.Application):
             label.get_style_context().add_class('message-body')
             content.pack_start(label,True,True,0); frame.add(content)
             self.chat.pack_start(frame,False,False,0)
-            self.messages[ident] = {'label':label,'text':'','frame':frame}
+            media_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=6)
+            content.pack_start(media_box,False,False,0)
+            self.messages[ident] = {'label':label,'text':'','frame':frame,'media_box':media_box,'attachments':[]}
             frame.show_all()
         self.messages[ident]['text'] = text
-        self.messages[ident]['label'].set_text(text or '…')
+        self.messages[ident]['label'].set_text(text or ('' if media else '…'))
+        message=self.messages[ident]
+        if message.get('attachments')!=media:
+            box=message['media_box']
+            for child in box.get_children():child.destroy()
+            for attachment in media:
+                if attachment['preview']:
+                    loader=GdkPixbuf.PixbufLoader.new()
+                    loader.write(base64.b64decode(attachment['preview'].split(',',1)[1]));loader.close()
+                    pixbuf=loader.get_pixbuf()
+                    scale=min(1,320/pixbuf.get_width(),200/pixbuf.get_height())
+                    thumbnail=pixbuf.scale_simple(max(1,int(pixbuf.get_width()*scale)),max(1,int(pixbuf.get_height()*scale)),GdkPixbuf.InterpType.BILINEAR)
+                    button=Gtk.Button();button.set_halign(Gtk.Align.START)
+                    button.add(Gtk.Image.new_from_pixbuf(thumbnail));button.set_tooltip_text(attachment['name'])
+                    button.connect('clicked',lambda _,image=pixbuf,name=attachment['name']:self.show_attachment(image,name))
+                    box.pack_start(button,False,False,0)
+                else:
+                    caption=Gtk.Label(label='📎 '+attachment['name']+' · '+('изображение недоступно' if attachment['kind']=='image' else 'файл'),xalign=0)
+                    caption.set_line_wrap(True);box.pack_start(caption,False,False,0)
+            message['attachments']=media;box.show_all()
         self.dirty_messages.discard(ident)
+
+    def show_attachment(self,pixbuf,name):
+        dialog=Gtk.Dialog(title=name,transient_for=self.window,modal=True)
+        dialog.add_button('Закрыть',Gtk.ResponseType.CLOSE)
+        dialog.get_content_area().add(Gtk.Image.new_from_pixbuf(pixbuf))
+        dialog.connect('response',lambda window,*_:window.destroy())
+        dialog.show_all()
 
     def set_working(self, working):
         self.engine_active = working
