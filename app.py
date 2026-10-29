@@ -22,6 +22,15 @@ os.environ["GTK_IM_MODULE"] = "gtk-im-context-simple"
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, Gio, Pango, GdkPixbuf
+try:
+    gi.require_version('WebKit2', '4.1')
+    from gi.repository import WebKit2
+except (ValueError, ImportError):
+    try:
+        gi.require_version('WebKit2', '4.0')
+        from gi.repository import WebKit2
+    except (ValueError, ImportError):
+        WebKit2 = None
 from backend import Backend, RpcError
 import providers
 from chat_media import attachments,display_text
@@ -198,6 +207,9 @@ class Panel(Gtk.Application):
             theme_switch.pack_start(button,False,False,0)
             self.theme_buttons[value]=button
         header.pack_start(theme_switch,False,False,6)
+        self.browser_button=self.button('web-browser-symbolic',translator.text('Браузер'),self.toggle_browser,'quiet')
+        self.browser_button.set_tooltip_text(translator.text('Открыть встроенный браузер'))
+        header.pack_start(self.browser_button,False,False,0)
         self.keyboard_button = self.button('input-keyboard-symbolic', 'Клавиатура', self.keyboard, 'quiet')
         header.pack_start(self.keyboard_button, False, False, 0)
         menu_button=Gtk.MenuButton()
@@ -412,6 +424,52 @@ class Panel(Gtk.Application):
         footer.pack_start(hint, True, True, 0)
         clear = self.button('edit-clear-symbolic', 'Очистить', self.clear, 'clear')
         footer.pack_start(clear, False, False, 4)
+
+        self.browser_revealer=Gtk.Revealer()
+        self.browser_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_LEFT)
+        self.browser_revealer.set_transition_duration(180)
+        self.browser_revealer.set_size_request(365,-1)
+        self.browser_revealer.get_style_context().add_class('browser-pane')
+        browser=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=8)
+        self.browser_revealer.add(browser)
+        browser_heading=Gtk.Box(spacing=6)
+        browser_title=UILabel(label='Встроенный браузер',xalign=0)
+        browser_title.get_style_context().add_class('chat-title')
+        browser_heading.pack_start(browser_title,True,True,0)
+        close_browser=self.button('window-close-symbolic',None,self.toggle_browser,'icon-only')
+        close_browser.set_tooltip_text('Закрыть браузер')
+        browser_heading.pack_end(close_browser,False,False,0)
+        browser.pack_start(browser_heading,False,False,0)
+        browser_nav=Gtk.Box(spacing=4)
+        for icon,tip,callback in [('go-previous-symbolic','Назад',lambda *_: self.browser_view.go_back() if self.browser_view else None),('go-next-symbolic','Вперёд',lambda *_: self.browser_view.go_forward() if self.browser_view else None),('view-refresh-symbolic','Обновить',lambda *_: self.browser_view.reload() if self.browser_view else None)]:
+            button=self.button(icon,None,callback,'icon-only');button.set_tooltip_text(tip);browser_nav.pack_start(button,False,False,0)
+        self.browser_address=Gtk.Entry();self.browser_address.set_placeholder_text('Адрес сайта');self.browser_address.connect('activate',self.browser_navigate)
+        browser_nav.pack_start(self.browser_address,True,True,0)
+        go=self.button('go-jump-symbolic',None,self.browser_navigate,'icon-only');go.set_tooltip_text('Перейти');browser_nav.pack_start(go,False,False,0)
+        browser.pack_start(browser_nav,False,False,0)
+        self.browser_view=None
+        if WebKit2 is not None:
+            try:
+                browser_data=STATE_DIR/'browser'
+                browser_data.mkdir(parents=True,exist_ok=True,mode=0o700)
+                manager=WebKit2.WebsiteDataManager(base_data_directory=str(browser_data),base_cache_directory=str(browser_data/'cache'))
+                context=WebKit2.WebContext.new_with_website_data_manager(manager)
+                self.browser_view=WebKit2.WebView.new_with_context(context)
+                self.browser_view.connect('notify::uri',self.browser_uri_changed)
+                self.browser_view.connect('decide-policy',self.browser_decide_policy)
+                self.browser_view.connect('load-changed',self.browser_load_changed)
+                web_scroll=Gtk.ScrolledWindow();web_scroll.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC);web_scroll.add(self.browser_view)
+                browser.pack_start(web_scroll,True,True,0)
+                browser_status=translator.text('Войдите на сайт или введите адрес HTTPS.')
+            except Exception:
+                self.browser_view=None;browser_status='Встроенный браузер не удалось запустить. Проверьте установку WebKitGTK.'
+        else:
+            browser_status=translator.text('Для встроенного браузера требуется WebKitGTK 4.1 или 4.0.')
+        self.browser_status=UILabel(label=browser_status,xalign=0)
+        self.browser_status.set_line_wrap(True);self.browser_status.get_style_context().add_class('browser-status')
+        browser.pack_start(self.browser_status,False,False,4)
+        browser.show_all();self.browser_revealer.set_reveal_child(False);self.browser_revealer.set_no_show_all(True);self.browser_revealer.hide()
+        body.pack_end(self.browser_revealer,False,False,0)
         self.app_keyboard=AppKeyboard(self.text,self.keyboard,ROOT)
         box.pack_start(self.app_keyboard,False,False,0)
         self.app_keyboard.set_no_show_all(True)
@@ -434,6 +492,57 @@ class Panel(Gtk.Application):
         self.closed = threading.Event()
         self.change_language(translator.language)
         self.reconnect()
+
+    def toggle_browser(self,*_):
+        if not hasattr(self,'browser_revealer'):return
+        reveal=not self.browser_revealer.get_reveal_child()
+        self.browser_revealer.set_no_show_all(False)
+        if reveal:self.browser_revealer.show()
+        self.browser_revealer.set_reveal_child(reveal)
+        if reveal:
+            self.browser_address.grab_focus()
+            if self.browser_view is None:self.browser_status.set_text(translator.text('Для встроенного браузера требуется WebKitGTK 4.1 или 4.0.'))
+        context=self.browser_button.get_style_context()
+        if reveal:context.add_class('selected')
+        else:context.remove_class('selected')
+
+    def browser_navigate(self,*_):
+        if self.browser_view is None:return
+        from urllib.parse import urlsplit
+        address=self.browser_address.get_text().strip()
+        if not address:return
+        if '://' not in address:address='https://'+address
+        parsed=urlsplit(address)
+        if parsed.scheme not in ('https','http') or not parsed.netloc:
+            self.browser_status.set_text(translator.text('Разрешены только веб-адреса HTTP и HTTPS.'))
+            return
+        self.browser_address.set_text(address)
+        self.browser_status.set_text(translator.text('Загружаю страницу…'))
+        self.browser_view.load_uri(address)
+
+    def browser_uri_changed(self,view,*_):
+        uri=view.get_uri() or ''
+        if uri:self.browser_address.set_text(uri)
+
+    def browser_decide_policy(self,view,decision,decision_type):
+        try:
+            action=decision.get_navigation_action();uri=action.get_request().get_uri() or ''
+            scheme=uri.split(':',1)[0].lower()
+            if scheme in ('https','http','about'):
+                if decision_type==WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
+                    view.load_uri(uri);decision.ignore()
+                else:decision.use()
+            else:
+                decision.ignore()
+                self.browser_status.set_text(translator.text('Разрешены только веб-адреса HTTP и HTTPS.'))
+            return True
+        except Exception:
+            return False
+
+    def browser_load_changed(self,view,event):
+        if WebKit2 is None:return
+        if event==WebKit2.LoadEvent.FINISHED:self.browser_status.set_text(view.get_title() or translator.text('Страница загружена.'))
+        elif event==WebKit2.LoadEvent.STARTED:self.browser_status.set_text(translator.text('Загружаю страницу…'))
 
     def application_key_pressed(self,widget,event):
         control=bool(event.state & Gdk.ModifierType.CONTROL_MASK)
@@ -1604,6 +1713,8 @@ class Panel(Gtk.Application):
         self._updating_model=False
         self.provider_action_button.title_label.set_text(translator.text('Настроить DeepSeek / OpenRouter'))
         self.claude_action_button.title_label.set_text(translator.text('Войти в Claude Code'))
+        self.browser_button.title_label.set_text(translator.text('Браузер'))
+        self.browser_button.set_tooltip_text(translator.text('Открыть встроенный браузер'))
         self.chat_search.set_placeholder_text(translator.text('Найти чат'))
         for item in self.app_menu.get_children():
             source=getattr(item,'translation_source',None)

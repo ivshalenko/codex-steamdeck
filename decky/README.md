@@ -23,4 +23,4 @@ npm test
 
 `npm test` checks TypeScript and generates the distributable files in `dist/`. A normal install of the checked-in plugin does not require Node.js. The bridge imports `providers.py` and related files from the desktop installation; do not copy API keys, Codex state, local screenshots, or chat data into this directory.
 
-See the root [README](../README.md) for desktop installation, provider setup, speech-model downloads, supported languages, and troubleshooting.
+See the root [README](../README.md) for desktop installation, provider setup, speech-model downloads, supported languages, and troubleshooting. The desktop companion also offers an optional embedded browser panel when WebKitGTK is available on the system; this is separate from the Decky plugin.

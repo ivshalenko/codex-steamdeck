@@ -99,6 +99,9 @@ menu menuitem:hover { background-color: @accent; color: white; }
 #voice-panel searchentry { background-image: none; background-color: @surface; color: @text; caret-color: @text; }
 #voice-panel .sidebar row { background-image: none; background-color: transparent; }
 #voice-panel .sidebar row:selected { background-color: @tint; }
+#voice-panel .browser-pane { background-color: @surface; border-left: 1px solid @line; padding: 3px 0 3px 10px; }
+#voice-panel .browser-pane entry { background-color: @canvas; color: @text; border: 1px solid @line; border-radius: 9px; min-height: 28px; padding: 2px 8px; }
+#voice-panel .browser-status { color: @muted; font-size: 10px; }
 #voice-panel .sidebar row:hover { background-color: @hover; }
 
 /* Sidebar controls and their bounded popovers share the app palette. */

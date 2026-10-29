@@ -11,6 +11,7 @@ The project is designed for Steam Deck. Choose between your signed-in Codex acco
 - Browse the current DeepSeek catalog from OpenRouter. Model prices are shown where the catalog provides them; OpenRouter requests require your own API key and may incur charges.
 - Use the fixed `deepseek-v4.1-flash:free` model through the OpenAI-compatible TokenHarbor endpoint (`https://tokenharbor.ai/v1`). The provider currently labels this model free; check TokenHarbor's terms and limits because provider availability and pricing can change.
 - Sign in, view the current account, or sign out through Codex.
+- Open websites in an optional right-side browser panel with a persistent, app-local cookie profile.
 - Use Russian or English for the interface. **English is the default on a fresh install.**
 - Dictate offline with Russian/English live previews and an optional multilingual Whisper final pass (99 supported languages). Audio stays on the Deck.
 - View image attachments directly in chat history; select a thumbnail to enlarge it. Sent images are kept in private app state, and unavailable files are labeled rather than silently hidden.
@@ -32,6 +33,7 @@ No software license has been selected yet. Reuse and redistribution permissions 
 - Optional: Claude Code installed and signed in with your Claude Pro/Max subscription to use Claude in the desktop companion. Sign in with `claude auth login`; do not use `--console` for a Pro/Max subscription.
 - Optional: an OpenRouter API key to use DeepSeek. The desktop app stores it in the system Secret Service (KWallet/libsecret), not in the repository or Codex config.
 - Optional: a TokenHarbor API key to use DeepSeek V4.1 Flash. It is stored in the system Secret Service (KWallet/libsecret), not in the repository. The API base is `https://tokenharbor.ai/v1`; the app calls its `/chat/completions` endpoint.
+- Optional: WebKitGTK 4.1 or 4.0 with Python GObject bindings to enable the embedded browser panel. Without it, the app remains usable and explains that the browser component is missing. Browser cookies are stored locally under the app state directory and are not part of this repository.
 - Internet access during setup to install Python packages and download speech models.
 
 ## Install the desktop companion
@@ -119,6 +121,8 @@ Deck AI for Steam Deck — мультипровайдерное настольн
 Установка настольного приложения: `./install.sh`. Иконка `deck-ai.png` и все локальные изображения панели входят в репозиторий; отдельно скачивать их не нужно. Для игрового режима установите и запустите **Decky Loader**, затем после установки настольного приложения скопируйте всю папку `decky/` в `~/homebrew/plugins/Codex/` (имя папки сохраните `Codex`) и перезапустите Decky Loader. В Quick Access меню Steam появится плагин **Deck AI**. Папку `dist/` копируйте целиком: в ней находятся собранный интерфейс и сгенерированная ссылка на картинку.
 
 Для сборки исходников плагина нужен Node.js 24 или новее: `cd decky && npm ci && npm test`. При обычной установке готового плагина Node.js не требуется. Для голосовой диктовки модели скачиваются отдельно командой `./scripts/download-models.sh`; в репозиторий они не включены, так как это большие файлы с отдельными лицензиями. TokenHarbor использует endpoint `https://tokenharbor.ai/v1` и модель `deepseek-v4.1-flash:free`; API-ключ хранится в системном хранилище секретов и не входит в проект.
+
+Встроенная боковая панель браузера является дополнительной функцией. Для неё нужны WebKitGTK 4.1 или 4.0 и Python GObject bindings, доступные системе. Cookies браузера хранятся локально в каталоге данных приложения, а не в проекте. Если WebKitGTK не установлен, остальная оболочка продолжит работать, а браузер покажет сообщение о недостающей библиотеке.
 
 Репозиторий не содержит паролей, ключей SSH, токенов, данных аккаунта, локальных чатов или установленных моделей речи. Не загружайте такие данные в публичный GitHub.
 
