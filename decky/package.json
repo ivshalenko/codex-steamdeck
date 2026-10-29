@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ilysenko/codex-steamdeck.git"
+    "url": "https://github.com/ivshalenko/codex-steamdeck.git"
   },
   "keywords": [
     "decky",
@@ -21,9 +21,9 @@
   ],
   "author": "Deck AI contributors",
   "bugs": {
-    "url": "https://github.com/ilysenko/codex-steamdeck/issues"
+    "url": "https://github.com/ivshalenko/codex-steamdeck/issues"
   },
-  "homepage": "https://github.com/ilysenko/codex-steamdeck",
+  "homepage": "https://github.com/ivshalenko/codex-steamdeck",
   "devDependencies": {
     "@decky/ui": "^4.11.0",
     "@rollup/plugin-commonjs": "^28.0.9",
