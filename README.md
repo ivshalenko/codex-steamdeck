@@ -2,13 +2,14 @@
 
 A community-built multi-provider AI desktop app and Decky Loader plugin for Steam Deck Desktop Mode and Gaming Mode.
 
-The project is designed for Steam Deck. Choose between your signed-in Codex account, Claude Code with a Claude Pro/Max subscription, and DeepSeek through OpenRouter. The desktop client provides a chat list, provider controls, dark and light themes, an integrated on-screen keyboard, and offline voice dictation. The Decky plugin puts a compact multi-provider chat panel in Steam's Quick Access menu.
+The project is designed for Steam Deck. Choose between your signed-in Codex account, Claude Code with a Claude Pro/Max subscription, DeepSeek through OpenRouter, or DeepSeek V4.1 Flash through TokenHarbor. The desktop client provides a chat list, provider controls, dark and light themes, an integrated on-screen keyboard, and offline voice dictation. The Decky Loader plugin puts a compact multi-provider chat panel in Steam's Quick Access menu.
 
 ## Features
 
 - Browse and continue local Codex chats; select models, reasoning effort, and speed.
 - Switch between your signed-in Codex account, Claude Code using a Claude Pro/Max subscription, and DeepSeek models through OpenRouter.
 - Browse the current DeepSeek catalog from OpenRouter. Model prices are shown where the catalog provides them; OpenRouter requests require your own API key and may incur charges.
+- Use the fixed `deepseek-v4.1-flash:free` model through the OpenAI-compatible TokenHarbor endpoint (`https://tokenharbor.ai/v1`). The provider currently labels this model free; check TokenHarbor's terms and limits because provider availability and pricing can change.
 - Sign in, view the current account, or sign out through Codex.
 - Use Russian or English for the interface. **English is the default on a fresh install.**
 - Dictate offline with Russian/English live previews and an optional multilingual Whisper final pass (99 supported languages). Audio stays on the Deck.
@@ -27,9 +28,10 @@ No software license has been selected yet. Reuse and redistribution permissions 
 - Steam Deck with SteamOS and Desktop Mode.
 - Codex CLI installed and signed in on the Deck. The official Codex CLI installation guide is at <https://developers.openai.com/codex/cli/>.
 - Python 3, GTK 3 Python bindings, FFmpeg, PulseAudio-compatible microphone input, and a working audio input device.
-- Optional: Decky Loader for the Gaming Mode Quick Access plugin.
+- Optional: Decky Loader for the Gaming Mode Quick Access plugin. The plugin uses Decky API version 2 and the folder name `Codex` in the current manual install path.
 - Optional: Claude Code installed and signed in with your Claude Pro/Max subscription to use Claude in the desktop companion. Sign in with `claude auth login`; do not use `--console` for a Pro/Max subscription.
 - Optional: an OpenRouter API key to use DeepSeek. The desktop app stores it in the system Secret Service (KWallet/libsecret), not in the repository or Codex config.
+- Optional: a TokenHarbor API key to use DeepSeek V4.1 Flash. It is stored in the system Secret Service (KWallet/libsecret), not in the repository. The API base is `https://tokenharbor.ai/v1`; the app calls its `/chat/completions` endpoint.
 - Internet access during setup to install Python packages and download speech models.
 
 ## Install the desktop companion
@@ -70,12 +72,21 @@ The multilingual model also supports English. Choose a language or automatic det
 - Select a message to reveal **Копировать**. When reading older messages, use **К последнему сообщению** to resume following the response.
 - Queued messages and errors remain visible. A successful click shows **Запрос принят · в очереди**; queued requests wait for the current response to finish. **Очередь · посмотреть** shows saved requests, their status and originating chat; it separates waiting requests in the current chat from other chats. After a backend restart, in-flight sends are checked against server turn IDs; an ambiguous send requires checking the chat before retrying.
 
-## Install the Decky plugin
+## Images, logos and app icons
 
-1. Install and start Decky Loader on Steam Deck.
-2. Install the desktop companion above first. The plugin uses its private Python environment and the local Codex app-server.
-3. Copy the `decky` folder from this repository to `~/homebrew/plugins/Codex` (replace an older copy if updating).
-4. Restart Decky Loader or reboot the Deck. Open Steam's Quick Access menu and choose **Deck AI**.
+The project artwork is included in this repository. `deck-ai.png` is the desktop icon and app logo; `scripts/manage-install.py` installs it into the user's hicolor icon directory. `icon.svg` is the editable vector artwork source. The Decky panel imports `decky/deck-ai.png`; the Rollup build copies it into `decky/dist/assets/` with a generated filename, and the bundle loads that local plugin asset at runtime. Keep the source PNG and generated `dist` asset together. After changing the artwork, rebuild the plugin with `npm ci && npm run build` from `decky/`; do not rename the generated asset by hand. The Decky `publish.image` URL in `decky/plugin.json` is only for a public plugin listing and needs a publicly accessible image URL if the plugin is submitted to a store. A private GitHub repository does not make that URL public. The legacy `decky/codex-official.png` is retained in the source tree; the current UI uses the Deck AI artwork.
+
+The runtime copies of the logo are installed from the repository by `./install.sh`. No separate image download is required. Chat screenshots and user attachments are private runtime data under the app state directory and are deliberately not part of this repository.
+
+## Install the Decky Loader plugin
+
+1. Install and start **Decky Loader** on the Steam Deck. Confirm it is running in Gaming Mode.
+2. Install the desktop companion above first. The plugin bridge imports the desktop app's provider code from its installed Python environment; Codex itself must be installed and signed in on the Deck.
+3. Copy the complete `decky/` directory from this repository to `~/homebrew/plugins/Codex/`, replacing the previous plugin directory when updating. Preserve the folder name `Codex`; Decky's displayed plugin name comes from `decky/plugin.json` and is **Deck AI**.
+4. Ensure the copied directory contains `plugin.json`, `main.py`, `bridge.py`, `dist/index.js`, and `dist/assets/deck-ai-2f73c1d3.png`. The image filename is generated by the current build and can change if the source image changes; copy the whole `dist/` directory rather than selecting files manually.
+5. Restart Decky Loader or reboot the Deck. Open Steam's Quick Access menu and choose **Deck AI**.
+
+For a development build, install Node.js 24 or newer, then run `npm ci && npm test` in `decky/`. End users installing the checked-in build do not need Node.js. To create release archives, use `python3 scripts/build-release.py`; this writes a desktop/source archive and a self-contained Decky ZIP under `build/releases/`. It does not publish either archive or change GitHub access.
 
 The plugin reconnects to Codex after Decky starts. It needs no separate OpenAI API key. To make it available through the Decky plugin store, a maintainer can submit this repository to the Decky plugin index after review.
 
@@ -99,13 +110,15 @@ On a fresh install the interface and keyboard start in English. Choose **Interfa
 
 ## Русский
 
-Deck AI for Steam Deck — мультипровайдерная настольная оболочка и плагин Decky Loader для Steam Deck. Подключайте Codex, Claude через Claude Code или DeepSeek через OpenRouter.
+Deck AI for Steam Deck — мультипровайдерное настольное приложение и плагин Decky Loader для Steam Deck. Доступны Codex, Claude через Claude Code, DeepSeek через OpenRouter и DeepSeek V4.1 Flash через TokenHarbor.
 
 Возможности: список чатов, выбор модели, глубины рассуждений и скорости, управление аккаунтом Codex, тёмная и светлая темы, встроенная экранная клавиатура, локальная голосовая диктовка и компактная панель в Quick Access меню Steam. Плагин повторно подключается к локальному Codex app-server после запуска системы.
 
 При первой установке интерфейс и экранная клавиатура запускаются на английском языке. Переключение интерфейса на русский находится в меню приложения. Базовая диктовка поддерживает английский и русский языки: загрузите модели командой `./scripts/download-models.sh`. Для уточнения текста и выбора из 99 поддерживаемых языков используйте `./scripts/download-models.sh --accurate-ru`. Клавиатура содержит раскладки EN, RU, DE, FR, ES, UK и IT.
 
-Установка: `./install.sh`. Для игрового режима нужен Decky Loader; после установки настольного приложения скопируйте папку `decky` в `~/homebrew/plugins/Codex` и перезапустите Decky Loader. Для подключения Mac или Windows используется SSH и отдельная настройка на компьютере пользователя.
+Установка настольного приложения: `./install.sh`. Иконка `deck-ai.png` и все локальные изображения панели входят в репозиторий; отдельно скачивать их не нужно. Для игрового режима установите и запустите **Decky Loader**, затем после установки настольного приложения скопируйте всю папку `decky/` в `~/homebrew/plugins/Codex/` (имя папки сохраните `Codex`) и перезапустите Decky Loader. В Quick Access меню Steam появится плагин **Deck AI**. Папку `dist/` копируйте целиком: в ней находятся собранный интерфейс и сгенерированная ссылка на картинку.
+
+Для сборки исходников плагина нужен Node.js 24 или новее: `cd decky && npm ci && npm test`. При обычной установке готового плагина Node.js не требуется. Для голосовой диктовки модели скачиваются отдельно командой `./scripts/download-models.sh`; в репозиторий они не включены, так как это большие файлы с отдельными лицензиями. TokenHarbor использует endpoint `https://tokenharbor.ai/v1` и модель `deepseek-v4.1-flash:free`; API-ключ хранится в системном хранилище секретов и не входит в проект.
 
 Репозиторий не содержит паролей, ключей SSH, токенов, данных аккаунта, локальных чатов или установленных моделей речи. Не загружайте такие данные в публичный GitHub.
 

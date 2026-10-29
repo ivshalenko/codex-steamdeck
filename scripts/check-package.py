@@ -4,7 +4,7 @@ import importlib.util,json,re,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 FORBIDDEN={'node_modules','venv','.venv','__pycache__','.git','state','sessions','logs','cache'}
-SECRET_PATTERNS=[re.compile(rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),re.compile(rb'\bsk-(?:proj-)?[A-Za-z0-9_-]{30,}\b'),re.compile(rb'\bgh[pousr]_[A-Za-z0-9]{30,}\b')]
+SECRET_PATTERNS=[re.compile(rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),re.compile(rb'\bsk-(?:proj-)?[A-Za-z0-9_-]{30,}\b'),re.compile(rb'\bgh[pousr]_[A-Za-z0-9]{30,}\b'),re.compile(rb'\bthk_live_[A-Za-z0-9_-]{20,}\b')]
 
 def source_files(root=ROOT):
     root=Path(root)

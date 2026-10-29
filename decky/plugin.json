@@ -10,7 +10,7 @@
       "voice",
       "gaming"
     ],
-    "description": "Chat with Codex, Claude and DeepSeek; use model controls, offline dictation and game captures in Steam Deck Quick Access",
+    "description": "Chat with Codex, Claude, DeepSeek via OpenRouter or TokenHarbor; use offline dictation and game captures in Steam Deck Quick Access",
     "image": "https://raw.githubusercontent.com/ilysenko/codex-steamdeck/main/deck-ai.png"
   }
 }
