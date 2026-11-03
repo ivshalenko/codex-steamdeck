@@ -13,6 +13,8 @@ import { attachTouchScroll, type Box } from "./touch-scroll";
 import { joinPath, parentPath, isFolder, sortEntries } from "./files";
 import { updateDictation, restoreDictation, bindDictation } from "./dictation";
 import { readGameContext, withGameContext, gameScreenshots } from "./game-context";
+import { startRepairPolling } from "./launch-repair";
+import { RepairPanel } from "./repair-panel";
 
 type Attachment={id:string;name:string;preview:string;available:boolean;kind:"image"|"file"};
 type Item = {id:string;role:"user"|"assistant"|"tool";text:string;attachments?:Attachment[]};
@@ -57,7 +59,7 @@ const customRemove=callable<[id:string],unknown>("custom_remove");
 const unloadModels=callable<[],unknown>("unload_models");
 const setProviderKey=callable<[key:string],unknown>("set_provider_key");
 const GameScroll=ScrollPanel as ComponentType<HTMLAttributes<HTMLDivElement> & RefAttributes<HTMLDivElement>>;
-type Tab = "chat"|"history"|"settings";
+type Tab = "chat"|"history"|"repair"|"settings";
 const providerNames:Record<string,string>={codex:"Codex · ChatGPT",claude:"Claude Code · свой доступ",deepseek:"DeepSeek · OpenRouter",tokenharbor:"DeepSeek · TokenHarbor"};
 const drafts=createDraftStore(localStorage);
 const viewGate=createViewGate();
@@ -367,19 +369,20 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
   else if(fullscreen){event.stopPropagation();closeFullscreen();}
  }}><style>{css}</style><span ref={touchAnchor} hidden/>
   {fullscreen&&<Focusable className="dai-full-header" flow-children="horizontal">
-   <div className="dai-full-brand"><h1>Deck AI</h1><span>{disconnect?"Нет соединения":data?.active?"Deck AI работает…":gameStatus}</span></div>
+   <div className="dai-full-brand"><h1>Deck AI</h1><span>{tab==="repair"?"Локальная диагностика":disconnect?"Нет соединения":data?.active?"Deck AI работает…":gameStatus}</span></div>
    <GameCheckbox checked={gameContextEnabled} onChange={toggleGameContext}/>
    <Action onClick={()=>closeFullscreen()}><FaCompress/>В панель</Action>
    <Action onClick={()=>closeFullscreen(false)}><FaArrowLeft/>К игре</Action>
   </Focusable>}
   <Focusable className="dai-tabs" flow-children="horizontal" role="tablist" aria-label="Deck AI">
-   {([["chat","Чат",<FaComment/>],["history","История",<FaHistory/>],["settings","Настройки",<FaCog/>]] as const).map(([id,label,icon])=><div key={id} role="tab" aria-selected={tab===id} className={"dai-tab "+(tab===id?"selected":"")}><Action disabled={busy} onClick={()=>{if(id==="settings"&&!fullscreen)openFullscreen("settings");else{setTab(id);setMediaOpen(false);setQueueOpen(false);}}}>{icon}<span>{label}</span></Action></div>)}
+   {([["chat","Чат",<FaComment/>],["history","История",<FaHistory/>],["repair","Ремонт",<FaGamepad/>],["settings","Настройки",<FaCog/>]] as const).map(([id,label,icon])=><div key={id} role="tab" aria-selected={tab===id} className={"dai-tab "+(tab===id?"selected":"")}><Action disabled={busy} onClick={()=>{if((id==="settings"||id==="repair")&&!fullscreen)openFullscreen(id);else{setTab(id);setMediaOpen(false);setQueueOpen(false);}}}>{icon}<span>{label}</span></Action></div>)}
   </Focusable>
   <div className="dai-viewbar"><div className="dai-status"><span className={"dai-dot "+(disconnect?"offline":data?.active?"working":"")}/><span>{!data?"Подключение…":data.ready?(data.active?"Deck AI работает…":gameStatus):(data.retryIn?`Нет связи · повтор через ${data.retryIn} с`:"Нет соединения")}</span>{data?.remoteHost&&<small>{data.remoteHost}</small>}{!!data?.runningCount&&<small className="dai-running-count">{data.runningCount} в работе</small>}</div>{!fullscreen&&<GameCheckbox checked={gameContextEnabled} onChange={toggleGameContext}/>}{!fullscreen&&<Action disabled={busy} onClick={()=>openFullscreen(tab)}><FaExpand/>На весь экран</Action>}</div>
-  {(error||connectionError)&&<div className="dai-banner" role="alert"><span>{error||connectionError}</span><Action onClick={()=>{setError("");setConnectionError("");}}>Закрыть</Action></div>}
-  {!error&&!connectionError&&(data?.historyWarning||data?.ready===false)&&<div className="dai-banner" role="status"><span>{data.historyWarning||data.status}</span><Action disabled={busy} onClick={()=>void run(async()=>{accept(await refresh());})}>Повторить подключение</Action></div>}
+  {tab!=="repair"&&(error||connectionError)&&<div className="dai-banner" role="alert"><span>{error||connectionError}</span><Action onClick={()=>{setError("");setConnectionError("");}}>Закрыть</Action></div>}
+  {tab!=="repair"&&!error&&!connectionError&&(data?.historyWarning||data?.ready===false)&&<div className="dai-banner" role="status"><span>{data.historyWarning||data.status}</span><Action disabled={busy} onClick={()=>void run(async()=>{accept(await refresh());})}>Повторить подключение</Action></div>}
   {notice&&<div className="dai-notice" role="status">{notice}</div>}
-  <div className="dai-page" role="tabpanel" aria-label={tab==="chat"?"Чат":tab==="history"?"История":"Настройки"}>
+  <div className="dai-page" role="tabpanel" aria-label={tab==="chat"?"Чат":tab==="history"?"История":tab==="repair"?"Ремонт":"Настройки"}>
+  {tab==="repair"&&<GameScroll className="dai-scroll dai-stack"><RepairPanel copy={copyMessage}/></GameScroll>}
   {tab==="chat"&&<div className="dai-chat-layout">{sidebar}<div className={"dai-chat-main"+(data?.approvals?.length?" has-approvals":"")}>
    {queueOpen?<GameScroll key="queue" ref={queueRef} className="dai-scroll dai-stack dai-queue-view"><div className="dai-stack-content">
     <Action onClick={()=>setQueueOpen(false)}>← К сообщению</Action>
@@ -571,9 +574,11 @@ export default definePlugin(()=>{
  routerHook.addRoute(FULLSCREEN_PATH,FullscreenPage,{exact:true});
  void showNotifications();
  const notifier=setInterval(()=>void showNotifications(),2000);
+ const stopRepairPolling=startRepairPolling();
  return {name:"Deck AI",titleView:<span>Deck AI</span>,content:<Panel/>,icon:<img src={logo} alt="Deck AI" style={{width:20,height:20,objectFit:"contain"}}/>,onDismount(){
   if(returnToPanel)clearTimeout(returnToPanel);
   clearInterval(notifier);
+  stopRepairPolling();
   routerHook.removeRoute(FULLSCREEN_PATH);
  }};
 });

@@ -10,14 +10,15 @@ def source_files(root=ROOT):
     root=Path(root)
     exact={'app.py','chat_media.py','language_support.py','language_settings.py', 'remote_access.py','message_blocks.py','backend.py','providers.py','ui_extras.py','speech_accuracy.py','deck_share.py','speech-languages.json','style.css','themes.json','deck-ai.png','requirements.txt','requirements-speech.txt','VERSION','README.md','CHANGELOG.md','SECURITY.md','LICENSE','NOTICE','install.sh','uninstall.sh','.gitignore'}
     directories={'scripts','tests','.github','docs'}
-    plugin_root={'LICENSE','NOTICE','THIRD_PARTY_NOTICES.txt','main.py','bridge.py','runtime_paths.py','README.md','package.json','package-lock.json','plugin.json','rollup.config.mjs','tsconfig.json','deck-ai.png'}
+    plugin_root={'LICENSE','NOTICE','THIRD_PARTY_NOTICES.txt','main.py','bridge.py','runtime_paths.py','launch_repair.py','repair_remote.py','README.md','package.json','package-lock.json','plugin.json','rollup.config.mjs','tsconfig.json','deck-ai.png'}
+    repair_web={'decky/repair-web/index.html','decky/repair-web/app.js','decky/repair-web/style.css'}
     files=[]
     for path in root.rglob('*'):
         rel=path.relative_to(root)
         if not path.is_file() or any(part in FORBIDDEN for part in rel.parts):continue
         if path.is_symlink():raise ValueError('Symlink in release source: '+str(rel))
         include=str(rel) in exact or (rel.parts[0] in directories and path.suffix in ('.py','.sh','.yml','.yaml','.md','.png','.jpg','.webp')) or str(rel)=='scripts/deck-ai-steam' or (rel.parts[0]=='decky' and ((len(rel.parts)==2 and path.name in plugin_root) or (len(rel.parts)>2 and rel.parts[1] in ('src','tests','dist') and path.suffix in ('.ts','.tsx','.css','.mjs','.js','.png','.svg','.json')))) or str(rel) in ('decky/vendor/websockets-15.0.1-py3-none-any.whl','decky/vendor/LICENSE-websockets.txt','decky/vendor/loader-api-1.1.3-source.tar.gz','models/README.md')
-        if include and path.suffix not in ('.map','.pyc','.pyo'):
+        if (include or rel.as_posix() in repair_web) and path.suffix not in ('.map','.pyc','.pyo'):
             if path.name.startswith('.env') or path.name in ('auth.json','known_hosts','config.toml'):raise ValueError('Personal file in release: '+str(rel))
             if path.stat().st_size>15_000_000:raise ValueError('Unexpected large release file: '+str(rel))
             if any(pattern.search(path.read_bytes()) for pattern in SECRET_PATTERNS):raise ValueError('Credential pattern in release file: '+str(rel))

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0-rc.11
+
+- Diagnose Steam game launch in Gaming Mode with local checks and an optional Steam screenshot.
+- Confirm, verify and restore a reversible Steam launch-option reset.
+- Pair a phone or PC browser with one repair through a private HTTPS proxy and confirm actions remotely.
+- Show bounded Steam process events for the selected game, refresh diagnostics after launch, and copy a safe summary.
+- Recognize Steam's 64-bit IDs for shortcut screenshots.
+
 ## 1.0.0-rc.9
 
 - Use the official Claude Code setup UI, with an explicit Console/API route and user-owned billing.

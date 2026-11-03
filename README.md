@@ -1,8 +1,8 @@
 # Deck AI for Steam Deck
 
-AI chat in Steam Deck's Quick Access menu, with an optional desktop app, local dictation and remote control over SSH. **Community project, release candidate 1.0.0-rc.9.** Not affiliated with Valve or OpenAI.
+AI chat in Steam Deck's Quick Access menu, with an optional desktop app, local dictation and remote control over SSH. **Community project, release candidate 1.0.0-rc.11.** Not affiliated with Valve or OpenAI.
 
-**[Download / Скачать](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.9)** · **[Установка по шагам / Quick start](docs/QUICKSTART.md)** · **[Steam Deck ↔ Mac / PC](docs/REMOTE-CONTROL.md)** · **[Report an issue](https://github.com/ivshalenko/codex-steamdeck/issues)**
+**[Download / Скачать](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.11)** · **[Установка по шагам / Quick start](docs/QUICKSTART.md)** · **[Steam Deck ↔ Mac / PC](docs/REMOTE-CONTROL.md)** · **[Report an issue](https://github.com/ivshalenko/codex-steamdeck/issues)**
 
 ## Quick start
 
@@ -27,6 +27,7 @@ Real Steam Deck capture: installation, interface, notifications, Mac → Deck co
 [Comparison with Quest Compendium, Happy and HAPI / Сравнение похожих проектов](docs/COMPARISON.md).
 
 - Continue local Codex chats and choose a model, reasoning effort and service tier available to your account.
+- Check a game's Steam launch settings, test a reversible launch-option reset, and review or approve the repair from a paired browser. [Диагностика запуска и пульт](docs/LAUNCH-REPAIR.md).
 - Send tasks, inspect requested confirmations, view the queue, and receive a notification when a task completes while the panel is closed.
 - Attach Steam screenshots or up to four frames extracted from a recording. Video attachments are sampled frames, not full video analysis.
 - Use full-screen chat, history, themes, local dictation, an on-screen keyboard and language settings in the desktop companion.
