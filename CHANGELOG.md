@@ -4,10 +4,10 @@
 
 - Render only the visible history window and share periodic reads across Decky views.
 - Scope drafts by provider, device and thread. Cancel dictation auto-send after navigation or an edit.
-- Pause idle repair and hidden browser polling. Reconnect with backoff and preserve edits made while a note is sending.
+- Pause idle repair and hidden browser polling. Discard late replies after disconnects and preserve edits made while a note is sending.
 - Check shortcut targets, separate storage and rotated Steam logs. Open the selected game in the Steam library.
 - Recover from an unanswered Steam write while keeping a local copy of the original options. Allow declining in read-only mode.
-- Retry interrupted installer transfers and validate the entire archive before extraction.
+- Retry interrupted installer transfers and validate the entire archive before extraction. Find native Codex and Claude CLI installations in the desktop preflight even when they are outside the shell path.
 
 ## 1.0.0-rc.11
 

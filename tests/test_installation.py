@@ -1,6 +1,7 @@
 """Install/update/uninstall in temporary homes, never in the real account."""
 import importlib.util,json,tempfile,unittest
 from pathlib import Path
+from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('manage_install',ROOT/'scripts/manage-install.py');manager=importlib.util.module_from_spec(spec);spec.loader.exec_module(manager)
 from runtime_paths import resolve_app_dir,resolve_state_dir
@@ -16,6 +17,17 @@ class InstallationTests(unittest.TestCase):
   self.assertFalse((app/'decky/node_modules').exists())
   self.assertTrue((self.home/'.local/bin/deck-ai').stat().st_mode&0o100)
   self.assertIn('"'+str(self.home), (self.home/'.local/share/applications/codex-steamdeck.desktop').read_text())
+ def test_preflight_finds_native_cli_installations_without_path_entries(self):
+  script=ROOT/'scripts/check-environment.py'
+  check_spec=importlib.util.spec_from_file_location('check_environment',script)
+  preflight=importlib.util.module_from_spec(check_spec);check_spec.loader.exec_module(preflight)
+  bin_dir=self.home/'.local/bin';bin_dir.mkdir(parents=True)
+  for name in ('codex','claude'):
+   binary=bin_dir/name;binary.touch();binary.chmod(0o700)
+  with patch.object(Path,'home',return_value=self.home), patch('shutil.which',return_value=None), patch('subprocess.run',side_effect=OSError):
+   checks=preflight.check()['checks']
+  self.assertTrue(checks['codex'])
+  self.assertTrue(checks['claude'])
  def test_legacy_update_reuses_location_and_preserves_models_and_data(self):
   for name in ('deck-voice','codex-steamdeck'):
    with self.subTest(name=name):
