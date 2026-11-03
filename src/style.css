@@ -282,3 +282,8 @@ div:has(> .dai-root:not(.dai-fullscreen)){display:flex!important;flex-direction:
 /* Keep "Отправить" on one line in the narrow panel: give the main action more room. */
 .dai-root:not(.dai-fullscreen) .dai-compose-actions>.dai-button.dai-primary.DialogButton{flex:1.9;white-space:nowrap!important}
 .dai-root:not(.dai-fullscreen) .dai-compose-actions>.dai-button.DialogButton{padding-left:3px!important;padding-right:3px!important;white-space:nowrap!important}
+
+/* Keep long permission requests inside the available chat area. */
+.dai-chat-main.has-approvals .dai-messages{min-height:0}
+.dai-approvals{flex:0 1 auto;min-height:48px;max-height:45%;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.dai-approval{flex-shrink:0;overflow-wrap:anywhere}

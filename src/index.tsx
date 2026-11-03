@@ -380,7 +380,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
   {!error&&!connectionError&&(data?.historyWarning||data?.ready===false)&&<div className="dai-banner" role="status"><span>{data.historyWarning||data.status}</span><Action disabled={busy} onClick={()=>void run(async()=>{accept(await refresh());})}>Повторить подключение</Action></div>}
   {notice&&<div className="dai-notice" role="status">{notice}</div>}
   <div className="dai-page" role="tabpanel" aria-label={tab==="chat"?"Чат":tab==="history"?"История":"Настройки"}>
-  {tab==="chat"&&<div className="dai-chat-layout">{sidebar}<div className="dai-chat-main">
+  {tab==="chat"&&<div className="dai-chat-layout">{sidebar}<div className={"dai-chat-main"+(data?.approvals?.length?" has-approvals":"")}>
    {queueOpen?<GameScroll key="queue" ref={queueRef} className="dai-scroll dai-stack dai-queue-view"><div className="dai-stack-content">
     <Action onClick={()=>setQueueOpen(false)}>← К сообщению</Action>
     <h3>Очередь запросов · {data?.queueTotal??data?.outbox.length??0}</h3>
@@ -430,7 +430,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     </div></GameScroll>
     {showLatest&&<div className="dai-latest"><Action onClick={jumpToLatest}>↓ К последнему сообщению</Action></div>}
     {ro&&<div className="dai-notice" role="status">Режим только чтения: отправка, подтверждения и правки отключены.</div>}
-    {!!data?.approvals?.length&&<div className="dai-approvals" role="alert">{data.approvals.map(item=><div className="dai-approval" key={item.key}><strong>Нужно подтверждение · {item.title}</strong><span className="dai-muted">{item.summary}</span><Focusable className="dai-compose-actions" flow-children="horizontal"><Action primary disabled={busy||ro} onClick={()=>decide(item,"accept")}>{confirmApproval===item.key?"Нажмите ещё раз":"Разрешить"}</Action><Action disabled={busy||ro} onClick={()=>decide(item,"decline")}>Отклонить</Action></Focusable></div>)}</div>}
+    {!!data?.approvals?.length&&<GameScroll className="dai-approvals" role="alert">{data.approvals.map(item=><div className="dai-approval" key={item.key}><strong>Нужно подтверждение · {item.title}</strong><span className="dai-muted">{item.summary}</span><Focusable className="dai-compose-actions" flow-children="horizontal"><Action primary disabled={busy||ro} onClick={()=>decide(item,"accept")}>{confirmApproval===item.key?"Нажмите ещё раз":"Разрешить"}</Action><Action disabled={busy||ro} onClick={()=>decide(item,"decline")}>Отклонить</Action></Focusable></div>)}</GameScroll>}
     <div className="dai-composer">
      {countdown!==null&&<div className="dai-notice" role="status">Отправка через {countdown} с<Action onClick={()=>setCountdown(null)}>Отменить отправку</Action></div>}
      {quickOpen&&data?.threadId&&<Focusable className="dai-quick" flow-children="horizontal">{quickActions.map(([label,text])=><Action key={label} disabled={busy||disconnect||ro} onClick={()=>quick(text)}>{label}</Action>)}</Focusable>}
