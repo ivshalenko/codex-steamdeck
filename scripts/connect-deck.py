@@ -48,9 +48,9 @@ def configure(address,home=None):
  if not key.exists():subprocess.run([shutil.which('ssh-keygen') or 'ssh-keygen','-t','ed25519','-N','','-C','Deck AI remote access','-f',str(key)],check=True)
  if not public.is_file():raise ValueError('Public key file is missing: '+str(public)+'. Restore its .pub file; the existing private key was preserved.')
  public_key=public.read_text(encoding='utf-8').strip()
- if managed and managed[2].lower()==address.lower():return public_key
  identity=str(key).replace('\\','/').replace('"','\\"')
  block=f'{MARKER}\nHost deck-ai\n    HostName {address}\n    User deck\n    IdentityFile "{identity}"\n    IdentitiesOnly yes\nHost *\n{END_MARKER}\n'
+ if current.startswith(block):return public_key
  remainder=current if not managed else current[:managed[0]]+current[managed[1]:]
  # Specific options must precede a user's Host * defaults: OpenSSH uses the first value.
  updated=block+'\n'+remainder

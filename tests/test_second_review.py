@@ -40,6 +40,13 @@ class PairingUpdateTests(unittest.TestCase):
   (self.ssh/'config').write_text('Host *\n    User somebody_else\n')
   pairing.configure('192.0.2.15',self.home);config=(self.ssh/'config').read_text();self.assertLess(config.index('Host deck-ai'),config.index('Host *'))
  @unittest.skipUnless(pairing.shutil.which('ssh'),'OpenSSH parser required')
+ def test_same_address_upgrades_legacy_block_after_host_defaults(self):
+  identity=str(self.key).replace('\\','/')
+  legacy=f'Host *\n    User somebody_else\n\n{pairing.MARKER}\nHost deck-ai\n    HostName 192.0.2.15\n    User deck\n    IdentityFile "{identity}"\n    IdentitiesOnly yes\n'
+  (self.ssh/'config').write_text(legacy);pairing.configure('192.0.2.15',self.home)
+  r=subprocess.run([pairing.shutil.which('ssh'),'-G','-F',str(self.ssh/'config'),'deck-ai'],capture_output=True,text=True,check=True)
+  self.assertIn('user deck\n',r.stdout);self.assertEqual((self.ssh/'config.before-deck-ai').read_text(),legacy)
+ @unittest.skipUnless(pairing.shutil.which('ssh'),'OpenSSH parser required')
  def test_global_options_keep_applying_to_other_hosts(self):
   (self.ssh/'config').write_text('ServerAliveInterval 37\nHost work\n    HostName workstation\n')
   pairing.configure('192.0.2.15',self.home)
