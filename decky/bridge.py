@@ -19,7 +19,7 @@ import backend as device
 from backend import Backend, ssh_command, CODEX
 import providers
 from speech_accuracy import multilingual_ready
-from launch_repair import LaunchRepair, STEAM_ID_BASE, valid_account
+from launch_repair import LaunchRepair, screenshot_dirs, valid_account
 from repair_remote import RepairRemote
 ROOT=Path.home(); STATE=resolve_state_dir()
 STEAM=ROOT/'.local/share/Steam/userdata'
@@ -830,10 +830,12 @@ def launch_repair_call(method, params):
         raise ValueError("Откройте библиотеку Steam под своим аккаунтом.")
     if method == "repair_screenshots":
         app_id = params.get("appId")
-        if type(app_id) is not int or not 0 < app_id <= 0xffffffff:
+        shortcut = params.get("shortcut", False)
+        if type(app_id) is not int or not 0 < app_id <= 0xffffffff or type(shortcut) is not bool:
             raise ValueError("Выберите игру в Steam.")
-        directory = STEAM / str(int(account) - STEAM_ID_BASE) / "760" / "remote" / str(app_id) / "screenshots"
-        return list_screenshots(directory)
+        directories = screenshot_dirs(STEAM, account, app_id, shortcut)
+        screenshots = [item for directory in directories for item in list_screenshots(directory)]
+        return sorted(screenshots, key=lambda item: item["when"], reverse=True)[:50]
     if method == "repair_inspect":
         return repair.inspect(account, params.get("app"), params.get("screenshot", ""))
     case_id, verb = params.get("caseId"), params.get("verb")

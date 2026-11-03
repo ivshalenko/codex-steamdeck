@@ -42,12 +42,12 @@ export function RepairPanel({ copy }: { copy: (value: string) => void }) {
   setShots([]);
   setShot("");
   if (selected && account && !current) {
-   void repairScreenshots(selected.appId).then(items => {
+   void repairScreenshots(selected.appId, selected.shortcut).then(items => {
     if (!stale) setShots(items);
    }).catch(() => {});
   }
   return () => { stale = true; };
- }, [selected?.appId, account, current?.id]);
+ }, [selected?.appId, selected?.shortcut, account, current?.id]);
  useEffect(() => { setPreview(""); }, [account]);
 
  async function run(operation: () => Promise<unknown>) {
@@ -93,6 +93,14 @@ export function RepairPanel({ copy }: { copy: (value: string) => void }) {
     <ul className="dai-repair-checks">{current.checks.map(check => <li key={check}>{check}</li>)}</ul>
     <p role="status">{action?.state === "pending" ? "Ожидаю подтверждение." : action ? "Сверяю параметры со Steam…" : status[current.state]}</p>
     {current.detail && <p className="dai-muted">{current.detail}</p>}
+    <Focusable className="dai-repair-actions" flow-children="horizontal">
+     <DialogButton className="dai-button" disabled={busy || !!action} onClick={() => send("recheck")}>Повторить проверку</DialogButton>
+     <DialogButton className="dai-button" onClick={() => copy([
+      `${current.name} · Steam App ID ${current.appId}`,
+      current.proton && `Совместимость Steam · ${current.proton}`,
+      ...current.checks,
+     ].filter(Boolean).join("\n"))}>Скопировать сводку</DialogButton>
+    </Focusable>
     {current.readOnly && <p className="dai-muted">Изменения приостановлены в режиме «Только чтение».</p>}
     {current.note && <p className="dai-muted">Уточнение с пульта · {current.note}</p>}
     {!action && current.canReset && <>

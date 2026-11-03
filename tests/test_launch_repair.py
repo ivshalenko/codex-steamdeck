@@ -10,7 +10,7 @@ from urllib.parse import urlsplit
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "decky"))
-from launch_repair import LaunchRepair
+from launch_repair import LaunchRepair, steam_ids
 from repair_remote import RepairRemote
 
 
@@ -128,6 +128,30 @@ class LaunchRepairTests(unittest.TestCase):
         self.assertIn("В журнале есть ошибка нехватки места.", result["case"]["checks"])
         self.assertNotIn("local-fixture", json.dumps(result["case"]))
         self.assertNotIn(str(good), self.repair.path.read_text())
+
+    def test_refresh_recognizes_shortcut_log_and_preserves_backup(self):
+        shortcut = {**APP, "shortcut": True}
+        self.case_id = self.repair.inspect(ACCOUNT, shortcut, "")["case"]["id"]
+        reset = self.request()
+        self.command("decide", actionId=reset, decision=True)
+        self.command("claim", actionId=reset, options=APP["options"], shortcut=True)
+        self.command("observe", actionId=reset, options="", shortcut=True)
+        self.command("result", result="started")
+        game_id = steam_ids(APP["appId"], True)[1]
+        logs = self.steam.parent / "logs"
+        logs.mkdir()
+        (logs / "gameprocess_log.txt").write_text(
+            f'[2026-11-04 02:27:33] AppID {game_id} adding PID 55 as a tracked process "private-path"\n'
+            f"[2026-11-04 02:27:36] AppID {game_id} no longer tracking PID 55, exit code 0\n"
+            "[2026-11-04 02:27:37] AppID 99 no longer tracking PID 66, exit code 12\n")
+        result = self.command("recheck")
+        self.assertIn("Steam зарегистрировал завершение процесса · 2026-11-04 02:27:36 · код 0.", result["checks"])
+        self.assertNotIn("private-path", str(result))
+        self.assertEqual("started", result["launchResult"])
+        self.assertEqual("applied", result["state"])
+        restore = self.request("restore")
+        self.command("decide", actionId=restore, decision=True)
+        self.assertEqual({"options": APP["options"]}, self.command("claim", actionId=restore, options="", shortcut=True))
 
     def test_real_http_pairing_scope_and_single_use_decision(self):
         remote = RepairRemote(self.repair, port=0, clock=lambda: self.now)

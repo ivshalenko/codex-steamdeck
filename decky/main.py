@@ -104,8 +104,8 @@ class Plugin:
     async def diagnose(self):return await self._rpc("diagnose",timeout=80)
     async def repair_status(self, account):
         return await self._rpc("repair_status", {"account": account}, timeout=8)
-    async def repair_screenshots(self, account, app_id):
-        return await self._rpc("repair_screenshots", {"account": account, "appId": app_id}, timeout=8)
+    async def repair_screenshots(self, account, app_id, shortcut=False):
+        return await self._rpc("repair_screenshots", {"account": account, "appId": app_id, "shortcut": shortcut}, timeout=8)
     async def repair_inspect(self, account, app, screenshot):
         return await self._rpc("repair_inspect", {"account": account, "app": app, "screenshot": screenshot}, timeout=15)
     async def repair_command(self, account, case_id, verb, fields):

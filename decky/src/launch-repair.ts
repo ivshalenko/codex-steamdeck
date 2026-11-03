@@ -16,7 +16,7 @@ type Screenshot = { path: string; name: string; when?: number };
 const repairStatus = callable<[account: string], View>("repair_status");
 const inspect = callable<[account: string, game: GameDetails, screenshot: string],
  { case: RepairCase; preview: string }>("repair_inspect");
-const screenshots = callable<[account: string, appId: number], Screenshot[]>("repair_screenshots");
+const screenshots = callable<[account: string, appId: number, shortcut: boolean], Screenshot[]>("repair_screenshots");
 const command = callable<[account: string, caseId: string, verb: string, fields: object], unknown>("repair_command");
 
 export function steamAccount(): string {
@@ -33,7 +33,8 @@ const shortcutType = 1073741824;
 export function libraryGames(query: string, preferredId: number): Game[] {
  const search = query.trim().toLocaleLowerCase();
  return (window.appStore?.allApps || [])
-  .filter(app => app.appid > 0 && (app.local_per_client_data?.installed || app.app_type === shortcutType)
+  .filter(app => app.appid > 0 && (app.local_per_client_data?.installed || (app.size_on_disk ?? 0) > 0
+   || app.appid === preferredId || app.app_type === shortcutType)
    && (app.app_type === 1 || app.app_type === 8 || app.app_type === shortcutType)
    && typeof app.display_name === "string" && app.display_name.toLocaleLowerCase() !== "deck ai"
    && (!search || app.display_name.toLocaleLowerCase().includes(search) || String(app.appid) === search))
@@ -93,7 +94,7 @@ export async function inspectLaunch(appId: number, screenshot: string) {
  return inspect(account, game, screenshot);
 }
 
-export function repairScreenshots(appId: number) { return screenshots(steamAccount(), appId); }
+export function repairScreenshots(appId: number, shortcut: boolean) { return screenshots(steamAccount(), appId, shortcut); }
 export function repairCommand(caseId: string, verb: string, fields: object = {}) {
  return command(steamAccount(), caseId, verb, fields);
 }

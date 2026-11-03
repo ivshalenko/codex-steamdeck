@@ -19,6 +19,11 @@ LOG_SIGNALS = {
     b"failed to initialize vulkan": "В журнале есть ошибка инициализации Vulkan.",
     b"could not load kernel32": "В журнале есть ошибка запуска Wine.",
 }
+STEAM_PROCESS = re.compile(
+    rb"^\[([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})\] "
+    rb"AppID ([0-9]{1,20}) (adding|no longer tracking) PID [0-9]+"
+    rb"(?:, exit code (-?[0-9]{1,12}))?(?: |$)"
+)
 
 
 def valid_account(account):
@@ -45,8 +50,40 @@ def read_regular(path, limit, *, tail=False):
         return stream.read(limit), info.st_mtime
 
 
-def collect(home, steam, account, app, screenshot):
-    app_id = app["appId"]
+def steam_ids(app_id, shortcut):
+    # Steam identifies a non-Steam shortcut by both its 32-bit app ID and its
+    # 64-bit game ID (type 2). Steam's process log uses the latter.
+    if shortcut:
+        return str(app_id), str((app_id << 32) | (2 << 24))
+    return (str(app_id),)
+
+
+def screenshot_dirs(steam, account, app_id, shortcut):
+    base = steam / str(int(account) - STEAM_ID_BASE) / "760" / "remote"
+    return [base / identifier / "screenshots" for identifier in steam_ids(app_id, shortcut)]
+
+
+def steam_process_check(steam, app_id, shortcut):
+    try:
+        data, _ = read_regular(steam.parent / "logs" / "gameprocess_log.txt", 256 * 1024, tail=True)
+    except (OSError, ValueError):
+        return "Журнал процессов Steam недоступен."
+    identifiers = {identifier.encode("ascii") for identifier in steam_ids(app_id, shortcut)}
+    for line in reversed(data.splitlines()):
+        event = STEAM_PROCESS.match(line)
+        if not event or event[2] not in identifiers:
+            continue
+        timestamp = event[1].decode("ascii")
+        if event[3] == b"adding":
+            return f"Steam зарегистрировал процесс игры · {timestamp}."
+        if event[4] is not None:
+            code = event[4].decode("ascii")
+            return f"Steam зарегистрировал завершение процесса · {timestamp} · код {code}."
+        return f"Steam зарегистрировал завершение процесса · {timestamp}."
+    return "В недавних событиях Steam процессы этой игры не найдены."
+
+
+def collect_checks(home, steam, app_id, shortcut):
     checks = []
     try:
         gib = shutil.disk_usage(home).free / (1024 ** 3)
@@ -61,27 +98,28 @@ def collect(home, steam, account, app, screenshot):
         checks.extend(hits or ["В конце журнала не найдено известных ошибок из списка проверок."])
     except (OSError, ValueError):
         checks.append("Доступный журнал Proton для игры отсутствует.")
-    preview = ""
-    if screenshot:
-        relative = Path(str(int(account) - STEAM_ID_BASE)) / "760" / "remote" / str(app_id) / "screenshots"
-        directory = steam / relative
-        path = Path(screenshot)
-        mime = {".jpg": "jpeg", ".jpeg": "jpeg", ".png": "png", ".webp": "webp"}.get(path.suffix.lower())
-        if (not mime or path.parent != directory or path.resolve().parent != directory.resolve()
-                or directory.resolve() != steam.resolve() / relative):
-            raise ValueError("Выберите скриншот этой игры из Steam.")
-        try:
-            data, _ = read_regular(path, 4_000_000)
-        except OSError:
-            raise ValueError("Скриншот Steam недоступен.") from None
-        signature_ok = ((mime == "png" and data.startswith(b"\x89PNG\r\n\x1a\n"))
-                        or (mime == "jpeg" and data.startswith(b"\xff\xd8\xff"))
-                        or (mime == "webp" and data.startswith(b"RIFF") and data[8:12] == b"WEBP"))
-        if not signature_ok:
-            raise ValueError("Формат файла не совпадает с расширением скриншота.")
-        preview = f"data:image/{mime};base64," + base64.b64encode(data).decode("ascii")
-        checks.append("Выбран скриншот Steam. Он отображается на Deck.")
-    return checks, preview
+    checks.append(steam_process_check(steam, app_id, shortcut))
+    return checks
+
+
+def screenshot_preview(steam, account, app_id, shortcut, screenshot):
+    path = Path(screenshot)
+    directory = path.parent
+    mime = {".jpg": "jpeg", ".jpeg": "jpeg", ".png": "png", ".webp": "webp"}.get(path.suffix.lower())
+    if (not mime or directory not in screenshot_dirs(steam, account, app_id, shortcut)
+            or path.resolve().parent != directory.resolve()
+            or directory.resolve() != steam.resolve() / directory.relative_to(steam)):
+        raise ValueError("Выберите скриншот этой игры из Steam.")
+    try:
+        data, _ = read_regular(path, 4_000_000)
+    except OSError:
+        raise ValueError("Скриншот Steam недоступен.") from None
+    signature_ok = ((mime == "png" and data.startswith(b"\x89PNG\r\n\x1a\n"))
+                    or (mime == "jpeg" and data.startswith(b"\xff\xd8\xff"))
+                    or (mime == "webp" and data.startswith(b"RIFF") and data[8:12] == b"WEBP"))
+    if not signature_ok:
+        raise ValueError("Формат файла не совпадает с расширением скриншота.")
+    return f"data:image/{mime};base64," + base64.b64encode(data).decode("ascii")
 
 
 class LaunchRepair:
@@ -157,7 +195,8 @@ class LaunchRepair:
                 or not isinstance(original, str) or len(original) > 8192 or "\0" in original
                 or type(app.get("shortcut")) is not bool or not isinstance(screenshot, str) or len(screenshot) > 4096):
             raise ValueError("Steam не предоставил данные о параметрах запуска игры.")
-        checks, preview = collect(self.home, self.steam, account, app, screenshot)
+        checks = collect_checks(self.home, self.steam, app_id, app["shortcut"])
+        preview = screenshot_preview(self.steam, account, app_id, app["shortcut"], screenshot) if screenshot else ""
         with self.lock:
             self._expire()
             if self.case and (self.case["action"] or self.case["state"] in ("applied", "conflict")):
@@ -223,6 +262,9 @@ class LaunchRepair:
                 if action or case["state"] != "applied" or params.get("result") not in ("started", "failed"):
                     raise ValueError("Сначала дождитесь проверки сброса параметров.")
                 self._update(launchResult=params["result"])
+            elif verb == "recheck":
+                checks = collect_checks(self.home, self.steam, case["appId"], case["shortcut"])
+                self._update(checks=checks)
             elif verb == "note":
                 note = clean_text(params.get("note"), 500)
                 if not note:
