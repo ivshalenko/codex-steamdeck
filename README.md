@@ -14,6 +14,14 @@ Users do **not** need Node.js, npm or a source build. The **decky.zip** asset in
 
 For an unpacked desktop release, the terminal alternative is `python3 scripts/setup.py`. Advanced unattended app/plugin installation: `./install.sh --decky` (install/sign into Codex separately first).
 
+## Screenshots and videos / Скриншоты и видео
+
+**[21 screenshot and 7 video examples / Каталог материалов](docs/MEDIA.md)** · **[Download the public gallery / Скачать галерею](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.8/deck-ai-1.0.0-rc.8-public-media.zip)**
+
+![Deck AI full-screen: result of a real demonstration command](docs/media/screenshots/27-rc8-confirmed-result.png)
+
+Real Steam Deck capture: installation, interface, notifications, Mac → Deck control and a demonstration fix. Game-request screenshots are conversation history, not proof of a successful game installation. The catalog identifies the recorded versions and remaining physical-input checks.
+
 ## What you can do
 
 - Continue local Codex chats and choose a model, reasoning effort and service tier available to your account.

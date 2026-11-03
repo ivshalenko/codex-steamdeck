@@ -1,0 +1,324 @@
+[
+  {
+    "file": "screenshots/01-bloodborne-request.png",
+    "caption": "Первый запрос Bloodborne и реальные ограничения в ответе",
+    "width": 1281,
+    "height": 681,
+    "seconds": null,
+    "sha256": "f4b0aea4fd8c9a3e03007bb4f12de312d360a9a0279bdf55c3968cccd5380ce4",
+    "pixelRangeSamples": [
+      247
+    ]
+  },
+  {
+    "file": "screenshots/02-bloodborne-error.png",
+    "caption": "Пользователь прислал ошибку запуска Bloodborne",
+    "width": 1281,
+    "height": 681,
+    "seconds": null,
+    "sha256": "8019bb4e7758147fb3e2b52fd9d410eb18a883acb66439585f72606b07bda1cc",
+    "pixelRangeSamples": [
+      247
+    ]
+  },
+  {
+    "file": "screenshots/03-zelda-botw-request.png",
+    "caption": "Историческая просьба настроить Zelda BOTW",
+    "width": 1281,
+    "height": 681,
+    "seconds": null,
+    "sha256": "f7bd2ff9cf5c7a41cf4e35f0276c33cd9a8ceff18508d22c5b9d71f46c7c481b",
+    "pixelRangeSamples": [
+      247
+    ]
+  },
+  {
+    "file": "screenshots/04-zelda-totk-request.png",
+    "caption": "Историческая просьба настроить Zelda TOTK",
+    "width": 1281,
+    "height": 681,
+    "seconds": null,
+    "sha256": "5eae2cdb887393eeb3b1c8e3ca93ded54385c4ff8d70b34c72f8a28e26207e33",
+    "pixelRangeSamples": [
+      247
+    ]
+  },
+  {
+    "file": "screenshots/05-keyboard-error-request.png",
+    "caption": "Исторический запрос об экранной клавиатуре",
+    "width": 1281,
+    "height": 681,
+    "seconds": null,
+    "sha256": "e6d0bd158bac70cf3406c55df8c232b610da7267d17d32d7180afe70d84be5ba",
+    "pixelRangeSamples": [
+      247
+    ]
+  },
+  {
+    "file": "screenshots/06-empty-fullscreen.png",
+    "caption": "Полноэкранный Decky: техническая проверка черновика",
+    "width": 1281,
+    "height": 681,
+    "seconds": null,
+    "sha256": "ead71522d27c07864dab3ba9bbbdbb6501dbda578f98bb6a420e1cee5116645f",
+    "pixelRangeSamples": [
+      247
+    ]
+  },
+  {
+    "file": "screenshots/07-appearance-settings.png",
+    "caption": "Темы, плотность, компоновка и вид сообщений",
+    "width": 597,
+    "height": 548,
+    "seconds": null,
+    "sha256": "c14e887fe1657aaff799210e9a92835b29c5b2ba983f1acaf35f3c6dcaa83897",
+    "pixelRangeSamples": [
+      247
+    ]
+  },
+  {
+    "file": "screenshots/08-compact-panel.png",
+    "caption": "Компактная панель Decky",
+    "width": 450,
+    "height": 609,
+    "seconds": null,
+    "sha256": "56eb56ff89e5dc28727da6af8e0bb51184bb1726bba3b66d6e9e9015b74d24f0",
+    "pixelRangeSamples": [
+      241
+    ]
+  },
+  {
+    "file": "screenshots/09-installation-wizard.png",
+    "caption": "Мастер установки на русском",
+    "width": 760,
+    "height": 620,
+    "seconds": null,
+    "sha256": "c371c402eba03fda49b2b14ff0d7958f3e08ee89eb02ff52e4cb165290685179",
+    "pixelRangeSamples": [
+      221
+    ]
+  },
+  {
+    "file": "screenshots/10-bloodborne-owned-files.png",
+    "caption": "Уточнение о локальных файлах Bloodborne",
+    "width": 1281,
+    "height": 681,
+    "seconds": null,
+    "sha256": "b2fa91dead1b2e570ca58b04496ccb4ac6de49f3fc4aa732e8c7a9866dbc1324",
+    "pixelRangeSamples": [
+      247
+    ]
+  },
+  {
+    "file": "screenshots/11-real-completion-notification.png",
+    "caption": "Настоящее уведомление Steam; исходный кадр системной записи",
+    "width": 1280,
+    "height": 800,
+    "seconds": null,
+    "sha256": "6a91da6210c10e9bd6f12cc3dda4aa95fc952fbe638cfdeb640f3646b90bb81d",
+    "pixelRangeSamples": [
+      255
+    ]
+  },
+  {
+    "file": "screenshots/12-notification-opens-result.png",
+    "caption": "Нажатие на уведомление открыло нужный результат",
+    "width": 1217,
+    "height": 647,
+    "seconds": null,
+    "sha256": "f0f063325cca3aad16443d1637a3d660a07bfed054ae54a867e9d8e723a70718",
+    "pixelRangeSamples": [
+      114
+    ]
+  },
+  {
+    "file": "screenshots/14-mac-controls-deck-result.png",
+    "caption": "Настоящая команда с Mac выполнена на Deck",
+    "width": 1281,
+    "height": 681,
+    "seconds": null,
+    "sha256": "faa5c4847df4544340d25bd2faa055c9bc67ca8f6a38bb66af9ccf7f71670203",
+    "pixelRangeSamples": [
+      247
+    ]
+  },
+  {
+    "file": "screenshots/15-real-bug-fix-result.png",
+    "caption": "GTK: результат настоящего демонстрационного исправления",
+    "width": 1280,
+    "height": 800,
+    "seconds": null,
+    "sha256": "4152e18c3740cfcd58df1e8520549019c5c7afe1a929157fdd650a23704d528f",
+    "pixelRangeSamples": [
+      234
+    ]
+  },
+  {
+    "file": "screenshots/16-real-failed-test-history.png",
+    "caption": "GTK: история проверки демонстрационного проекта",
+    "width": 1280,
+    "height": 800,
+    "seconds": null,
+    "sha256": "7eb8087bac14740d5988c110ed3bbac33bd708777e9d335a0f2a34c05c72c60d",
+    "pixelRangeSamples": [
+      234
+    ]
+  },
+  {
+    "file": "screenshots/17-real-diff-history.png",
+    "caption": "GTK: реальный diff и успешный тест",
+    "width": 1280,
+    "height": 800,
+    "seconds": null,
+    "sha256": "4152e18c3740cfcd58df1e8520549019c5c7afe1a929157fdd650a23704d528f",
+    "pixelRangeSamples": [
+      234
+    ]
+  },
+  {
+    "file": "screenshots/18-rc7-bug-fix-request.png",
+    "caption": "rc.7: новый реальный запрос об исправлении демо-бага",
+    "width": 1281,
+    "height": 561,
+    "seconds": null,
+    "sha256": "847426b574156abd6f53de2073d395417ad7361f7ef422a1a54d0bfd8aed2b78",
+    "pixelRangeSamples": [
+      255
+    ]
+  },
+  {
+    "file": "screenshots/20-rc7-live-fix-result.png",
+    "caption": "rc.7: результат нового исправления, diff и проверочный маркер",
+    "width": 1281,
+    "height": 441,
+    "seconds": null,
+    "sha256": "6fd2eca7d24f95e559bb0a77ced0dbe37f9a53f57f436c9422abf5155a21699b",
+    "pixelRangeSamples": [
+      247
+    ]
+  },
+  {
+    "file": "screenshots/25-rc8-visible-permission-buttons.png",
+    "caption": "rc.8: запрос и обе кнопки полностью в окне",
+    "width": 1281,
+    "height": 801,
+    "seconds": null,
+    "sha256": "f5fcf642d09a5ff630227a8d78a963889a5a6a4818685130b198417adf52fa69",
+    "pixelRangeSamples": [
+      255
+    ]
+  },
+  {
+    "file": "screenshots/26-rc8-second-confirmation.png",
+    "caption": "rc.8: отдельное второе подтверждение",
+    "width": 1281,
+    "height": 801,
+    "seconds": null,
+    "sha256": "917f22a1f921ed066d3562dac657eba4b31322701497ff235d5f892142138115",
+    "pixelRangeSamples": [
+      255
+    ]
+  },
+  {
+    "file": "screenshots/27-rc8-confirmed-result.png",
+    "caption": "rc.8: настоящий результат разрешённой демо-команды",
+    "width": 1281,
+    "height": 801,
+    "seconds": null,
+    "sha256": "b31c90da3b14dd4bcfde8b794cb251eb6f6a732891aa570e129d4339c6ce8907",
+    "pixelRangeSamples": [
+      255
+    ]
+  },
+  {
+    "file": "videos/01-real-game-conversations.mp4",
+    "caption": "История реальных игровых запросов: Zelda и список чатов",
+    "width": 1282,
+    "height": 682,
+    "seconds": 16.23,
+    "sha256": "97f921329e9c45faae11d803d1200456696671980682b16fdf875bbfc9a4eb88",
+    "pixelRangeSamples": [
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "videos/02-appearance-controls.mp4",
+    "caption": "Переключение тем в Decky",
+    "width": 598,
+    "height": 536,
+    "seconds": 9.23,
+    "sha256": "33c4ac6c1ec3ead261176fcdad46bb502c7cc5674255f18ec83979631a40e9e8",
+    "pixelRangeSamples": [
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "videos/03-real-background-notification.mp4",
+    "caption": "Настоящее уведомление при закрытой панели и переход в ответ",
+    "width": 1280,
+    "height": 800,
+    "seconds": 22.87,
+    "sha256": "490bbfb65fdd0ff4079b93a0d4b8cc1385dafc22a74851180b16a8026a3dae27",
+    "pixelRangeSamples": [
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "videos/04-mac-controls-deck.mp4",
+    "caption": "Продолжение чата с Mac; исполнение на Steam Deck",
+    "width": 1282,
+    "height": 682,
+    "seconds": 35.2,
+    "sha256": "8f846006d0333eaa9b37f772d89bdb11de655fda3129c319998029a2dc929c89",
+    "pixelRangeSamples": [
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "videos/05-real-bug-fix-history-gtk.mp4",
+    "caption": "Настольный GTK: просмотр истории выполненной правки и теста",
+    "width": 1280,
+    "height": 800,
+    "seconds": 12.63,
+    "sha256": "5f608b94a1cea67ee162f3b891f45cc6db35f9e3d8d6b2f2147e3a9b1c1d2c4b",
+    "pixelRangeSamples": [
+      255,
+      255,
+      254
+    ]
+  },
+  {
+    "file": "videos/06-rc7-live-bug-fix.mp4",
+    "caption": "rc.7: живое выполнение нового демо-задания после включения экрана",
+    "width": 1282,
+    "height": 562,
+    "seconds": 80.27,
+    "sha256": "78c6ccc3dcb67ec25b245712fa6a732076d8a762745a885b395d805edd8e0bbb",
+    "pixelRangeSamples": [
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "videos/08-rc8-live-confirmation.mp4",
+    "caption": "rc.8: полный запрос, два подтверждения и настоящий результат",
+    "width": 1282,
+    "height": 802,
+    "seconds": 35.2,
+    "sha256": "fed2944fc58b7a52f4a3b389a9a2c302838519201ed1d6175e065c190bf79b67",
+    "pixelRangeSamples": [
+      255,
+      255,
+      255
+    ]
+  }
+]
