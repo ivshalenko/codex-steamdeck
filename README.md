@@ -10,6 +10,7 @@ The project is designed for Steam Deck. Choose between your signed-in Codex acco
 - Switch between your signed-in Codex account, Claude Code using a Claude Pro/Max subscription, and DeepSeek models through OpenRouter.
 - Browse the current DeepSeek catalog from OpenRouter. Model prices are shown where the catalog provides them; OpenRouter requests require your own API key and may incur charges.
 - Use the fixed `deepseek-v4.1-flash:free` model through the OpenAI-compatible TokenHarbor endpoint (`https://tokenharbor.ai/v1`). The provider currently labels this model free; check TokenHarbor's terms and limits because provider availability and pricing can change.
+- Connect **any other cloud AI** that has an OpenAI-compatible API (OpenAI, Gemini, Groq, Mistral, DeepSeek, xAI, OpenRouter, …): Decky Settings → «Свой облачный ИИ», or the **+** menu in the desktop app. Only https addresses of public cloud hosts are accepted (no local servers); the API key goes to the system secret store.
 - Sign in, view the current account, or sign out through Codex.
 - Open websites in an optional right-side browser panel with a persistent, app-local cookie profile.
 - Use Russian or English for the interface. **English is the default on a fresh install.**
@@ -22,12 +23,14 @@ The project is designed for Steam Deck. Choose between your signed-in Codex acco
 
 The interface is currently translated into English and Russian. Voice recognition supports English and Russian with the basic models, or 99 model-supported languages and automatic detection with the optional multilingual model. Keyboard layouts cover the seven languages listed above; other interface and speech languages are not included yet.
 
-No software license has been selected yet. Reuse and redistribution permissions have not been granted. A public release has not been published.
+## License and attribution
+
+Deck AI is licensed under the **Apache License 2.0** (see `LICENSE`). Anyone who copies, modifies or redistributes it must keep the copyright notice and the `NOTICE` file, which credit the author (ivshalenko), and must mark files they changed. A public release has not been published.
 
 ## Requirements
 
 - Steam Deck with SteamOS and Desktop Mode.
-- Codex CLI installed and signed in on the Deck. The official Codex CLI installation guide is at <https://developers.openai.com/codex/cli/>.
+- Codex CLI installed and signed in on the Deck (or on the selected SSH host). The official Codex CLI installation guide is at <https://developers.openai.com/codex/cli/>.
 - Python 3, GTK 3 Python bindings, FFmpeg, PulseAudio-compatible microphone input, and a working audio input device.
 - Optional: Decky Loader for the Gaming Mode Quick Access plugin. The plugin uses Decky API version 2 and the folder name `Codex` in the current manual install path.
 - Optional: Claude Code installed and signed in with your Claude Pro/Max subscription to use Claude in the desktop companion. Sign in with `claude auth login`; do not use `--console` for a Pro/Max subscription.
@@ -35,6 +38,20 @@ No software license has been selected yet. Reuse and redistribution permissions 
 - Optional: a TokenHarbor API key to use DeepSeek V4.1 Flash. It is stored in the system Secret Service (KWallet/libsecret), not in the repository. The API base is `https://tokenharbor.ai/v1`; the app calls its `/chat/completions` endpoint.
 - Optional: WebKitGTK 4.1 or 4.0 with Python GObject bindings to enable the embedded browser panel. Without it, the app remains usable and explains that the browser component is missing. Browser cookies are stored locally under the app state directory and are not part of this repository.
 - Internet access during setup to install Python packages and download speech models.
+
+## Connect Codex on Steam Deck
+
+In Desktop Mode, install Codex using the [official CLI guide](https://developers.openai.com/codex/cli/), then sign in:
+
+```bash
+codex --version
+codex login --device-auth
+codex login status
+```
+
+Open the displayed verification page on the Deck or another device and enter the code. If device authentication is disabled for your account, enable it in ChatGPT security settings or run `codex login` with a browser on the same machine. In Deck AI choose **Codex → Этот Steam Deck**. In the Decky panel, **Settings → Аккаунт ChatGPT → Войти в аккаунт** displays the verification URL and device code.
+
+Deck AI connects to the local Codex control socket when available. It starts the shared daemon if supported and falls back to an owned stdio app-server for CLIs without daemon support. No public app-server listener is needed. A custom `CODEX_HOME` is respected.
 
 ## Install the desktop companion
 
@@ -65,6 +82,22 @@ For more accurate final text and multilingual dictation:
 
 The multilingual model also supports English. Choose a language or automatic detection in settings. Decky uses fast streaming recognition for Russian/English; the desktop app can also refine them. The final pass runs after recording stops and releases its model memory when finished.
 
+## Project web page
+
+The optional workflow builds a web page from this README, the changelog and the version (`.github/workflows/pages.yml`, `scripts/build-site.py`). To enable deployment, set Settings → Pages → Source to **GitHub Actions**, then set the repository Actions variable `ENABLE_GITHUB_PAGES=true`. Run the **Project web page** workflow or push to `main`. It is skipped until explicitly enabled. Build the page locally with `python3 scripts/build-site.py`.
+
+## Notifications, remote tasks and files
+
+- Steam toasts report finished, failed and approval-waiting tasks even with the panel closed. Under **Следить в фоне** you can watch several SSH machines at once.
+- **История → Что произошло** lists recent events; **Задачи на всех устройствах** lists running chats of every device visited.
+- Approval requests appear in the chat with **Разрешить / Отклонить**; allowing needs a second press. **Только чтение** disables all actions.
+- **Файлы на устройстве** (История) opens text files from the home folder of the selected device for viewing and small edits.
+- **Control the Deck from a Mac or PC.** On the Deck (Desktop Mode terminal) run `passwd`, then `sudo systemctl enable --now sshd` once. In Decky open Settings → «Доступ с другого компьютера», copy the shown `Host steamdeck` block into `~/.ssh/config` on the Mac, and paste the Mac's public key (`cat ~/.ssh/id_ed25519.pub`). For the Mac side there is a guided setup: `python3 scripts/deck-remote.py steamdeck setup DECK_ADDRESS` creates a key if needed, adds the `Host steamdeck` block to `~/.ssh/config` and prints the one command to run on the Deck. Then `python3 scripts/deck-remote.py steamdeck list` / `send THREAD "text" --wait` sends commands that appear in Deck AI. Use key login only and keep SSH reachable only on your home network or through Tailscale.
+- **Appearance** (Decky Settings → «Оформление»): seven colour themes, message style (bubbles / lines / cards), density, and layout — tabs on top or at the bottom, or two columns (chat list + conversation) in full screen. The desktop app has the same colour themes in its menu.
+- With a hardware keyboard, **Enter sends** the message (Shift+Enter inserts a new line in the desktop app). Dragging a finger over messages, history and settings scrolls them.
+- X on the controller toggles dictation. Own words go in `vocabulary.txt` (project folder or `~/.config/deck-ai/`): one word per line, or `heard => written` to correct recognition.
+- Faster final pass: `DECK_AI_WHISPER_SIZE=base ./scripts/download-models.sh --accurate-ru`.
+
 ## Gaming Mode controls
 
 - Compact chat fills Decky's available height. Use **На весь экран** to expand it; settings open on a separate full-screen page.
@@ -82,6 +115,8 @@ The runtime copies of the logo are installed from the repository by `./install.s
 
 ## Install the Decky Loader plugin
 
+**Quick way:** after `./install.sh`, run `./install.sh --decky` (or `scripts/install-decky.sh`). It copies the plugin to `~/homebrew/plugins/Codex`, asks for your password once because that folder belongs to root, and restarts Decky Loader. The manual steps below do the same thing by hand.
+
 1. Install and start **Decky Loader** on the Steam Deck. Confirm it is running in Gaming Mode.
 2. Install the desktop companion above first. The plugin bridge imports the desktop app's provider code from its installed Python environment; Codex itself must be installed and signed in on the Deck.
 3. Copy the complete `decky/` directory from this repository to `~/homebrew/plugins/Codex/`, replacing the previous plugin directory when updating. Preserve the folder name `Codex`; Decky's displayed plugin name comes from `decky/plugin.json` and is **Deck AI**.
@@ -94,9 +129,20 @@ The plugin reconnects to Codex after Decky starts. It needs no separate OpenAI A
 
 ## Optional: connect another computer
 
-Install Codex CLI on the other computer and sign in there. Configure SSH on the Deck using your own SSH host alias and key, then select that device in Codex. Use a trusted private network or VPN such as Tailscale; do not expose the Codex app-server port directly to the public internet. Never upload private SSH keys, `~/.codex/auth.json`, or account tokens.
+Install Codex CLI on the other computer and sign in there. Configure SSH on the Deck using your own SSH host alias and key. Before selecting that alias under **Устройство**, connect once from a Desktop Mode terminal to verify the host fingerprint and key login:
 
-Third-party dependency notices are included in `decky/THIRD_PARTY_NOTICES.txt`. These are separate from the still-pending license choice for Deck AI itself.
+```bash
+ssh YOUR_ALIAS true
+ssh -o BatchMode=yes YOUR_ALIAS 'pwd'
+```
+
+Deck AI runs JSONL RPC through SSH. Current CLIs use `app-server daemon start` and `app-server proxy` to share running Codex threads; CLIs without those commands use `app-server --listen stdio://`. Both desktop and Decky resume an existing thread before sending through the same RPC connection. A failed resume stays visible as an error instead of silently handing the message to another queue. For legacy CLIs, keep the client open while work is running; use `--wait` with `scripts/deck-remote.py`.
+
+The SSH launcher also checks `~/.local/bin`, `~/.npm-global/bin`, Homebrew paths and the macOS Codex app binary when the SSH session has a minimal PATH. Remote account login uses a device code, so no browser callback needs to reach the other computer.
+
+ Use a trusted private network or VPN such as Tailscale; do not expose the Codex app-server port directly to the public internet. Never upload private SSH keys, `~/.codex/auth.json`, or account tokens.
+
+Third-party dependency notices are included in `decky/THIRD_PARTY_NOTICES.txt`. Deck AI itself is licensed under Apache-2.0 (`LICENSE`, `NOTICE`).
 
 ## Privacy and security
 
@@ -149,7 +195,7 @@ The GUI and voice checks make one real Codex request each and use account quota.
 
 The builder runs compilation, shell syntax checks, frontend tests, Python regression tests and package checks, then creates `build/releases/` with a desktop/source archive, a Decky runtime ZIP, `SHA256SUMS.txt` and `BUILD-REPORT.json`. Downloaded models, virtual environments, personal state and credentials are excluded. GitHub Actions runs the same builder and uploads artifacts; it does not publish a release automatically.
 
-Before a stable `1.0.0` tag: select a LICENSE; test the archives on another SteamOS installation; check controller-only navigation, suspend/resume, network loss, microphone language/quality and game performance; and test every advertised optional provider with its own account. The stable-package check refuses a release without a selected LICENSE. Publishing to the Decky store is a separate review from creating a GitHub release.
+Before a stable `1.0.0` tag: test the archives on another SteamOS installation; check controller-only navigation, suspend/resume, network loss, microphone language/quality and game performance; and test every advertised optional provider with its own account. The stable-package check refuses a release without a LICENSE. Publishing to the Decky store is a separate review from creating a GitHub release.
 
 ## Development
 

@@ -31,17 +31,17 @@ except (ValueError, ImportError):
         from gi.repository import WebKit2
     except (ValueError, ImportError):
         WebKit2 = None
-from backend import Backend, RpcError
+from backend import Backend, RpcError, CODEX
 import providers
 from chat_media import attachments,display_text
 from ui_extras import UILabel, translator, AppKeyboard, CompactPicker
 
 ROOT = Path(__file__).resolve().parent
 STATE_DIR = resolve_state_dir()
+THEME_TITLES = {'light':'Светлая','dark':'Тёмная','graphite':'Графит','violet':'Фиалка','forest':'Лес','amber':'Янтарь','rose':'Роза'}
 DRAFT = STATE_DIR/'draft.txt'
 THREAD = DRAFT.parent/'thread-id'
 THEME = DRAFT.parent/'theme'
-CODEX = shutil.which('codex') or str(Path.home()/'.local/bin/codex')
 
 def command(*args):
     return subprocess.check_output(args, text=True, stderr=subprocess.STDOUT, timeout=4).strip()
@@ -105,6 +105,13 @@ class Panel(Gtk.Application):
                 self.external_threads[key]=provider_state.get('chats',{}).get(key,{})
                 self.external_thread_ids[key]=provider_state.get('selected',{}).get(key,'')
         except (OSError,ValueError,TypeError):pass
+        self.custom_providers=providers.load_custom(STATE_DIR)
+        try:saved_chats=json.loads((DRAFT.parent/'provider-chats.json').read_text())
+        except (OSError,ValueError,TypeError):saved_chats={}
+        for entry in self.custom_providers:
+            self.external_threads[entry['id']]=saved_chats.get('chats',{}).get(entry['id'],{})
+            self.external_thread_ids[entry['id']]=saved_chats.get('selected',{}).get(entry['id'],'')
+            self.external_models[entry['id']]=[]
         self.codex_thread_id=self.thread_id
         self.current_model=None
         self.current_effort=None
@@ -124,7 +131,7 @@ class Panel(Gtk.Application):
         self._programmatic_scroll=False
         self.dirty_messages=set()
         self.theme = THEME.read_text().strip() if THEME.exists() else 'dark'
-        if self.theme not in ('light','dark'):self.theme='dark'
+        if self.theme not in THEME_TITLES:self.theme='dark'
         for name, callback in [('show',lambda *_:self.activate()),('hide',lambda *_:self.close()),('keyboard',lambda *_:self.keyboard()),('quit',lambda *_:self.shutdown_app())]:
             action=Gio.SimpleAction.new(name,None)
             action.connect('activate',callback)
@@ -222,6 +229,11 @@ class Panel(Gtk.Application):
         self.account_login_item=Gtk.MenuItem(label=translator.text('Войти или сменить аккаунт'));self.account_login_item.connect('activate',self.begin_account_login);account_menu.append(self.account_login_item)
         self.account_logout_item=Gtk.MenuItem(label=translator.text('Выйти из аккаунта'));self.account_logout_item.connect('activate',self.confirm_account_logout);account_menu.append(self.account_logout_item)
         self.account_item.set_submenu(account_menu);menu.append(self.account_item);menu.append(Gtk.SeparatorMenuItem())
+        theme_item=Gtk.MenuItem(label=translator.text('Цветовая тема'));theme_item.translation_source='Цветовая тема'
+        theme_menu=Gtk.Menu()
+        for key,title in THEME_TITLES.items():
+            entry=Gtk.MenuItem(label=translator.text(title));entry.connect('activate',lambda _,value=key:self.apply_theme(value));theme_menu.append(entry)
+        theme_item.set_submenu(theme_menu);menu.append(theme_item)
         for code,title in [('ru','Интерфейс: Русский'),('en','Interface: English')]:
             item=Gtk.MenuItem(label=title)
             item.connect('activate',lambda _,c=code:self.change_language(c))
@@ -247,7 +259,7 @@ class Panel(Gtk.Application):
         provider_label=UILabel(label='Выбрать ИИ-провайдера',xalign=0);provider_label.get_style_context().add_class('sidebar-caption')
         sidebar.pack_start(provider_label,False,False,0)
         self.provider_picker=CompactPicker()
-        self.provider_titles=[('codex','Codex · ChatGPT'),('claude','Claude · Pro / Max'),('deepseek','DeepSeek · OpenRouter'),('tokenharbor','DeepSeek · TokenHarbor')]
+        self.provider_titles=[('codex','Codex · ChatGPT'),('claude','Claude · Pro / Max'),('deepseek','DeepSeek · OpenRouter'),('tokenharbor','DeepSeek · TokenHarbor')]+[(entry['id'],entry['name']) for entry in self.custom_providers]
         for ident,title in self.provider_titles:self.provider_picker.append(ident,translator.text(title))
         self.provider_picker.set_active_id('codex')
         self.provider_picker.connect('changed',self.provider_changed)
@@ -339,7 +351,7 @@ class Panel(Gtk.Application):
         self.chat_scroll = Gtk.ScrolledWindow()
         self.chat_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         self.chat_scroll.set_overlay_scrolling(False)
-        self.chat_scroll.set_kinetic_scrolling(False)
+        self.chat_scroll.set_kinetic_scrolling(True)  # finger drag scrolls the messages
         self.chat = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
         self.chat.set_margin_top(12); self.chat.set_margin_bottom(12)
         self.chat.set_margin_start(10); self.chat.set_margin_end(14)
@@ -547,7 +559,9 @@ class Panel(Gtk.Application):
     def application_key_pressed(self,widget,event):
         control=bool(event.state & Gdk.ModifierType.CONTROL_MASK)
         key=Gdk.keyval_name(event.keyval)
-        if control and key in ('Return','KP_Enter'):
+        shift=bool(event.state & Gdk.ModifierType.SHIFT_MASK)
+        if key in ('Return','KP_Enter') and (control or (not shift and self.window.get_focus() is self.text)):
+            # Enter sends from the message field; Shift+Enter inserts a new line.
             self.send()
             return True
         if control and key in ('l','L'):
@@ -565,14 +579,14 @@ class Panel(Gtk.Application):
 
     def apply_theme(self, theme):
         if getattr(self,'_applying_theme',False):return
-        if theme not in ('light','dark'):return
+        if theme not in THEME_TITLES:return
         self.theme=theme
         if not hasattr(self,'css'):return
         self._applying_theme=True
         palette=json.loads((ROOT/'themes.json').read_text())[theme]
         colors='\n'.join('@define-color '+key+' '+value+';' for key,value in palette.items())
         self.css.load_from_data((colors+'\n'+(ROOT/'style.css').read_text()).encode())
-        Gtk.Settings.get_default().set_property('gtk-application-prefer-dark-theme',theme=='dark')
+        Gtk.Settings.get_default().set_property('gtk-application-prefer-dark-theme',theme!='light')
         for value,button in self.theme_buttons.items():button.set_active(value==theme)
         if hasattr(self,'wave'):self.wave.queue_draw()
         THEME.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
@@ -729,7 +743,7 @@ class Panel(Gtk.Application):
         if self.provider!='codex':return
         host=host.strip()
         if host==self.remote_host:return
-        if not re.fullmatch(r'[A-Za-z0-9_.@-]{0,120}',host):self.message('Введите SSH-алиас без пробелов.');return
+        if host and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.@-]{0,119}',host):self.message('Введите SSH-алиас без пробелов.');return
         if self.busy or self.sending or self.connecting:self.message('Закончите текущую отправку перед сменой устройства.');return
         self.save_draft(self.text.get_buffer())
         if self.thread_id and self.history_ready:
@@ -738,7 +752,7 @@ class Panel(Gtk.Application):
         self.device_thread_caches[self.remote_host]=dict(self.thread_cache)
         previous=self.backend
         if previous:
-            try:previous.process.terminate() if previous.process else previous.ws.close()
+            try:previous.close()
             except Exception:pass
         self.backend=None;self.remote_host=host;self.loading_thread_id=None
         path=DRAFT.parent/'remote-host';path.parent.mkdir(parents=True,exist_ok=True,mode=0o700);path.write_text(host+'\n');path.chmod(0o600)
@@ -955,7 +969,7 @@ class Panel(Gtk.Application):
         self.more_chats_button.hide()
         if target=='claude' and not providers.claude_code_available():
             self.message('Для Claude Pro/Max нужен Claude Code. Откройте меню Claude и установите Claude Code по инструкции Anthropic.')
-        if target=='deepseek':self.load_models()
+        if target=='deepseek' or target.startswith('custom:'):self.load_models()
         else:
             catalog=self.external_models[target]
             self.available_models=[{'id':item['id'],'model':item['id'],'displayName':item['name'],'supportedReasoningEfforts':[]} for item in catalog]
@@ -984,6 +998,7 @@ class Panel(Gtk.Application):
             ('Подключить Claude Pro / Max',self.connect_claude_provider),
             ('Подключить DeepSeek через OpenRouter',self.connect_deepseek_provider),
             ('Подключить DeepSeek через TokenHarbor',self.connect_tokenharbor_provider),
+            ('Подключить свой ИИ (любой API)…',self.configure_custom_provider),
         ]
         for label,callback in choices:
             item=Gtk.MenuItem(label=translator.text(label));item.connect('activate',callback);menu.append(item)
@@ -1022,6 +1037,38 @@ class Panel(Gtk.Application):
             except providers.ProviderError as exc:self.message(str(exc))
         dialog.destroy()
 
+    def configure_custom_provider(self,*_):
+        """Any cloud AI with an OpenAI-compatible API: OpenAI, Gemini, Groq, Mistral, DeepSeek, xAI, OpenRouter."""
+        dialog=Gtk.Dialog(title='Свой ИИ',transient_for=self.window,flags=Gtk.DialogFlags.MODAL)
+        dialog.add_buttons('Отмена',Gtk.ResponseType.CANCEL,'Добавить',Gtk.ResponseType.OK)
+        dialog.set_default_size(470,-1)
+        box=dialog.get_content_area();box.set_spacing(8);box.set_margin_top(14);box.set_margin_bottom(14);box.set_margin_start(14);box.set_margin_end(14)
+        note=Gtk.Label(label='Подойдёт любой облачный сервис с OpenAI-совместимым API (OpenAI, Gemini, Groq, Mistral, DeepSeek, xAI…). Нужен https-адрес и ключ API; ключ сохранится в системном хранилище секретов. Локальные серверы не поддерживаются.',xalign=0);note.set_line_wrap(True);box.pack_start(note,False,False,0)
+        preset=Gtk.ComboBoxText();preset.append_text('Выберите готовый пример…')
+        for title,_url in providers.CUSTOM_PRESETS:preset.append_text(title)
+        preset.set_active(0);box.pack_start(preset,False,False,0)
+        name=Gtk.Entry();name.set_placeholder_text('Название, например: Groq');box.pack_start(name,False,False,0)
+        url=Gtk.Entry();url.set_placeholder_text('Адрес API, например: https://api.groq.com/openai/v1');box.pack_start(url,False,False,0)
+        models=Gtk.Entry();models.set_placeholder_text('Модели через запятую (необязательно)');box.pack_start(models,False,False,0)
+        key=Gtk.Entry();key.set_visibility(False);key.set_placeholder_text('Ключ API');box.pack_start(key,False,False,0)
+        def choose(combo):
+            index=combo.get_active()
+            if index>0:
+                title,address=providers.CUSTOM_PRESETS[index-1];url.set_text(address)
+                if not name.get_text():name.set_text(title.split(' · ')[0])
+        preset.connect('changed',choose);box.show_all()
+        if dialog.run()==Gtk.ResponseType.OK:
+            try:
+                ident=providers.save_custom(STATE_DIR,name.get_text(),url.get_text(),models.get_text(),key.get_text())
+                self.custom_providers=providers.load_custom(STATE_DIR)
+                entry=self.custom_entry(ident)
+                self.external_threads.setdefault(ident,{});self.external_thread_ids.setdefault(ident,'');self.external_models[ident]=[]
+                if ident not in [row[0] for row in self.provider_titles]:
+                    self.provider_titles.append((ident,entry['name']));self.provider_picker.append(ident,entry['name'])
+                self.provider_picker.set_active_id(ident)
+            except providers.ProviderError as exc:self.message(str(exc))
+        dialog.destroy()
+
     def configure_tokenharbor(self,*_):
         dialog=Gtk.Dialog(title='DeepSeek через TokenHarbor',transient_for=self.window,flags=Gtk.DialogFlags.MODAL)
         dialog.add_buttons('Отмена',Gtk.ResponseType.CANCEL,'Сохранить ключ',Gtk.ResponseType.OK)
@@ -1039,13 +1086,13 @@ class Panel(Gtk.Application):
 
     def refresh_provider_model_list(self,models,source=None):
         source=source or self.provider
-        if source not in ('deepseek','tokenharbor') or self.provider!=source:return False
+        if source not in ('deepseek','tokenharbor') and not source.startswith('custom:') or self.provider!=source:return False
         self.external_models[source]=models
         def price(model):
             if model.get('inputPrice')==0 and model.get('outputPrice')==0:return 'бесплатно'
             if model.get('inputPrice') is None:return 'цена не указана'
             return f"${model['inputPrice']*1_000_000:.2f}/${model['outputPrice']*1_000_000:.2f} за 1M токенов"
-        self.available_models=[{'id':m['id'],'model':m['id'],'displayName':m['name']+' · '+price(m),'supportedReasoningEfforts':[]} for m in models]
+        self.available_models=[{'id':m['id'],'model':m['id'],'displayName':m['name']+('' if source.startswith('custom:') else ' · '+price(m)),'supportedReasoningEfforts':[]} for m in models]
         self.update_model_picker()
 
     def create_external_chat(self):
@@ -1091,6 +1138,7 @@ class Panel(Gtk.Application):
             try:
                 if provider=='deepseek':answer=providers.openrouter_reply(selected,prior,text)
                 elif provider=='tokenharbor':answer=providers.tokenharbor_reply(selected,prior,text)
+                elif provider.startswith('custom:'):answer=providers.custom_reply(self.custom_entry(provider),selected,prior,text)
                 else:answer=providers.claude_code_reply(selected,session,text,working_dir,resume)
                 error=''
             except Exception as exc:answer='';error=str(exc)
@@ -1105,10 +1153,20 @@ class Panel(Gtk.Application):
         chat['updatedAt']=int(time.time());self.save_provider_chats()
         if self.provider==provider and self.thread_id==session:self.render_external_history(chat)
         self.sending=False;self.send_button.set_sensitive(True)
-        self.message(error or ('Ответ Claude готов' if provider=='claude' else 'Ответ DeepSeek готов'))
+        entry=self.custom_entry(provider)
+        self.message(error or ('Ответ Claude готов' if provider=='claude' else ('Ответ: '+entry['name']) if entry else 'Ответ DeepSeek готов'))
         return False
 
+    def custom_entry(self,ident):
+        return next((entry for entry in self.custom_providers if entry['id']==ident),None)
+
     def load_models(self):
+        if self.provider.startswith('custom:'):
+            source=self.provider;entry=self.custom_entry(source)
+            def load_custom():
+                try:GLib.idle_add(self.refresh_provider_model_list,providers.custom_models(entry),source)
+                except Exception as exc:GLib.idle_add(self.message,'Не удалось получить список моделей: '+str(exc))
+            threading.Thread(target=load_custom,daemon=True).start();return
         if self.provider in ('deepseek','tokenharbor'):
             source=self.provider
             def load_external():
@@ -1211,7 +1269,8 @@ class Panel(Gtk.Application):
             (DRAFT.parent/'model-preferences.json').write_text(json.dumps(self.model_by_thread))
             chat=self.external_threads.get(self.provider,{}).get(self.thread_id)
             if chat:chat['model']=model;self.save_provider_chats()
-            provider_name={'codex':'Codex','claude':'Claude','deepseek':'DeepSeek','tokenharbor':'DeepSeek · TokenHarbor'}.get(self.provider,'Deck AI')
+            entry=self.custom_entry(self.provider)
+            provider_name={'codex':'Codex','claude':'Claude','deepseek':'DeepSeek','tokenharbor':'DeepSeek · TokenHarbor'}.get(self.provider,entry['name'] if entry else 'Deck AI')
             self.message('Модель для следующего сообщения: '+provider_name+' · '+model)
             self.update_runtime_pickers()
 
@@ -1249,12 +1308,7 @@ class Panel(Gtk.Application):
 
     def connection_failed(self, error):
         self.connecting = False
-        if self.backend:
-            self.backend.connected=False
-            if self.backend.process:
-                try:self.backend.process.terminate()
-                except Exception:pass
-            elif self.backend.ws:self.backend.ws.close()
+        if self.backend:self.backend.close()
         self.reconnect_button.set_sensitive(True)
         self.reconnect_button.show_all()
         self.message('Нет подключения')
@@ -1371,7 +1425,8 @@ class Panel(Gtk.Application):
             frame.get_style_context().add_class('chat-message')
             frame.get_style_context().add_class('user-message' if kind=='userMessage' else 'assistant-message')
             content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=7,margin=14)
-            assistant_name={'claude':'CLAUDE','deepseek':'DEEPSEEK','tokenharbor':'DEEPSEEK','codex':'CODEX'}.get(getattr(self,'provider','codex'),'CODEX')
+            custom=self.custom_entry(getattr(self,'provider','codex'))
+            assistant_name={'claude':'CLAUDE','deepseek':'DEEPSEEK','tokenharbor':'DEEPSEEK','codex':'CODEX'}.get(getattr(self,'provider','codex'),custom['name'].upper()[:20] if custom else 'CODEX')
             heading = Gtk.Label(label='ВЫ' if kind=='userMessage' else assistant_name)
             heading.set_xalign(0); heading.get_style_context().add_class('message-author')
             content.pack_start(heading,False,False,0)
@@ -1519,13 +1574,13 @@ class Panel(Gtk.Application):
         self.account_login_item.set_sensitive(False)
         def worker():
             try:
-                result=backend.request('account/login/start',{'type':'chatgpt'},timeout=20)
+                result=backend.request('account/login/start',{'type':'chatgptDeviceCode' if self.remote_host else 'chatgpt'},timeout=20)
                 url=result.get('authUrl') or result.get('verificationUrl')
                 if not url:raise RuntimeError('Codex не вернул ссылку для входа.')
                 try:
                     subprocess.Popen(['/usr/bin/xdg-open',url],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
-                    GLib.idle_add(self.message,'Страница входа открыта в браузере.')
-                except OSError:GLib.idle_add(self.message,'Откройте ссылку для входа: '+url)
+                    GLib.idle_add(self.message,('Код входа: '+result['userCode']+' · '+url) if result.get('userCode') else 'Страница входа открыта в браузере.')
+                except OSError:GLib.idle_add(self.message,'Откройте '+url+(' · код '+result['userCode'] if result.get('userCode') else ''))
             except Exception as exc:
                 GLib.idle_add(self.message,'Не удалось начать вход: '+str(exc)[:180])
                 GLib.idle_add(self.launch_codex_login)
@@ -1614,7 +1669,7 @@ class Panel(Gtk.Application):
 
     def draw_wave(self, widget, cr):
         width, height = widget.get_allocated_width(), widget.get_allocated_height()
-        steel=(.72,.76,.81) if self.theme=='dark' else (.32,.36,.40)
+        steel=(.72,.76,.81) if self.theme!='light' else (.32,.36,.40)
         cr.set_source_rgb(*((1, .33, .31) if self.recording else steel))
         cr.set_line_width(2.7); cr.set_line_cap(1)
         for i, base in enumerate([7, 14, 22, 14, 7]):
@@ -1761,7 +1816,7 @@ class Panel(Gtk.Application):
             threading.Thread(target=self.record, daemon=True).start()
 
     def record(self):
-        result = ''; error = None
+        result = ''; error = None; refiner = None
         stop = self.stop_event
         try:
             from vosk import Model, KaldiRecognizer, SetLogLevel
@@ -1777,6 +1832,8 @@ class Panel(Gtk.Application):
             if lang in ('ru','en'):
                 if lang not in self.voice_models:self.voice_models[lang]=Model(str(path))
                 recognizer=KaldiRecognizer(self.voice_models[lang],16000)
+            from speech_accuracy import prewarm_worker
+            refiner = prewarm_worker(lang, ROOT)
             GLib.idle_add(self.message, '● Слушаю · нажмите «Закончить»')
             parts = [];pcm=[]
             def stop_capture():
@@ -1802,13 +1859,18 @@ class Panel(Gtk.Application):
             if not lang.endswith('-fast'):
                 GLib.idle_add(self.message,'Уточняю распознанную речь…')
                 from speech_accuracy import refine_dictation
-                result=refine_dictation(b''.join(pcm),lang,result,ROOT)
+                result=refine_dictation(b''.join(pcm),lang,result,ROOT,refiner);refiner=None
+            from speech_accuracy import apply_corrections
+            result=apply_corrections(result)
             if self.recorder.poll() not in (None, 0, -15, 255):
                 raise RuntimeError('Не удалось записать микрофон. Проверьте настройки звука.')
         except Exception as exc:
             error = str(exc)
         finally:
             stop.set()
+            if refiner is not None:
+                from speech_accuracy import cancel_worker
+                cancel_worker(refiner)
             if self.recorder is not None:
                 if self.recorder.poll() is None: self.recorder.terminate()
                 try: self.recorder.wait(timeout=3)
@@ -1916,11 +1978,6 @@ class Panel(Gtk.Application):
     def deliver_job(self,job):
         try:
             tid=job['threadId']
-            if self.remote_host and tid not in self.empty_threads:
-                self.backend.queue_message(tid,job['text'],job.get('model'),job.get('effort'),job.get('tier') or 'default')
-                GLib.idle_add(self.job_finished,job,None)
-                GLib.idle_add(self.message,'Запрос передан удалённому Codex')
-                return
             if tid in self.empty_threads:
                 start={'cwd':self.backend.cwd if self.remote_host else str(Path.home()),'ephemeral':False}
                 if job.get('model'):start['model']=job['model']
@@ -1929,7 +1986,7 @@ class Panel(Gtk.Application):
                 GLib.idle_add(self.promote_empty_thread,tid,result,done)
                 if not done.wait(15):raise RpcError('Не удалось открыть новый чат.')
                 tid=job['threadId']
-            elif tid not in self.thread_activity:
+            else:
                 _,thread=self.backend.select_thread(tid)
                 busy=any(turn.get('status')=='inProgress' for turn in thread.get('turns',[]))
                 if busy:GLib.idle_add(self.job_waiting,job,True);return
@@ -1986,7 +2043,7 @@ class Panel(Gtk.Application):
         if hasattr(self,'closed'):self.closed.set()
         self.stop_event.set()
         if self.recorder is not None and self.recorder.poll() is None:self.recorder.terminate()
-        if self.backend and self.backend.ws:self.backend.ws.close()
+        if self.backend:self.backend.close()
         self.quit()
 
 if __name__ == '__main__':

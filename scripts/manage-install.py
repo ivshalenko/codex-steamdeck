@@ -4,15 +4,17 @@ import argparse,hashlib,json,os,shlex,shutil,sys,tempfile
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'decky'))
 from runtime_paths import resolve_app_dir
-ROOT_FILES=('app.py','chat_media.py','backend.py','providers.py','ui_extras.py','speech_accuracy.py','speech-languages.json','style.css','themes.json','deck-ai.png','requirements.txt','requirements-speech.txt','VERSION','README.md','CHANGELOG.md','SECURITY.md','uninstall.sh')
+ROOT_FILES=('app.py','chat_media.py','backend.py','providers.py','ui_extras.py','speech_accuracy.py','deck_share.py','speech-languages.json','style.css','themes.json','deck-ai.png','requirements.txt','requirements-speech.txt','VERSION','README.md','CHANGELOG.md','SECURITY.md','uninstall.sh')
 PLUGIN_FILES=('THIRD_PARTY_NOTICES.txt','main.py','bridge.py','runtime_paths.py','plugin.json','package.json','deck-ai.png')
-SCRIPTS=('download-models.sh','deck-ai-steam','check-environment.py','manage-install.py')
+SCRIPTS=('backup-state.py','deck-remote.py','download-models.sh','deck-ai-steam','check-environment.py','manage-install.py')
 
 
 def source_files(source):
     source=Path(source)
     paths=[Path(x) for x in ROOT_FILES]+[Path('decky')/x for x in PLUGIN_FILES]+[Path('scripts')/x for x in SCRIPTS]
-    if (source/'LICENSE').is_file():paths.append(Path('LICENSE'))
+    for legal in ('LICENSE','NOTICE'):
+        if (source/legal).is_file():paths.append(Path(legal))
+        if (source/'decky'/legal).is_file():paths.append(Path('decky')/legal)
     paths.extend(p.relative_to(source) for p in (source/'decky/dist').rglob('*') if p.is_file() and p.suffix!='.map')
     if not (source/'decky/dist/index.js').is_file():raise ValueError('Missing Decky build. Run npm ci && npm test in decky first.')
     for rel in paths:
@@ -71,7 +73,7 @@ def uninstall(home=None):
         external.update([home/'.local/share/applications/codex-steamdeck.desktop',home/'.local/share/icons/hicolor/256x256/apps/deck-ai.png'])
         if target.is_relative_to(app):
             rel=target.relative_to(app)
-            owned=str(rel) in ROOT_FILES or str(rel)=='LICENSE' or rel in {Path('decky')/x for x in PLUGIN_FILES} or rel in {Path('scripts')/x for x in SCRIPTS} or rel.is_relative_to(Path('decky/dist'))
+            owned=str(rel) in ROOT_FILES or str(rel) in ('LICENSE','NOTICE','decky/LICENSE','decky/NOTICE') or rel in {Path('decky')/x for x in PLUGIN_FILES} or rel in {Path('scripts')/x for x in SCRIPTS} or rel.is_relative_to(Path('decky/dist'))
             if not owned or not target.resolve().is_relative_to(app.resolve()):raise ValueError('Manifest refers to user data or an external path')
         elif target not in external:raise ValueError('Unexpected external installation file')
         if target.is_symlink():raise ValueError('Refusing to remove symlink: '+str(target))

@@ -21,16 +21,31 @@ class GamingModeTests(unittest.TestCase):
         self.assertTrue(method('close')(panel))
         panel.window.hide.assert_called_once()
 
+    GDK=SimpleNamespace(ModifierType=SimpleNamespace(CONTROL_MASK=4,SHIFT_MASK=1),keyval_name=lambda value:value)
+
+    def key_panel(self,focused=True):
+        text=object()
+        return SimpleNamespace(send=Mock(),text=text,window=SimpleNamespace(get_focus=lambda:text if focused else object()))
+
     def test_control_enter_sends(self):
-        panel=SimpleNamespace(send=Mock())
-        gdk=SimpleNamespace(ModifierType=SimpleNamespace(CONTROL_MASK=4),keyval_name=lambda value:value)
-        self.assertTrue(method('application_key_pressed',Gdk=gdk)(panel,None,SimpleNamespace(state=4,keyval='Return')))
+        panel=self.key_panel(focused=False)
+        self.assertTrue(method('application_key_pressed',Gdk=self.GDK)(panel,None,SimpleNamespace(state=4,keyval='Return')))
         panel.send.assert_called_once()
 
-    def test_plain_enter_keeps_multiline_input(self):
-        panel=SimpleNamespace(send=Mock())
-        gdk=SimpleNamespace(ModifierType=SimpleNamespace(CONTROL_MASK=4),keyval_name=lambda value:value)
-        self.assertFalse(method('application_key_pressed',Gdk=gdk)(panel,None,SimpleNamespace(state=0,keyval='Return')))
+    def test_plain_enter_in_message_field_sends(self):
+        for key in ('Return','KP_Enter'):
+            panel=self.key_panel()
+            self.assertTrue(method('application_key_pressed',Gdk=self.GDK)(panel,None,SimpleNamespace(state=0,keyval=key)))
+            panel.send.assert_called_once()
+
+    def test_shift_enter_keeps_multiline_input(self):
+        panel=self.key_panel()
+        self.assertFalse(method('application_key_pressed',Gdk=self.GDK)(panel,None,SimpleNamespace(state=1,keyval='Return')))
+        panel.send.assert_not_called()
+
+    def test_enter_in_other_widgets_is_not_intercepted(self):
+        panel=self.key_panel(focused=False)
+        self.assertFalse(method('application_key_pressed',Gdk=self.GDK)(panel,None,SimpleNamespace(state=0,keyval='Return')))
         panel.send.assert_not_called()
 
     def test_working_label_is_app_name_for_every_provider(self):

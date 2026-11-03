@@ -1,2 +1,2 @@
-websockets==17.3
+websockets==15.0.1
 vosk==0.3.45

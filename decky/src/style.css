@@ -193,3 +193,92 @@ div:has(> .dai-root:not(.dai-fullscreen)){display:flex!important;flex-direction:
 .dai-root .dai-queue-item>strong{font-size:12px;line-height:1.3}
 .dai-root .dai-queue-item>small{font-size:10px;line-height:1.3}
 .dai-root .dai-queue-item .dai-button.DialogButton{min-height:24px!important;padding:3px 5px!important;font-size:11px!important}
+.dai-running-count{color:#e4c56e;white-space:nowrap}.dai-history-item.running .dai-button>span{display:flex;align-items:center;gap:6px}.dai-history-item.running .dai-dot{animation:dai-pulse 1.4s ease-in-out infinite}@keyframes dai-pulse{50%{opacity:.35}}
+.dai-message.tool{background:rgba(255,255,255,.025);padding:6px 8px}.dai-message.tool pre{margin:0;font:11px/1.4 monospace;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--dai-muted)}.dai-approvals{display:flex;flex-direction:column;gap:6px;flex-shrink:0}.dai-approval{display:flex;flex-direction:column;gap:5px;padding:8px;background:#4a3d1f;border-radius:3px;font-size:12px}.dai-quick{display:grid;grid-template-columns:1fr 1fr;gap:5px}.dai-check.ok{color:#8fd1ac}.dai-check.bad{color:#f0a58c}
+.dai-textarea{width:100%;min-height:220px;resize:vertical;box-sizing:border-box;background:#0e141b;color:#e5edf4;border:1px solid var(--dai-line);border-radius:3px;padding:8px;font:12px/1.5 monospace}.dai-textarea-small{min-height:90px}.dai-textarea:focus{outline:2px solid #fff}
+.dai-snippet{margin:0;padding:6px;background:#0e141b;border-radius:3px;font:11px/1.4 monospace;white-space:pre-wrap;user-select:text;overflow-wrap:anywhere}
+
+/* ===== Appearance layer: colour themes, density, message style, layouts =====
+   Tokens (--t-*) are set per data-theme on .dai-root. Rules below are scoped
+   with [data-theme] so they win over the structural rules above without
+   changing them. */
+.dai-root,.dai-root[data-theme=ocean]{--t-bg:#101923;--t-card:#16212d;--t-input:#223243;--t-btn:rgba(255,255,255,.07);--t-accent:#1a77b9;--t-accent-text:#fff;--t-tab-on:#34495d;--t-tab-on-text:#fff;--t-user:#1d3347;--t-assistant:#17222e;--t-text:#f0f4f8;--t-muted:#aab6c3;--t-line:rgba(255,255,255,.12);--t-focus-bg:#dce8f1;--t-focus-text:#152638;--t-focus-ring:#fff;--t-warn:#4a3d1f;--t-warn-line:#e4c56e;--t-bad:#502f36;--t-ok:#69c49a;--t-working:#e4c56e;--t-offline:#e59980;--t-notice:#a9cddb;--t-thumb:#3b4d5f;--dai-radius:10px;--dai-radius-sm:7px}
+.dai-root[data-theme=graphite]{--t-bg:#15171a;--t-card:#1e2125;--t-input:#2a2e33;--t-btn:rgba(255,255,255,.07);--t-accent:#8aa0b8;--t-accent-text:#10151a;--t-tab-on:#363c43;--t-tab-on-text:#fff;--t-user:#2b3138;--t-assistant:#1b1e22;--t-text:#ececec;--t-muted:#a2a9b0;--t-line:rgba(255,255,255,.11);--t-focus-bg:#ececec;--t-focus-text:#15171a;--t-focus-ring:#8aa0b8;--t-warn:#3d3a2c;--t-bad:#46302f;--t-notice:#b7c4d1;--t-thumb:#444a51}
+.dai-root[data-theme=violet]{--t-bg:#14111f;--t-card:#1d1830;--t-input:#2a2344;--t-btn:rgba(200,180,255,.09);--t-accent:#8b6cf0;--t-accent-text:#fff;--t-tab-on:#3a3060;--t-tab-on-text:#fff;--t-user:#2c2350;--t-assistant:#1a1629;--t-text:#efeaff;--t-muted:#b2a8d0;--t-line:rgba(190,170,255,.16);--t-focus-bg:#e7deff;--t-focus-text:#241a4a;--t-focus-ring:#fff;--t-warn:#44381f;--t-bad:#4d2a3a;--t-notice:#c9bcf5;--t-thumb:#463b72}
+.dai-root[data-theme=forest]{--t-bg:#0f1a15;--t-card:#15241c;--t-input:#1f3328;--t-btn:rgba(160,255,200,.07);--t-accent:#2fa66a;--t-accent-text:#06150d;--t-tab-on:#25433a;--t-tab-on-text:#fff;--t-user:#1c3a2c;--t-assistant:#14231b;--t-text:#e9f4ee;--t-muted:#9fb8aa;--t-line:rgba(160,230,190,.15);--t-focus-bg:#dcf2e5;--t-focus-text:#0d2a1b;--t-focus-ring:#fff;--t-warn:#423c1d;--t-bad:#4a2f2f;--t-notice:#a9dcc0;--t-thumb:#2f4a3b}
+.dai-root[data-theme=amber]{--t-bg:#1a140c;--t-card:#251c10;--t-input:#33271a;--t-btn:rgba(255,220,160,.07);--t-accent:#d99a2b;--t-accent-text:#1c1204;--t-tab-on:#4a3a1c;--t-tab-on-text:#fff;--t-user:#3a2d14;--t-assistant:#221a0f;--t-text:#f6eee0;--t-muted:#c2b394;--t-line:rgba(255,215,150,.15);--t-focus-bg:#f7e7c6;--t-focus-text:#2b1d06;--t-focus-ring:#fff;--t-warn:#4a3a14;--t-bad:#4e2f2a;--t-notice:#e0c48a;--t-thumb:#54421f}
+.dai-root[data-theme=rose]{--t-bg:#1c1015;--t-card:#281820;--t-input:#38222d;--t-btn:rgba(255,190,210,.07);--t-accent:#e0577d;--t-accent-text:#fff;--t-tab-on:#50263a;--t-tab-on-text:#fff;--t-user:#43202f;--t-assistant:#25151c;--t-text:#fbeaf0;--t-muted:#cfa9b8;--t-line:rgba(255,170,200,.15);--t-focus-bg:#fbdbe6;--t-focus-text:#40101f;--t-focus-ring:#fff;--t-warn:#4a3a1f;--t-bad:#5a2430;--t-notice:#f0b6c9;--t-thumb:#5a3041}
+.dai-root[data-theme=light]{--t-bg:#f3f6f9;--t-card:#fff;--t-input:#e9eff5;--t-btn:rgba(20,60,100,.08);--t-accent:#1a77b9;--t-accent-text:#fff;--t-tab-on:#dbe8f3;--t-tab-on-text:#10304a;--t-user:#dbeaf7;--t-assistant:#fff;--t-text:#1b2733;--t-muted:#5a6b7b;--t-line:rgba(20,40,60,.14);--t-focus-bg:#1a77b9;--t-focus-text:#fff;--t-focus-ring:#0d4f7d;--t-warn:#fff1cf;--t-warn-line:#c98a12;--t-bad:#fde3e3;--t-ok:#1f8a5b;--t-working:#b7791f;--t-offline:#c2543a;--t-notice:#1c6aa3;--t-thumb:#b9c6d3}
+.dai-root[data-theme]{--dai-line:var(--t-line);--dai-muted:var(--t-muted);background:var(--t-bg)!important;color:var(--t-text);border-radius:var(--dai-radius)}
+.dai-root[data-theme].dai-fullscreen{border-radius:0}
+.dai-root[data-theme] h3,.dai-root[data-theme] .dai-section h3,.dai-root[data-theme] .dai-empty h3,.dai-root[data-theme].dai-fullscreen .dai-section h3{color:var(--t-text)}
+/* Buttons */
+.dai-root[data-theme] .dai-button.DialogButton{background:var(--t-btn)!important;color:var(--t-text)!important;border-radius:var(--dai-radius-sm)!important;transition:background .12s}
+.dai-root[data-theme] .dai-button.DialogButton:disabled{opacity:.45}
+.dai-root[data-theme] .dai-image-button.DialogButton{background:transparent!important}
+.dai-root[data-theme] .dai-tab .dai-button.DialogButton{background:transparent!important;color:var(--t-muted)!important;border-radius:999px!important}
+.dai-root[data-theme] .dai-tab.selected .dai-button.DialogButton{background:var(--t-tab-on)!important;color:var(--t-tab-on-text)!important;font-weight:650}
+.dai-root[data-theme] .dai-button.dai-primary.DialogButton,.dai-root[data-theme] .dai-button.DialogButton.dai-selected{background:var(--t-accent)!important;color:var(--t-accent-text)!important}
+.dai-root[data-theme] .dai-button.DialogButton.dai-recording{background:#aa2635!important;color:#fff!important}
+.dai-root[data-theme] .dai-button.DialogButton.gpfocus,.dai-root[data-theme] .dai-button.DialogButton:focus,.dai-root[data-theme] .dai-focused{background:var(--t-focus-bg)!important;color:var(--t-focus-text)!important;outline:2px solid var(--t-focus-ring)!important;outline-offset:-2px}
+/* Tab bar as a pill; optional bottom placement (thumb-friendly) */
+.dai-root[data-theme] .dai-tabs{background:var(--t-card);border:1px solid var(--t-line);border-radius:999px;padding:3px;gap:3px}
+.dai-root[data-layout=bottom] .dai-tabs{order:50}
+.dai-root[data-layout=bottom] .dai-page{order:10}
+/* Status */
+.dai-root[data-theme] .dai-dot{background:var(--t-ok)}
+.dai-root[data-theme] .dai-dot.working{background:var(--t-working)}
+.dai-root[data-theme] .dai-dot.offline{background:var(--t-offline)}
+.dai-root[data-theme] .dai-running-count{color:var(--t-working)}
+.dai-root[data-theme] .dai-notice{color:var(--t-notice)}
+.dai-root[data-theme] .dai-banner{background:var(--t-bad);border-radius:var(--dai-radius-sm)}
+.dai-root[data-theme] .dai-approval{background:var(--t-warn);border-left:3px solid var(--t-warn-line,#e4c56e);border-radius:var(--dai-radius-sm)}
+.dai-root[data-theme] .dai-check.ok{color:var(--t-ok)}
+/* Cards for settings blocks and the composer */
+.dai-root[data-theme] .dai-section,.dai-root[data-theme] .dai-section:last-child,.dai-root[data-theme].dai-fullscreen .dai-section,.dai-root[data-theme].dai-fullscreen .dai-section:last-child{background:var(--t-card);border:1px solid var(--t-line);border-radius:var(--dai-radius);padding:12px}
+.dai-root[data-theme] .dai-composer,.dai-root[data-theme].dai-fullscreen .dai-composer{background:var(--t-card);border:1px solid var(--t-line);border-radius:var(--dai-radius);padding:8px}
+.dai-root[data-theme] input.DialogInput,.dai-root[data-theme] .dai-field>button[role=combobox],.dai-root[data-theme].dai-fullscreen .dai-settings input.DialogInput,.dai-root[data-theme].dai-fullscreen .dai-field>button[role=combobox]{background:var(--t-input)!important;color:var(--t-text)!important;border-radius:var(--dai-radius-sm)!important}
+.dai-root[data-theme] .dai-textarea,.dai-root[data-theme] .dai-snippet{background:var(--t-input);color:var(--t-text);border-color:var(--t-line)}
+.dai-root[data-theme] .dai-game-check[aria-checked=true] .dai-check-box{background:var(--t-accent);border-color:var(--t-accent);color:var(--t-accent-text)}
+.dai-root[data-theme] .dai-history-item.selected{border-left-color:var(--t-accent)}
+.dai-root[data-theme] .dai-scroll,.dai-root[data-theme] .dai-messages{scrollbar-color:var(--t-thumb) transparent}
+/* Messages: three styles */
+.dai-root[data-theme] .dai-message{background:var(--t-assistant);color:var(--t-text);border-radius:var(--dai-radius)}
+.dai-root[data-theme] .dai-message.user{background:var(--t-user)}
+.dai-root[data-theme] .dai-message.tool{background:transparent;border:1px dashed var(--t-line)}
+.dai-root[data-theme] .dai-message small{color:var(--t-muted);letter-spacing:.3px;text-transform:uppercase}
+.dai-root[data-theme] .dai-message.user small{color:var(--t-accent)}
+.dai-root[data-theme][data-bubbles=bubbles] .dai-message.user{align-self:flex-end;max-width:92%;border-bottom-right-radius:3px}
+.dai-root[data-theme][data-bubbles=bubbles] .dai-message.assistant{align-self:flex-start;max-width:97%;border-bottom-left-radius:3px;border:1px solid var(--t-line)}
+.dai-root[data-theme][data-bubbles=flat] .dai-message,.dai-root[data-theme][data-bubbles=flat] .dai-message.user{background:transparent;border-radius:0;border-bottom:1px solid var(--t-line);padding-left:2px;padding-right:2px}
+.dai-root[data-theme][data-bubbles=cards] .dai-message{border-left:3px solid var(--t-line)}
+.dai-root[data-theme][data-bubbles=cards] .dai-message.user{border-left-color:var(--t-accent)}
+.dai-root[data-theme][data-bubbles=cards] .dai-message.assistant{border-left-color:var(--t-working)}
+/* Density */
+.dai-root[data-density=compact] .dai-message{padding:6px 9px;line-height:1.35}
+.dai-root[data-density=compact] .dai-message-list,.dai-root[data-density=compact] .dai-messages{gap:5px}
+.dai-root[data-density=roomy] .dai-message{padding:14px 16px;line-height:1.6}
+.dai-root[data-density=roomy] .dai-message-list,.dai-root[data-density=roomy] .dai-messages{gap:14px}
+.dai-root[data-density=roomy] .dai-section{padding:16px}
+/* Quick toolbar above the conversation */
+.dai-toolbar{display:flex;gap:6px;flex-shrink:0}
+.dai-root .dai-toolbar>.dai-button.DialogButton{flex:1 1 0;min-height:36px!important;padding:4px 2px!important;flex-direction:column;gap:1px!important;font-size:10px!important;line-height:1.1!important;border-radius:var(--dai-radius-sm)!important}
+.dai-toolbar .dai-button svg{font-size:13px}
+.dai-toolbar .dai-button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dai-root.dai-fullscreen .dai-toolbar>.dai-button.DialogButton{flex-direction:row;gap:6px!important;min-height:26px!important;font-size:11px!important}
+/* Two columns: chat list beside the conversation (full screen only) */
+.dai-chat-layout{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0}
+.dai-chat-main{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;gap:inherit}
+.dai-root[data-layout=split].dai-fullscreen .dai-chat-layout{flex-direction:row;gap:10px}
+.dai-split-side{flex:none;width:230px;min-height:0;overflow-y:auto;border:1px solid var(--t-line);border-radius:var(--dai-radius);background:var(--t-card);padding:8px}
+.dai-split-side .dai-history-item .dai-button{padding:7px 9px!important;min-height:30px!important}
+.dai-split-side .dai-history-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px;display:flex;align-items:center;gap:6px}
+/* Appearance settings */
+.dai-swatches{display:flex;flex-wrap:wrap;gap:6px}
+.dai-root .dai-swatches>.dai-button.DialogButton{width:auto!important;flex:1 1 28%;min-width:78px;min-height:28px!important;font-size:11px!important;gap:6px!important}
+.dai-swatch-dot{width:12px;height:12px;border-radius:50%;flex:none;border:1px solid rgba(128,128,128,.6)}
+.dai-segmented{display:flex;gap:4px}
+.dai-root .dai-segmented>.dai-button.DialogButton{flex:1;min-height:28px!important;font-size:11px!important}
+/* Keep "Отправить" on one line in the narrow panel: give the main action more room. */
+.dai-root:not(.dai-fullscreen) .dai-compose-actions>.dai-button.dai-primary.DialogButton{flex:1.9;white-space:nowrap!important}
+.dai-root:not(.dai-fullscreen) .dai-compose-actions>.dai-button.DialogButton{padding-left:3px!important;padding-right:3px!important;white-space:nowrap!important}

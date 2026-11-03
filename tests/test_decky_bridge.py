@@ -181,6 +181,32 @@ class DeckyBridgeTests(unittest.TestCase):
         self.assertEqual(result['messages'],messages)
         self.assertEqual(result['threadId'],'saved')
 
+    def test_device_code_login_is_returned_for_game_mode(self):
+        client=Mock(connected=True)
+        client.request.return_value={'loginId':'login','verificationUrl':'https://auth.openai.com/codex/device','userCode':'ABCD-1234'}
+        bridge.bridge=client;bridge.account_login_id=''
+        with patch.object(bridge.subprocess,'Popen'):
+            result=bridge.start_account_login()
+        client.request.assert_called_once_with('account/login/start',{'type':'chatgptDeviceCode'},timeout=20)
+        self.assertEqual(result['userCode'],'ABCD-1234')
+        bridge.account_login_id=''
+
+    def test_remote_first_send_skips_resume_of_unpersisted_chat(self):
+        bridge.remote_host='desk';bridge.bridge=Mock(connected=True)
+        bridge.bridge.request.return_value={'turn':{'id':'started'}}
+        job={'id':'q','threadId':'new','host':'desk','text':'hello','images':[],'status':'sending','freshThread':True}
+        bridge.outbox=[job];bridge.dispatch_job(job)
+        bridge.bridge.request.assert_called_once()
+        self.assertEqual(bridge.bridge.request.call_args.args[0],'turn/start')
+        self.assertEqual(job['turnId'],'started')
+
+    def test_recovery_does_not_read_jobs_from_another_device(self):
+        bridge.bridge=Mock(connected=True);bridge.remote_host='desk'
+        job={'id':'j','threadId':'chat','host':'other','turnId':'t','status':'recovering'}
+        bridge.outbox=[job];bridge.recover_outbox()
+        bridge.bridge.request.assert_not_called()
+        self.assertEqual(job['status'],'recovering')
+
     def test_connect_does_not_resume_broken_thread(self):
         bridge.thread_id='broken-id';candidate=Mock(connected=True)
         with patch.object(bridge,'Backend',return_value=candidate):bridge.connected()
