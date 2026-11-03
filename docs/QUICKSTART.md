@@ -16,7 +16,7 @@
 
 ## Если установлен только ZIP Decky
 
-Включите Developer Mode в Decky → Settings → Developer → **Install Plugin from ZIP** и выберите **decky.zip** из релиза. У пакета есть собственный Python-код и WebSocket-библиотека: настольное приложение для текстового чата не требуется. **Codex CLI и вход ChatGPT всё равно нужны на Deck.** Установите их мастером выше. Плагин отсутствует в официальном каталоге, пока модераторы не одобрят публикацию; не ищите его там как уже опубликованный.
+Включите Developer Mode в Decky → Settings → Developer → **Install Plugin from ZIP** и выберите **decky.zip** из релиза. У пакета есть собственный Python-код и WebSocket-библиотека: настольное приложение для текстового чата не требуется. **Codex CLI и вход ChatGPT всё равно нужны на Deck.** Установите их мастером выше. Для Deck AI доступна ручная установка из GitHub Releases. [Официальный каталог отклонил заявку](DECKY-SUBMISSION.md).
 
 ![Компактная панель Deck AI](images/compact-panel.png)
 
