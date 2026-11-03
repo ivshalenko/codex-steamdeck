@@ -17,6 +17,6 @@ The exact counts and device results are recorded in the GitHub release and relea
 - Suspend/resume during a running task; safe recovery after network loss.
 - Optional providers with valid accounts and an unlocked system wallet.
 - Real Windows client pairing; Mac/Linux host pairing on another machine.
-- Confirm official Decky eligibility honestly; await maintainer review.
+- Keep the official-store status accurate: the request was declined; do not advertise a pending or approved listing.
 
 Do not mark these boxes complete merely because unit tests or Steam Desktop Big Picture passed.

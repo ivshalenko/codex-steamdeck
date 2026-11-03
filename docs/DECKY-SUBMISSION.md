@@ -1,13 +1,11 @@
 # Official Decky submission status
 
-The official destination is [SteamDeckHomebrew/decky-plugin-database](https://github.com/SteamDeckHomebrew/decky-plugin-database). A new listing is a maintainer-reviewed pull request adding a plugin submodule, not an automated registration endpoint.
+**Declined on 3 November 2026.** [Eligibility issue #1178](https://github.com/SteamDeckHomebrew/decky-plugin-database/issues/1178) is closed.
 
-The current [new-plugin template](https://github.com/SteamDeckHomebrew/decky-plugin-database/blob/main/.github/PULL_REQUEST_TEMPLATE/plugin_addition.md) includes this mandatory developer confirmation:
+A Decky organization member [explained the decision](https://github.com/SteamDeckHomebrew/decky-plugin-database/issues/1178#issuecomment-6607400046): the project falls under both the restriction on plugins that are shells for LLM access and the restriction on plugins developed mostly by LLMs. This is a store-admission decision; it is not a legal ruling about independent distribution.
 
-> Generative AI was NOT used to write a majority of the code I am submitting.
+Deck AI was developed with substantial Claude/Codex assistance. The [new-plugin template](https://github.com/SteamDeckHomebrew/decky-plugin-database/blob/main/.github/PULL_REQUEST_TEMPLATE/plugin_addition.md) asks developers to confirm that generative AI did not write a majority of submitted code. We cannot truthfully make that confirmation. No normal listing PR, pending approval or exception is claimed.
 
-Deck AI was developed with substantial Claude/Codex assistance. We cannot check this statement. A normal listing PR must not misrepresent code provenance or mark unperformed Stable/Beta/third-party tests as passed. An eligibility inquiry and a complete technical package are prepared; listing requires maintainer clarification/approval and the actual required human tests.
+Distribution remains independent through GitHub Releases and manual installation. The `decky-store-candidate` branch is retained as standalone source for reference, not as an accepted or pending store entry. A future store submission would require an applicable policy change or an explicit maintainer invitation.
 
-Technical delivery: standalone built Decky ZIP, API v2 manifest, source, Apache-2.0 and dependency notices, explicit runtime/package allowlists, regression tests, installation/remote-access documentation, and release notes. The main repository is a monorepo; a future approved store submission should use a plugin-root branch/submodule compatible with Decky's build pipeline. Store approval is not claimed by a GitHub release.
-
-Eligibility inquiry submitted: https://github.com/SteamDeckHomebrew/decky-plugin-database/issues/1178. This is a clarification request, not a store approval.
+Independent device, Stable/Beta and physical-control tests remain technical release-candidate checks; passing them would not reverse the store decision. See [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md).
