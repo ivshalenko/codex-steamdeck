@@ -1,0 +1,16 @@
+{
+  "name": "Deck AI",
+  "author": "ivshalenko",
+  "flags": [],
+  "api_version": 2,
+  "publish": {
+    "tags": [
+      "ai-assistant",
+      "ai",
+      "voice",
+      "gaming"
+    ],
+    "description": "Chat with Codex, Claude, DeepSeek via OpenRouter or TokenHarbor; use offline dictation and game captures in Steam Deck Quick Access",
+    "image": "https://raw.githubusercontent.com/ivshalenko/codex-steamdeck/main/deck-ai.png"
+  }
+}
