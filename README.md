@@ -45,7 +45,7 @@ Dictation is local; prompts and attached content are sent to the selected cloud 
 
 ## Release status and Decky store
 
-This release is distributed from GitHub. **Deck AI is not listed in the official Decky store.** Its current [submission template](https://github.com/SteamDeckHomebrew/decky-plugin-database/blob/main/.github/PULL_REQUEST_TEMPLATE/plugin_addition.md) requires confirming that a majority of submitted code was not written by generative AI. This project used substantial AI assistance; that confirmation cannot honestly be made. Store eligibility and any exception require an explicit maintainer decision. [Submission status](docs/DECKY-SUBMISSION.md).
+This release is distributed independently from GitHub. **The official Decky store submission was declined on 3 November 2026.** The maintainer cited both the rule against plugins that are shells for LLM access and the rule against plugins developed mostly by LLMs. [Read the decision](https://github.com/SteamDeckHomebrew/decky-plugin-database/issues/1178#issuecomment-6607400046). This project used substantial Claude/Codex assistance. Install manually from this repository; no official-store approval or pending review is claimed. [Submission status](docs/DECKY-SUBMISSION.md).
 
 Automated tests and checks on the developer's Deck do not replace an independent clean-device test. Physical controller behavior, SteamOS Stable/Beta coverage, suspend/resume during a running task and all optional providers still need the checks listed in the [release report](docs/RELEASE-CHECKLIST.md). Game installation or performance is not guaranteed; users must supply their own legally obtained games and files.
 
