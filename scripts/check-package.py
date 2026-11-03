@@ -16,7 +16,7 @@ def source_files(root=ROOT):
         rel=path.relative_to(root)
         if not path.is_file() or any(part in FORBIDDEN for part in rel.parts):continue
         if path.is_symlink():raise ValueError('Symlink in release source: '+str(rel))
-        include=str(rel) in exact or (rel.parts[0] in directories and path.suffix in ('.py','.sh','.yml','.yaml','.md','.png','.jpg','.webp')) or str(rel)=='scripts/deck-ai-steam' or (rel.parts[0]=='decky' and ((len(rel.parts)==2 and path.name in plugin_root) or (len(rel.parts)>2 and rel.parts[1] in ('src','tests','dist') and path.suffix in ('.ts','.tsx','.css','.mjs','.js','.png','.svg','.json')))) or str(rel) in ('decky/vendor/websockets-15.0.1-py3-none-any.whl','decky/vendor/LICENSE-websockets.txt','models/README.md')
+        include=str(rel) in exact or (rel.parts[0] in directories and path.suffix in ('.py','.sh','.yml','.yaml','.md','.png','.jpg','.webp')) or str(rel)=='scripts/deck-ai-steam' or (rel.parts[0]=='decky' and ((len(rel.parts)==2 and path.name in plugin_root) or (len(rel.parts)>2 and rel.parts[1] in ('src','tests','dist') and path.suffix in ('.ts','.tsx','.css','.mjs','.js','.png','.svg','.json')))) or str(rel) in ('decky/vendor/websockets-15.0.1-py3-none-any.whl','decky/vendor/LICENSE-websockets.txt','decky/vendor/loader-api-1.1.3-source.tar.gz','models/README.md')
         if include and path.suffix not in ('.map','.pyc','.pyo'):
             if path.name.startswith('.env') or path.name in ('auth.json','known_hosts','config.toml'):raise ValueError('Personal file in release: '+str(rel))
             if path.stat().st_size>15_000_000:raise ValueError('Unexpected large release file: '+str(rel))
@@ -32,6 +32,9 @@ def check(root=ROOT):
         data=json.loads((root/'decky'/filename).read_text())
         if data['version']!=version:raise ValueError('Version mismatch: '+filename)
     if '-' not in version and not (root/'LICENSE').is_file():raise ValueError('Stable release requires an explicitly selected LICENSE')
+    source_url=f'https://github.com/ivshalenko/codex-steamdeck/releases/download/v{version}/deck-ai-{version}-lgpl-sources.zip'
+    notices=root/'decky/THIRD_PARTY_NOTICES.txt'
+    if not notices.is_file() or source_url not in notices.read_text():raise ValueError('Update the versioned LGPL source link for this release')
     spec=importlib.util.spec_from_file_location('release_install_manager',root/'scripts/manage-install.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);module.source_files(root)
     files=source_files(root)
     for required in ('speech_accuracy.py','speech-languages.json','decky/runtime_paths.py','install.sh','uninstall.sh','decky/dist/index.js'):

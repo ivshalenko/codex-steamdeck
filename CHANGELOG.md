@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.0-rc.9
+
+- Use the official Claude Code setup UI, with an explicit Console/API route and user-owned billing.
+- Preserve native account/API/helper/cloud authentication; remove subscription-only checks and credential clearing.
+- Fix the auth-status invocation, discover native installs outside GUI PATH and keep credentials out of error messages.
+- Use standard Claude permissions without automatic edit approval; unanswered permission prompts are denied.
+- Document the exact Claude setup, provider environment and verification limits.
+- Supply pinned LGPL library/application sources, used npm modules and rebuild instructions alongside the plugin.
+
 ## 1.0.0-rc.8
 
 - Keep long permission requests in a bounded, scrollable Decky panel so allow/decline actions remain reachable in short windows.

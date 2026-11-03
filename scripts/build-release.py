@@ -31,7 +31,8 @@ def build(output):
     setup=output/'Install-Deck-AI.desktop'
     encoded=base64.b64encode((ROOT/'scripts/bootstrap.py').read_text().replace('@VERSION@',version).encode()).decode()
     setup.write_text('[Desktop Entry]\nType=Application\nName=Install Deck AI\nComment=Install or update Deck AI on Steam Deck\nExec=python3 -c "import base64;exec(base64.b64decode(\''+encoded+'\'))"\nIcon=system-software-install\nTerminal=true\nCategories=Utility;\n');setup.chmod(0o755)
-    checksums=output/'SHA256SUMS.txt';checksums.write_text(''.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name+'\n' for path in (desktop,plugin,remote,setup)))
+    lgpl=module('lgpl_sources','build-lgpl-sources.py').build(ROOT,output,version,source)
+    checksums=output/'SHA256SUMS.txt';checksums.write_text(''.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name+'\n' for path in (desktop,plugin,remote,setup,lgpl)))
     report={'version':version,'sourceFiles':len(source),'pluginFiles':len(runtime),'licenseSelected':(ROOT/'LICENSE').is_file(),'published':False,'checks':'compile, shell syntax, TypeScript, frontend logic, Python regression tests, package allowlist','manualChecksRequired':['Second Steam Deck/SteamOS installation','SteamOS suspend/resume during a task','Live optional providers with owner accounts','Human microphone accuracy in a running game']}
     (output/'BUILD-REPORT.json').write_text(json.dumps(report,indent=2)+'\n');return output
 

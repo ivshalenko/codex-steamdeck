@@ -17,3 +17,13 @@ def files(root):
  for rel,source in result.items():
   if not source.is_file() or source.is_symlink():raise ValueError('Missing/unsafe plugin source: '+str(rel))
  return dict(sorted(result.items()))
+
+if __name__=='__main__':
+ import argparse,zipfile
+ parser=argparse.ArgumentParser(description='Package built plugin files, including a locally modified library build.')
+ parser.add_argument('--output',type=Path,required=True);args=parser.parse_args()
+ source=files(Path(__file__).resolve().parents[1]);args.output.parent.mkdir(parents=True,exist_ok=True)
+ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as archive:
+  for rel,path in source.items():
+   info=zipfile.ZipInfo(str(Path('Deck AI')/rel),(2020,1,1,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.external_attr=0o100644<<16;archive.writestr(info,path.read_bytes())
+ print(args.output)

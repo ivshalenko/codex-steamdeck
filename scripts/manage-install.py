@@ -15,7 +15,7 @@ def source_files(source):
     for legal in ('LICENSE','NOTICE'):
         if (source/legal).is_file():paths.append(Path(legal))
         if (source/'decky'/legal).is_file():paths.append(Path('decky')/legal)
-    paths.extend(p.relative_to(source) for p in (source/'decky/vendor').glob('*') if p.is_file())
+    paths.extend(p.relative_to(source) for p in (source/'decky/vendor').glob('*') if p.is_file() and p.name in ('websockets-15.0.1-py3-none-any.whl','LICENSE-websockets.txt'))
     paths.extend(p.relative_to(source) for p in (source/'decky/dist').rglob('*') if p.is_file() and p.suffix!='.map')
     if not (source/'decky/dist/index.js').is_file():raise ValueError('Missing Decky build. Run npm ci && npm test in decky first.')
     for rel in paths:
