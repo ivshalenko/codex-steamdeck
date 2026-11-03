@@ -9,3 +9,5 @@ The current [new-plugin template](https://github.com/SteamDeckHomebrew/decky-plu
 Deck AI was developed with substantial Claude/Codex assistance. We cannot check this statement. A normal listing PR must not misrepresent code provenance or mark unperformed Stable/Beta/third-party tests as passed. An eligibility inquiry and a complete technical package are prepared; listing requires maintainer clarification/approval and the actual required human tests.
 
 Technical delivery: standalone built Decky ZIP, API v2 manifest, source, Apache-2.0 and dependency notices, explicit runtime/package allowlists, regression tests, installation/remote-access documentation, and release notes. The main repository is a monorepo; a future approved store submission should use a plugin-root branch/submodule compatible with Decky's build pipeline. Store approval is not claimed by a GitHub release.
+
+Eligibility inquiry submitted: https://github.com/SteamDeckHomebrew/decky-plugin-database/issues/1178. This is a clarification request, not a store approval.

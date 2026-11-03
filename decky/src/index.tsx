@@ -4,6 +4,7 @@ import { DialogButton, Dropdown, Focusable, TextField, ConfirmModal, showModal, 
 import { FaMicrophone, FaComment, FaHistory, FaCog, FaExpand, FaCompress, FaArrowLeft, FaGamepad, FaCopy, FaPlus, FaFolderOpen, FaListUl, FaSyncAlt } from "react-icons/fa";
 import logo from "../deck-ai.png";
 import css from "./style.css";
+import { createDraftStore, createViewGate } from "./drafts";
 import { chatFailures, queueCounts, queueStatus, type QueueJob } from "./queue";
 import { speechLanguages } from "./speech-languages";
 import { parseQuickActions } from "./quick";
@@ -58,7 +59,8 @@ const setProviderKey=callable<[key:string],unknown>("set_provider_key");
 const GameScroll=ScrollPanel as ComponentType<HTMLAttributes<HTMLDivElement> & RefAttributes<HTMLDivElement>>;
 type Tab = "chat"|"history"|"settings";
 const providerNames:Record<string,string>={codex:"Codex · ChatGPT",claude:"Claude · Pro / Max",deepseek:"DeepSeek · OpenRouter",tokenharbor:"DeepSeek · TokenHarbor"};
-const draftKey=(id?:string)=>"codex-game-draft:"+(id||"new");
+const drafts=createDraftStore(localStorage);
+const viewGate=createViewGate();
 function Action({children,onClick,disabled=false,primary=false,recording=false,selected}:{children:ReactNode;onClick:()=>void;disabled?:boolean;primary?:boolean;recording?:boolean;selected?:boolean}) {
  return <DialogButton className={"dai-button"+(primary?" dai-primary":"")+(recording?" dai-recording":"")+(selected?" dai-selected":"")} aria-pressed={selected} disabled={disabled} onClick={onClick}>{children}</DialogButton>;
 }
@@ -82,6 +84,11 @@ const dictationKey="deck-ai-dictation-v1";
 const historySnapshots=new Map<string,Snapshot>();
 const historyKey=(s:Pick<Snapshot,"provider"|"remoteHost"|"threadId">)=>JSON.stringify([s.provider,s.remoteHost||"",s.threadId]);
 const session={snapshot:null as Snapshot|null,attachments:new Map<string,Media[]>(),voiceText:"",voiceError:"",discardedVoice:localStorage.getItem("deck-ai-discarded-voice")||"",finishedVoice:"",dictation:restoreDictation(localStorage.getItem(dictationKey))};
+const attachmentListeners=new Set<(thread:string,items:Media[])=>void>();
+function publishAttachments(thread:string,items:Media[]){
+ if(items.length)session.attachments.set(thread,items);else session.attachments.delete(thread);
+ for(const listener of attachmentListeners)listener(thread,items);
+}
 const textScaleKey="deck-ai-text-scale";
 const textScaleListeners=new Set<(value:number)=>void>();
 function readTextScale(){
@@ -155,9 +162,10 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
   fullscreenViews.add(change);
   return()=>{fullscreenViews.delete(change);};
  },[fullscreen]);
- const [draft,setDraft]=useState(()=>localStorage.getItem(draftKey(session.snapshot?.threadId))||"");
+ const [draft,setDraft]=useState(()=>drafts.read(session.snapshot?.threadId));
  const draftId=useRef(session.snapshot?.threadId||"");
  const [busy,setBusy]=useState(false);
+ useEffect(()=>viewGate.subscribe(setBusy),[]);
  const [voiceStarting,setVoiceStarting]=useState(false);
  const [voicePolling,setVoicePolling]=useState(false);
  const actionLock=useRef(false);
@@ -171,11 +179,16 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const [queueOpen,setQueueOpen]=useState(false);
  const [expandedJob,setExpandedJob]=useState("");
  const [images,setImagesState]=useState<Media[]>(()=>session.attachments.get(draftId.current)||[]);
- const setImages=(update:Media[]|((old:Media[])=>Media[]))=>setImagesState(old=>{
-  const next=typeof update==="function"?update(old):update;
-  session.attachments.set(draftId.current,next);
-  return next;
- });
+ const setImages=(update:Media[]|((old:Media[])=>Media[]))=>{
+  const owner=draftId.current,old=session.attachments.get(owner)||[];
+  publishAttachments(owner,typeof update==="function"?update(old):update);
+ };
+ useEffect(()=>{
+  const unsubscribe=drafts.subscribe((owner,text)=>{if(owner===draftId.current)setDraft(text);});
+  const receive=(owner:string,items:Media[])=>{if(owner===draftId.current)setImagesState(items);};
+  attachmentListeners.add(receive);
+  return()=>{unsubscribe();attachmentListeners.delete(receive);};
+ },[]);
  const [shot,setShot]=useState("");const [video,setVideo]=useState("");
  const [key,setKey]=useState("");const [host,setHost]=useState("");
  const [loginUrl,setLoginUrl]=useState("");
@@ -208,7 +221,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const [openTool,setOpenTool]=useState("");
  useEffect(()=>{panelMounted++;return()=>{panelMounted--;};},[]);
  const lastVoice=useRef(session.voiceText);const lastVoiceError=useRef(session.voiceError);
- const inFlight=useRef(false);const mounted=useRef(true);const viewRevision=useRef(0);
+ const inFlight=useRef(false);const mounted=useRef(true);
  const queueRef=useRef<HTMLDivElement>(null);
  useEffect(()=>{if(queueOpen)requestAnimationFrame(()=>{const el=queueRef.current;if(el){el.scrollTop=0;el.querySelector<HTMLButtonElement>("button")?.focus();}});},[queueOpen]);
  const chatRef=useRef<HTMLDivElement>(null);const followTail=useRef(true);
@@ -217,34 +230,34 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
   const next=incoming.voiceId===session.finishedVoice&&incoming.voiceText?{...incoming,voiceState:"done"}:incoming;
   // Change the draft and its storage key together; polling must never copy a
   // draft into a different chat when the selected conversation changes.
-  if(next.threadId!==draftId.current){draftId.current=next.threadId;setDraft(localStorage.getItem(draftKey(next.threadId))||"");setImagesState(session.attachments.get(next.threadId)||[]);followTail.current=true;setShowLatest(false);}
+  if(next.threadId!==draftId.current){draftId.current=next.threadId;setDraft(drafts.read(next.threadId));setImagesState(session.attachments.get(next.threadId)||[]);followTail.current=true;setShowLatest(false);}
   historySnapshots.set(historyKey(next),next);
   while(historySnapshots.size>12)historySnapshots.delete(historySnapshots.keys().next().value!);
   session.snapshot=next;setData(next);
   if(next.voiceId&&["recording","stopping","processing"].includes(next.voiceState)){
-   session.dictation=bindDictation(session.dictation,next.voiceId,next.threadId,localStorage.getItem(draftKey(next.threadId))||"");
+   session.dictation=bindDictation(session.dictation,next.voiceId,next.threadId,drafts.read(next.threadId));
    localStorage.setItem(dictationKey,JSON.stringify(session.dictation));
   }
   if(next.voiceId&&next.voiceId!==session.discardedVoice&&next.voiceText&&next.voiceState==="done"){
    const id=next.voiceId;
    const owner=session.dictation?.id===id?session.dictation.thread:next.threadId;
-   const update=updateDictation(session.dictation,id,owner,next.voiceText,localStorage.getItem(draftKey(owner))||"");
+   const update=updateDictation(session.dictation,id,owner,next.voiceText,drafts.read(owner));
    session.dictation=update.session;
    localStorage.setItem(dictationKey,JSON.stringify(session.dictation));
-   if(update.value!==null){localStorage.setItem(draftKey(owner),update.value);if(owner===draftId.current)setDraft(update.value);if(autoSendRef.current&&owner===draftId.current){pendingAuto.current=true;setTimeout(()=>{pendingAuto.current=false;},8000);}}
+   if(update.value!==null){drafts.write(owner,update.value);if(owner===draftId.current)setDraft(update.value);if(autoSendRef.current&&owner===draftId.current){pendingAuto.current=true;setTimeout(()=>{pendingAuto.current=false;},8000);}}
    lastVoice.current=next.voiceText;session.voiceText=next.voiceText;
-  }else if(!next.voiceId&&next.voiceState==="done"&&next.voiceText&&next.voiceText!==lastVoice.current){lastVoice.current=next.voiceText;session.voiceText=next.voiceText;setDraft(old=>{const value=(old?old.trimEnd()+" ":"")+next.voiceText.trim()+" ";localStorage.setItem(draftKey(next.threadId),value);return value;});}
+  }else if(!next.voiceId&&next.voiceState==="done"&&next.voiceText&&next.voiceText!==session.voiceText){lastVoice.current=next.voiceText;session.voiceText=next.voiceText;drafts.write(next.threadId,(drafts.read(next.threadId).trimEnd()?drafts.read(next.threadId).trimEnd()+" ":"")+next.voiceText.trim()+" ");}
   if(next.voiceError&&next.voiceError!==lastVoiceError.current){lastVoiceError.current=next.voiceError;session.voiceError=next.voiceError;setError(next.voiceError);}
  },[]);
  const load=useCallback(async()=>{
-  if(inFlight.current||actionLock.current)return;
-  inFlight.current=true;const revision=viewRevision.current;
-  try{const next=await snapshot();if(mounted.current&&revision===viewRevision.current){accept(next);setConnectionError("");}}catch{if(mounted.current)setConnectionError("Связь с Deck AI прервалась. Повторяю подключение…");}finally{inFlight.current=false;}
+  if(inFlight.current||viewGate.busy())return;
+  inFlight.current=true;const revision=viewGate.token();
+  try{const next=await snapshot();if(mounted.current&&viewGate.current(revision)){accept(next);setConnectionError("");}}catch{if(mounted.current)setConnectionError("Связь с Deck AI прервалась. Повторяю подключение…");}finally{inFlight.current=false;}
  },[accept]);
  useEffect(()=>{mounted.current=true;void load();const timer=setInterval(()=>void load(),voicePolling?500:2500);return()=>{mounted.current=false;clearInterval(timer);};},[load,voicePolling]);
  useEffect(()=>{const el=chatRef.current;if(el&&followTail.current)el.scrollTop=el.scrollHeight;},[data?.messages,tab]);
- const editDraft=(value:string)=>{setDraft(value);localStorage.setItem(draftKey(draftId.current),value);};
- const run=async(work:()=>Promise<void>)=>{if(actionLock.current)return;actionLock.current=true;viewRevision.current++;setBusy(true);setError("");setNotice("");try{await work();}catch(e){setError(String(e));}finally{actionLock.current=false;setBusy(false);}};
+ const editDraft=(value:string,owner=draftId.current)=>drafts.write(owner,value);
+ const run=async(work:()=>Promise<void>)=>{if(actionLock.current||!viewGate.begin())return;actionLock.current=true;setBusy(true);setError("");setNotice("");try{await work();}catch(e){setError(String(e));}finally{actionLock.current=false;viewGate.end();setBusy(false);}};
  const model=data?.models.find(x=>x.id===data.model)||data?.models[0];
  const effort=data?.effort||model?.defaultEffort||model?.efforts[0]?.id||"";
  const tier=data?.tier||"default";
@@ -280,11 +293,11 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
   if(!data||!draft.trim()){setError("Нет текста для отправки. Завершите диктовку или введите сообщение.");return;}
   const sentThread=draftId.current,sentDraft=draft;
   await sendMessage(withGameContext(sentDraft,currentGame(),localStorage.getItem("deck-ai-game-context")==="on"),images.map(x=>x.path),model?.id||"",effort,tier);
-  if(localStorage.getItem(draftKey(sentThread))===sentDraft){
-   localStorage.setItem(draftKey(sentThread),"");
+  if(drafts.read(sentThread)===sentDraft){
+   drafts.write(sentThread,"");
    if(draftId.current===sentThread)setDraft("");
   }
-  session.attachments.delete(sentThread);
+  publishAttachments(sentThread,[]);
   if(draftId.current===sentThread)setImagesState([]);
   setNotice("Запрос принят · в очереди");followTail.current=true;accept(await snapshot());
  });
@@ -310,12 +323,12 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const openFile=(path:string)=>void run(async()=>{const result=await fileRead(path);setFile(result);setFileText(result.text);});
  const saveFile=()=>void run(async()=>{if(!file)return;const result=await fileWrite(file.path,fileText,file.sha256);setFile({...file,text:fileText,sha256:result.sha256});setNotice("Файл сохранён · копия: "+file.path.split("/").pop()+".deckai.bak");});
  const chooseThread=(id:string)=>void run(async()=>{
-  viewRevision.current++;
+  
   const current=session.snapshot;
   if(current){const cached=historySnapshots.get(historyKey({...current,threadId:id}));accept(cached?{...cached,threads:current.threads}:{...current,threadId:id,messages:[],active:false,status:"Загружаю диалог…"});}
   accept(await selectThread(id));setTab("chat");
  });
- const startChat=()=>void run(async()=>{viewRevision.current++;accept(await newThread());setTab("chat");});
+ const startChat=()=>void run(async()=>{accept(await newThread());setTab("chat");});
  const openFiles=()=>{setTab("history");setFilesOpen(true);openFolder("~");};
  const sortedThreads=[...(data?.threads||[])].sort((a,b)=>Number(!!b.running)-Number(!!a.running));
  const sidebar=fullscreen&&layout==="split"?<GameScroll className="dai-split-side"><div className="dai-stack-content">
@@ -382,7 +395,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
      {job.error&&<p className="dai-muted">{job.error}</p>}
      {job.status==="queued"&&<Action disabled={busy||ro} onClick={()=>void run(async()=>{await queueFront(job.id);accept(await snapshot());})}>↑ Отправить первым</Action>}
      {(job.status==="queued"||job.status==="error")&&<Action disabled={busy||ro} onClick={()=>void run(async()=>{await queueRemove(job.id);accept(await snapshot());})}>Удалить из очереди</Action>}
-     {job.threadId&&<Action disabled={busy} onClick={()=>void run(async()=>{viewRevision.current++;if((job.host||"")!==(data?.remoteHost||""))accept(await remoteHost(job.host||""));accept(await selectThread(job.threadId!));setTab("chat");setQueueOpen(false);})}>Открыть чат</Action>}
+     {job.threadId&&<Action disabled={busy} onClick={()=>void run(async()=>{if((job.host||"")!==(data?.remoteHost||""))accept(await remoteHost(job.host||""));accept(await selectThread(job.threadId!));setTab("chat");setQueueOpen(false);})}>Открыть чат</Action>}
     </section>)}
    </div></GameScroll>:mediaOpen?<GameScroll className="dai-scroll dai-stack"><div className="dai-stack-content">
     <Action onClick={()=>setMediaOpen(false)}>← К сообщению</Action>
@@ -424,7 +437,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
      {!!data?.outbox.length&&<div className="dai-queue-summary"><Action onClick={()=>setQueueOpen(true)}>Очередь · {data.queueTotal??data.outbox.length} · посмотреть</Action></div>}
      {images.length>0&&<div className="dai-attachments">{images.map((image,i)=><Action key={image.path+":"+i} onClick={()=>setImages(old=>old.filter((_,n)=>n!==i))}>× {image.name}</Action>)}</div>}
      {(recording||voiceProcessing)&&<div className="dai-voice-preview" role="status" aria-live="polite"><span className="dai-record-dot" aria-hidden="true"/><div><strong>{recording?"● Запись · распознанный текст":"Завершаю распознавание…"}</strong><span role="textbox" aria-label="Распознанная речь" aria-readonly="true">{(data?.voiceId!==session.discardedVoice?data?.voiceText:"")||(["ru","en","ru-fast","en-fast"].includes(lang)?"Здесь появится распознанная речь":"Записываю. Текст появится после «Стоп».")}</span></div></div>}
-     <form style={{display:"contents"}} onSubmit={e=>{e.preventDefault();submit();}}><div className="dai-draft-field"><TextField disabled={recording||voiceProcessing} value={draft} placeholder="Спросить об игре…" onChange={e=>editDraft(e.target.value)} onKeyDown={e=>{if((e.key==="Enter"||e.keyCode===13)&&!e.shiftKey&&!(e.nativeEvent as KeyboardEvent).isComposing){e.preventDefault();submit();}}}/></div></form>
+     <form style={{display:"contents"}} onSubmit={e=>{e.preventDefault();submit();}}><div className="dai-draft-field" key={data?.threadId||"new"} data-draft-owner={data?.threadId||""} onInputCapture={e=>{const target=e.target as HTMLInputElement;if(target.tagName==="INPUT")editDraft(target.value,e.currentTarget.dataset.draftOwner||"");}}><TextField disabled={recording||voiceProcessing} value={draft} placeholder="Спросить об игре…" onChange={e=>editDraft(e.target.value,e.target.closest<HTMLElement>(".dai-draft-field")?.dataset.draftOwner??draftId.current)} onKeyDown={e=>{if((e.key==="Enter"||e.keyCode===13)&&!e.shiftKey&&!(e.nativeEvent as KeyboardEvent).isComposing){e.preventDefault();submit();}}}/></div></form>
      <Focusable className="dai-compose-actions" flow-children="horizontal">
       <Action recording={recording||voiceProcessing} disabled={!data||voiceProcessing||busy} onClick={()=>void toggleVoice()}><FaMicrophone/>{recording?"Стоп":"Голос"}</Action>
       {!!data?.threadId&&<Action disabled={recording||voiceProcessing} onClick={()=>setQuickOpen(!quickOpen)}>⚡</Action>}
@@ -454,7 +467,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
    {(data?.provider==="codex"||!data)&&<Choice label="Устройство" value={data?.remoteHost||""} options={[{data:"",label:"Этот Steam Deck"},...(data?.sshHosts||[]).map(x=>({data:x,label:x}))]} disabled={busy||data?.active} onChange={value=>void run(async()=>accept(await remoteHost(value)))}/>}
    {data?.remoteHost&&<Action disabled={busy} onClick={()=>void run(async()=>{accept(await refresh());setNotice("Список задач обновлён");})}>↻ Обновить задачи на {data.remoteHost}</Action>}
    <TextField value={historyQuery} placeholder="Найти разговор…" onChange={e=>setHistoryQuery(e.target.value)}/>
-   {(data?.allTasks||[]).some(t=>t.host!==(data?.remoteHost||"")||t.running)&&<section className="dai-section dai-all-tasks"><h3>Задачи на всех устройствах</h3>{(data?.allTasks||[]).filter(t=>t.host!==(data?.remoteHost||"")||t.running).slice(0,12).map(t=><Action key={t.host+":"+t.id} disabled={busy||(data?.active&&!data.remoteHost&&t.host==="")} onClick={()=>void run(async()=>{viewRevision.current++;if(t.host!==(data?.remoteHost||""))accept(await remoteHost(t.host));accept(await selectThread(t.id));setTab("chat");})}><span>{t.running&&<span className="dai-dot working" aria-label="Выполняется"/>}{(t.host||"Steam Deck")+" · "+t.name}</span></Action>)}</section>}
+   {(data?.allTasks||[]).some(t=>t.host!==(data?.remoteHost||"")||t.running)&&<section className="dai-section dai-all-tasks"><h3>Задачи на всех устройствах</h3>{(data?.allTasks||[]).filter(t=>t.host!==(data?.remoteHost||"")||t.running).slice(0,12).map(t=><Action key={t.host+":"+t.id} disabled={busy||(data?.active&&!data.remoteHost&&t.host==="")} onClick={()=>void run(async()=>{if(t.host!==(data?.remoteHost||""))accept(await remoteHost(t.host));accept(await selectThread(t.id));setTab("chat");})}><span>{t.running&&<span className="dai-dot working" aria-label="Выполняется"/>}{(t.host||"Steam Deck")+" · "+t.name}</span></Action>)}</section>}
    {!data?.threads.length&&<p className="dai-muted">Ваши разговоры появятся здесь.</p>}
    {data?.threads.filter(x=>x.name.toLocaleLowerCase().includes(historyQuery.toLocaleLowerCase())).sort((a,b)=>Number(!!b.running)-Number(!!a.running)).map(thread=><div className={"dai-history-item "+(thread.id===data.threadId?"selected":"")+(thread.running?" running":"")} key={thread.id}><Action disabled={busy||(data.active&&thread.id!==data.threadId&&!data.remoteHost)} onClick={()=>chooseThread(thread.id)}><span>{thread.running&&<span className="dai-dot working" aria-label="Выполняется"/>}{thread.name||"Новый чат"}</span>{thread.id===data.threadId&&<small>Текущий</small>}</Action></div>)}
   </div></GameScroll>}

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0-rc.6
+
+- Synchronize drafts and attachments between the compact panel and an already open full-screen workspace.
+- Persist native text input immediately and bind late callbacks to their original conversation.
+- Share navigation/action state across both views so stale background polls cannot overwrite the selected chat.
+- Add regressions for two-view editing, draft ownership and cross-view polling races.
+
 ## 1.0.0-rc.5
 
 - Self-contained Decky text-chat package, including a pinned pure-Python WebSocket dependency; desktop companion is optional.
