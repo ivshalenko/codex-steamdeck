@@ -193,31 +193,69 @@ def openrouter_reply(model, history, text, images=()):
 
 
 def claude_code_available():
-    return shutil.which('claude')
+    binary = shutil.which('claude')
+    if binary:
+        return binary
+    # Native installs use ~/.local/bin, often absent from Decky's GUI PATH.
+    for binary in (Path.home()/'.local/bin/claude', Path.home()/'.npm-global/bin/claude',
+                   Path('/opt/homebrew/bin/claude'), Path('/usr/local/bin/claude')):
+        if binary.is_file() and os.access(binary, os.X_OK):
+            return str(binary)
+    return None
 
 
-def claude_subscription_status(binary=None):
+def claude_environment():
+    """Let the official CLI own authentication, provider selection and billing."""
+    return {**os.environ, 'NO_COLOR': '1'}
+
+
+def launch_claude_setup(console=False):
+    """Open Anthropic's own UI. Never collect credentials in Deck AI."""
+    binary = claude_code_available()
+    if not binary:
+        raise ProviderError('Установите Claude Code по официальной инструкции Anthropic.')
+    terminal = shutil.which('konsole') or shutil.which('xterm')
+    if not terminal:
+        raise ProviderError('Откройте терминал и выполните: claude auth login --console' if console else
+                            'Откройте терминал и выполните: claude. Для смены входа используйте /login.')
+    command = [terminal, '-e', binary]
+    if console:
+        command += ['auth', 'login', '--console']
+    try:
+        subprocess.Popen(command, cwd=str(Path.home()), env=claude_environment(), start_new_session=True)
+    except OSError:
+        raise ProviderError('Не удалось открыть Claude Code. Запустите claude в терминале.') from None
+
+
+def claude_auth_status(binary=None):
     binary = binary or claude_code_available()
     if not binary:
         return {'loggedIn': False, 'method': 'none'}
     try:
-        result = subprocess.run([binary, 'auth', 'status', '--json'], capture_output=True, text=True, timeout=12, check=False)
+        # `auth status` already returns JSON; --json is not a supported flag.
+        result = subprocess.run([binary, 'auth', 'status'], capture_output=True, text=True,
+                                timeout=12, check=False, env=claude_environment())
         payload = json.loads(result.stdout) if result.stdout.strip() else {}
     except (OSError, subprocess.TimeoutExpired, ValueError):
         return {'loggedIn': False, 'method': 'unknown'}
+    if not isinstance(payload, dict):
+        return {'loggedIn': False, 'method': 'unknown'}
     method = payload.get('authMethod', 'none')
-    return {'loggedIn': result.returncode == 0 and method in ('claude.ai', 'oauth_token'), 'method': method}
+    # The CLI decides readiness for account, API/helper and cloud-provider auth.
+    # Do not impose a subscription-only whitelist or copy its account details.
+    return {'loggedIn': result.returncode == 0 and payload.get('loggedIn', True) is True,
+            'method': method if isinstance(method, str) else 'unknown'}
 
 
 def claude_code_reply(model, session_id, text, cwd=None, resume=True):
     binary = claude_code_available()
     if not binary:
-        raise ProviderError('Claude Code не установлен. Установите его с официального сайта Anthropic и выполните вход по Claude Pro/Max.')
-    auth = claude_subscription_status(binary)
+        raise ProviderError('Claude Code не установлен. Откройте официальную инструкцию Anthropic и установите Claude Code.')
+    auth = claude_auth_status(binary)
     if not auth['loggedIn']:
-        raise ProviderError('Claude Code не вошёл через подписку Claude Pro/Max. Откройте «Войти в Claude Code» и выполните вход без Anthropic Console API.')
+        raise ProviderError('Claude Code не подтвердил готовность доступа. Откройте «Настроить Claude Code»: свой аккаунт, Console/API или облачный провайдер. Расходы зависят от выбранного доступа.')
     command = [binary, '-p', '--output-format', 'json', '--model', model,
-               '--permission-mode', 'acceptEdits', '--permission-prompts', 'none']
+               '--permission-mode', 'default', '--permission-prompts', 'none']
     if session_id and resume:
         command += ['--resume', session_id]
     else:
@@ -225,24 +263,24 @@ def claude_code_reply(model, session_id, text, cwd=None, resume=True):
     try:
         result = subprocess.run(command, input=text, text=True, capture_output=True,
                                 cwd=cwd or str(Path.home()), timeout=300, check=False,
-                                env={**os.environ, 'NO_COLOR': '1', 'ANTHROPIC_API_KEY': '', 'ANTHROPIC_AUTH_TOKEN': ''})
+                                env=claude_environment())
     except subprocess.TimeoutExpired as exc:
         raise ProviderError('Claude Code не завершил запрос за 5 минут.') from exc
     except OSError as exc:
         raise ProviderError('Не удалось запустить Claude Code.') from exc
     if result.returncode:
-        # Keep diagnostics concise; never include the process environment.
-        diagnostic = (result.stderr or result.stdout or '').strip().splitlines()
-        safe = diagnostic[-1][:300] if diagnostic else 'проверьте вход Claude Code командой claude'
-        raise ProviderError('Claude Code: ' + safe)
+        # CLI diagnostics can contain credentials. Inspect them only in its UI.
+        raise ProviderError('Claude Code не выполнил запрос. Проверьте доступ, биллинг и разрешения в официальном терминале Claude Code.')
     try:
         payload = json.loads(result.stdout)
+        if not isinstance(payload, dict) or payload.get('is_error'):
+            raise ProviderError('Claude Code сообщил об ошибке. Откройте его терминал для проверки доступа и разрешений.')
         answer = payload.get('result') or payload.get('message', {}).get('content')
         if isinstance(answer, list):
             answer = '\n'.join(block.get('text', '') for block in answer if isinstance(block, dict))
-    except (ValueError, AttributeError):
-        answer = result.stdout.strip()
-    if not answer:
+    except (ValueError, AttributeError, TypeError):
+        raise ProviderError('Claude Code вернул неожиданный формат ответа. Проверьте версию CLI.') from None
+    if not isinstance(answer, str) or not answer.strip():
         raise ProviderError('Claude Code вернул пустой ответ.')
     return answer.strip()
 
