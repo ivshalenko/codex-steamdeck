@@ -58,7 +58,7 @@ const unloadModels=callable<[],unknown>("unload_models");
 const setProviderKey=callable<[key:string],unknown>("set_provider_key");
 const GameScroll=ScrollPanel as ComponentType<HTMLAttributes<HTMLDivElement> & RefAttributes<HTMLDivElement>>;
 type Tab = "chat"|"history"|"settings";
-const providerNames:Record<string,string>={codex:"Codex · ChatGPT",claude:"Claude · Pro / Max",deepseek:"DeepSeek · OpenRouter",tokenharbor:"DeepSeek · TokenHarbor"};
+const providerNames:Record<string,string>={codex:"Codex · ChatGPT",claude:"Claude Code · свой доступ",deepseek:"DeepSeek · OpenRouter",tokenharbor:"DeepSeek · TokenHarbor"};
 const drafts=createDraftStore(localStorage);
 const viewGate=createViewGate();
 function Action({children,onClick,disabled=false,primary=false,recording=false,selected}:{children:ReactNode;onClick:()=>void;disabled?:boolean;primary?:boolean;recording?:boolean;selected?:boolean}) {
@@ -478,7 +478,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     <Choice label="Модель" value={model?.id||""} options={(data?.models||[]).map(x=>({data:x.id,label:x.name}))} disabled={busy} onChange={id=>{const next=data?.models.find(x=>x.id===id);settings(id,next?.defaultEffort||next?.efforts[0]?.id||"","default");}}/>
     {data?.provider==="codex"&&<><Choice label="Глубина обработки" value={effort} options={(model?.efforts||[]).map(x=>({data:x.id,label:x.name}))} disabled={busy} onChange={value=>settings(model?.id||"",value,tier)}/><Choice label="Скорость" value={tier} options={[{data:"default",label:"Обычная"},...(model?.tiers.includes("priority")?[{data:"priority",label:"Приоритетная"}]:[])]} disabled={busy} onChange={value=>settings(model?.id||"",effort,value)}/></>}
     </div>{(data?.provider==="deepseek"||data?.provider==="tokenharbor"||isCustom)&&<><TextField bIsPassword value={key} placeholder="Ключ API" onChange={e=>setKey(e.target.value)}/><Action disabled={busy||!key.trim()} onClick={()=>void run(async()=>{await setProviderKey(key.trim());setKey("");accept(await refresh());setNotice("Ключ сохранён");})}>Сохранить ключ</Action><p className="dai-muted">Ключ хранится в системном хранилище SteamOS.</p></>}
-    {data?.provider==="claude"&&<p className="dai-muted">Используется вход Claude Code, настроенный в режиме рабочего стола.</p>}
+    {data?.provider==="claude"&&<p className="dai-muted">Desktop Mode → Deck AI → + → Подключить Claude Code или Anthropic Console (API). Вход выполняется в официальном CLI: свой аккаунт, API-ключ или облачный доступ. Расходы зависят от способа доступа.</p>}
     {isCustom&&<><p className="dai-muted">Для этого облачного сервиса нужен API-ключ. Он хранится в системном хранилище SteamOS.</p><Action disabled={busy||ro} onClick={()=>showModal(<ConfirmModal strTitle={"Удалить «"+(names[data!.provider]||"")+"»?"} strOKButtonText="Удалить" strCancelButtonText="Отмена" onOK={()=>void run(async()=>{await customRemove(data!.provider);accept(await refresh());})}/>)}>Удалить это подключение</Action></>}
    </section>
    <section className="dai-section dai-appearance"><h3>Оформление</h3>

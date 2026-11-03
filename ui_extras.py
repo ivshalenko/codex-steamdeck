@@ -38,6 +38,8 @@ EN.update({'Копировать': 'Copy', 'Копировать ответ': 'C
 
 EN.update({'Поиск по названию или коду': 'Search by name or code', 'В начало списка': 'Start of list', 'На страницу вверх': 'Page up', 'На страницу вниз': 'Page down', 'В конец списка': 'End of list', 'Ничего не найдено': 'No matches', 'Нажмите один раз, затем листайте список или используйте поиск': 'Click once, then scroll the list or use search'})
 
+EN.update({'Claude Code · свой доступ':'Claude Code · your access','Настроить Claude Code':'Set up Claude Code','Подключить Claude Code':'Connect Claude Code','Войти через Anthropic Console (API)':'Sign in with Anthropic Console (API)'})
+
 class Translator:
     def __init__(self):
         self.language=STATE.read_text().strip() if STATE.exists() else 'en'

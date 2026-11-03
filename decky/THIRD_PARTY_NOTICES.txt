@@ -7,6 +7,12 @@ Font Awesome 5 icons are provided through react-icons as React components; artwo
 https://fontawesome.com/
 
 
+Corresponding source for the bundled @decky/api library and the application,
+including exact upstream source, used npm source/modules and rebuild instructions:
+https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.9/deck-ai-1.0.0-rc.9-lgpl-sources.zip
+Upstream source commit: d1b7f16070777a0ada939cbacd3606eeba0574f5
+
+
 ========================================================================
 @decky/api 1.1.3
 Source: git+https://github.com/SteamDeckHomebrew/loader-api.git

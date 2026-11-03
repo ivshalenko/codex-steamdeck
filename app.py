@@ -264,7 +264,7 @@ class Panel(Gtk.Application):
         provider_label=UILabel(label='Выбрать ИИ-провайдера',xalign=0);provider_label.get_style_context().add_class('sidebar-caption')
         sidebar.pack_start(provider_label,False,False,0)
         self.provider_picker=CompactPicker()
-        self.provider_titles=[('codex','Codex · ChatGPT'),('claude','Claude · Pro / Max'),('deepseek','DeepSeek · OpenRouter'),('tokenharbor','DeepSeek · TokenHarbor')]+[(entry['id'],entry['name']) for entry in self.custom_providers]
+        self.provider_titles=[('codex','Codex · ChatGPT'),('claude','Claude Code · свой доступ'),('deepseek','DeepSeek · OpenRouter'),('tokenharbor','DeepSeek · TokenHarbor')]+[(entry['id'],entry['name']) for entry in self.custom_providers]
         for ident,title in self.provider_titles:self.provider_picker.append(ident,translator.text(title))
         self.provider_picker.set_active_id('codex')
         self.provider_picker.connect('changed',self.provider_changed)
@@ -334,7 +334,7 @@ class Panel(Gtk.Application):
         self.tokenharbor_action_button=self.button('preferences-system-symbolic',translator.text('Настроить TokenHarbor'),self.configure_tokenharbor,'quiet')
         self.tokenharbor_action_button.set_no_show_all(True)
         self.provider_controls.pack_start(self.tokenharbor_action_button,False,False,0)
-        self.claude_action_button=self.button('system-users-symbolic',translator.text('Войти в Claude Code'),self.launch_claude_login,'quiet')
+        self.claude_action_button=self.button('system-users-symbolic',translator.text('Настроить Claude Code'),self.launch_claude_login,'quiet')
         self.claude_action_button.set_no_show_all(True)
         self.provider_controls.pack_start(self.claude_action_button,False,False,0)
         self.model_menu_popover.add(model_settings)
@@ -865,7 +865,7 @@ class Panel(Gtk.Application):
         self.claude_action_button.set_visible(target=='claude')
         self.more_chats_button.hide()
         if target=='claude' and not providers.claude_code_available():
-            self.message('Для Claude Pro/Max нужен Claude Code. Откройте меню Claude и установите Claude Code по инструкции Anthropic.')
+            self.message('Для этого источника нужен официальный Claude Code. Установите его и настройте собственный доступ по инструкции Anthropic.')
         if target=='deepseek' or target.startswith('custom:'):self.load_models()
         else:
             catalog=self.external_models[target]
@@ -875,17 +875,14 @@ class Panel(Gtk.Application):
         if self.thread_id and self.thread_id in self.external_threads[target]:self.render_external_history(self.external_threads[target][self.thread_id])
         else:self.new_chat()
 
-    def launch_claude_login(self,*_):
-        binary=providers.claude_code_available()
-        if not binary:
-            subprocess.Popen(['/usr/bin/xdg-open','https://code.claude.com/docs/en/getting-started'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
-            self.message('Открыл официальную инструкцию установки Claude Code. После установки выполните вход через «Войти в Claude Code».');return
-        terminal=shutil.which('konsole') or shutil.which('xterm')
-        if not terminal:
-            self.message('Откройте терминал и выполните: claude auth login');return
-        args=[terminal,'-e',binary,'auth','login'] if terminal.endswith('konsole') else [terminal,'-e',binary,'auth','login']
-        try:subprocess.Popen(args,start_new_session=True);self.message('Выполните вход в открывшемся окне Claude Code по тарифу Claude Pro/Max.')
-        except OSError:self.message('Не удалось открыть вход. В терминале выполните: claude auth login')
+    def launch_claude_login(self,*_,console=False):
+        if not providers.claude_code_available():
+            subprocess.Popen(['/usr/bin/xdg-open','https://code.claude.com/docs/en/setup'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
+            self.message('Открыл официальную инструкцию установки Claude Code. После установки нажмите «Настроить Claude Code».');return
+        try:
+            providers.launch_claude_setup(console=console)
+            self.message('Открыт официальный вход Anthropic Console. API-расходы оплачиваются по вашему доступу.' if console else 'Открыт официальный Claude Code: выберите собственный доступ. Для смены входа используйте /login. Аккаунт, API или облачная платформа могут иметь отдельные расходы.')
+        except providers.ProviderError as exc:self.message(str(exc))
 
     def show_connect_menu(self,*_):
         """Offer AI providers and remote Codex from the header's add button."""
@@ -893,7 +890,8 @@ class Panel(Gtk.Application):
         choices=[
             ('Подключить Codex на другом компьютере',self.prompt_remote_host),
             ('Управлять этим Steam Deck с Mac / ПК',self.show_remote_access),
-            ('Подключить Claude Pro / Max',self.connect_claude_provider),
+            ('Подключить Claude Code',self.connect_claude_provider),
+            ('Войти через Anthropic Console (API)',self.connect_claude_console),
             ('Подключить DeepSeek через OpenRouter',self.connect_deepseek_provider),
             ('Подключить DeepSeek через TokenHarbor',self.connect_tokenharbor_provider),
             ('Подключить свой ИИ (любой API)…',self.configure_custom_provider),
@@ -906,6 +904,10 @@ class Panel(Gtk.Application):
     def show_remote_access(self,*_):
         import remote_access
         remote_access.show(self.window,translator.language)
+
+    def connect_claude_console(self,*_):
+        self.provider_picker.set_active_id('claude')
+        GLib.idle_add(lambda:self.launch_claude_login(console=True))
 
     def connect_claude_provider(self,*_):
         self.provider_picker.set_active_id('claude')
@@ -1820,7 +1822,7 @@ class Panel(Gtk.Application):
         self.provider_picker.set_active_id(self.provider)
         self._updating_model=False
         self.provider_action_button.title_label.set_text(translator.text('Настроить DeepSeek / OpenRouter'))
-        self.claude_action_button.title_label.set_text(translator.text('Войти в Claude Code'))
+        self.claude_action_button.title_label.set_text(translator.text('Настроить Claude Code'))
         self.chat_search.set_placeholder_text(translator.text('Найти чат'))
         for item in self.app_menu.get_children():
             source=getattr(item,'translation_source',None)

@@ -50,16 +50,17 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(payload['messages'],[{'role':'user','content':'older prompt'},{'role':'user','content':'new prompt'}])
         self.assertEqual(request.get_header('Authorization'),'Bearer test-secret-placeholder')
 
-    def test_claude_calls_cli_with_subscription_auth_and_safe_permission_mode(self):
+    def test_claude_calls_cli_with_native_auth_and_no_automatic_edit_permission(self):
         payload={'result':'answer'}
         result=type('Completed',(),{'returncode':0,'stdout':json.dumps(payload),'stderr':''})()
-        with patch.object(providers,'claude_code_available',return_value='/opt/claude'), patch.object(providers,'claude_subscription_status',return_value={'loggedIn':True,'method':'claude.ai'}), patch.object(providers.subprocess,'run',return_value=result) as run:
+        with patch.object(providers,'claude_code_available',return_value='/opt/claude'), patch.object(providers,'claude_auth_status',return_value={'loggedIn':True,'method':'claude.ai'}), patch.object(providers.subprocess,'run',return_value=result) as run:
             self.assertEqual(providers.claude_code_reply('sonnet','session-id','hello'), 'answer')
         args=run.call_args.args[0]
         self.assertIn('--resume',args)
         self.assertIn('--permission-prompts',args)
         self.assertIn('none',args)
-        self.assertEqual(run.call_args.kwargs['env']['ANTHROPIC_API_KEY'],'')
+        self.assertEqual(args[args.index('--permission-mode')+1],'default')
+        self.assertNotIn('acceptEdits',args)
 
     def test_openrouter_key_is_sent_to_secret_store_stdin_not_arguments(self):
         secret='test-secret-placeholder'
@@ -91,9 +92,9 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(payload['model'],'deepseek-v4.1-flash:free')
         self.assertEqual(payload['messages'],[{'role':'user','content':'older prompt'},{'role':'user','content':'new prompt'}])
 
-    def test_claude_console_api_auth_is_not_used_for_subscription_mode(self):
-        with patch.object(providers,'claude_code_available',return_value='/opt/claude'), patch.object(providers,'claude_subscription_status',return_value={'loggedIn':False,'method':'api_key'}):
-            with self.assertRaisesRegex(providers.ProviderError,'Pro/Max'):
+    def test_claude_not_ready_directs_user_to_native_setup(self):
+        with patch.object(providers,'claude_code_available',return_value='/opt/claude'), patch.object(providers,'claude_auth_status',return_value={'loggedIn':False,'method':'none'}):
+            with self.assertRaisesRegex(providers.ProviderError,'Console/API'):
                 providers.claude_code_reply('sonnet','session-id','hello')
 
 

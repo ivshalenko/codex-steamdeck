@@ -1,8 +1,8 @@
 # Deck AI for Steam Deck
 
-AI chat in Steam Deck's Quick Access menu, with an optional desktop app, local dictation and remote control over SSH. **Community project, release candidate 1.0.0-rc.8.** Not affiliated with Valve or OpenAI.
+AI chat in Steam Deck's Quick Access menu, with an optional desktop app, local dictation and remote control over SSH. **Community project, release candidate 1.0.0-rc.9.** Not affiliated with Valve or OpenAI.
 
-**[Download / Скачать](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.8)** · **[Установка по шагам / Quick start](docs/QUICKSTART.md)** · **[Steam Deck ↔ Mac / PC](docs/REMOTE-CONTROL.md)** · **[Report an issue](https://github.com/ivshalenko/codex-steamdeck/issues)**
+**[Download / Скачать](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.9)** · **[Установка по шагам / Quick start](docs/QUICKSTART.md)** · **[Steam Deck ↔ Mac / PC](docs/REMOTE-CONTROL.md)** · **[Report an issue](https://github.com/ivshalenko/codex-steamdeck/issues)**
 
 ## Quick start
 
@@ -24,12 +24,14 @@ Real Steam Deck capture: installation, interface, notifications, Mac → Deck co
 
 ## What you can do
 
+[Comparison with Quest Compendium, Happy and HAPI / Сравнение похожих проектов](docs/COMPARISON.md).
+
 - Continue local Codex chats and choose a model, reasoning effort and service tier available to your account.
 - Send tasks, inspect requested confirmations, view the queue, and receive a notification when a task completes while the panel is closed.
 - Attach Steam screenshots or up to four frames extracted from a recording. Video attachments are sampled frames, not full video analysis.
 - Use full-screen chat, history, themes, local dictation, an on-screen keyboard and language settings in the desktop companion.
 - Control Codex **on Deck from Mac/Windows/Linux**, or control a **Mac/Linux/WSL host from Deck** over SSH. [The guide separates both directions.](docs/REMOTE-CONTROL.md)
-- Optional providers: Claude Code (requires its own installation and sign-in), DeepSeek/OpenRouter and custom compatible API endpoints (require their own credentials). Provider availability, limits and charges depend on those services. Only Codex's agent interface executes commands in this project; API chat providers produce chat replies.
+- Optional providers: [Claude Code](docs/CLAUDE-AUTH.md) (official CLI 2.1.259+, your own account/API/cloud access), DeepSeek/OpenRouter and custom compatible API endpoints (require their own credentials). Provider availability, limits and charges depend on those services. Codex has interactive tool confirmations in Deck AI. Claude Code uses its native permissions; actions requiring a prompt must be handled in its own terminal. API chat providers produce chat replies.
 
 ## Notifications, remote tasks and files
 
@@ -64,4 +66,4 @@ GitHub Pages is optional: the workflow runs only when repository variable `ENABL
 
 ## License and attribution
 
-Apache-2.0. Preserve [LICENSE](LICENSE), [NOTICE](NOTICE), author credit to **ivshalenko**, and third-party notices when redistributing. The plugin bundles Decky API components and a pure-Python websockets 15.0.1 wheel; their licenses are included. Codex, Decky Loader and optional voice models have their own upstream licenses and are downloaded separately where needed.
+Apache-2.0. Preserve [LICENSE](LICENSE), [NOTICE](NOTICE), author credit to **ivshalenko**, and third-party notices when redistributing. The plugin bundles Decky API components and a pure-Python websockets 15.0.1 wheel; their licenses are included. Each release supplies an LGPL source ZIP with the pinned Decky API, application source and instructions for rebuilding against a modified library. Codex, Decky Loader and optional voice models have their own upstream licenses and are downloaded separately where needed.
