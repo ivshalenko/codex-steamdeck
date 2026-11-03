@@ -35,11 +35,16 @@ Rebuild the application (Node 24 and Python 3.9+):
   npm --prefix decky test
   python3 scripts/package-plugin.py --output Deck-AI-modified.zip
 
-To use your modified library, unpack the upstream source, install its build
-dependencies with scripts disabled, edit src/, and run npm run build. Copy its
-  built dist/ into decky/node_modules/@decky/api/dist/, replacing the installed
-library. Then run npm --prefix decky test again and package the plugin. The
-application is rebuilt against your modified library; no signature lock is used.
+To modify the library using the application's locked build toolchain (Unix):
+  mkdir -p decky/library-source
+  tar -xzf decky/vendor/{SOURCE} -C decky/library-source --strip-components=1
+  # Edit decky/library-source/src/ as desired, then compile it:
+  node decky/node_modules/typescript/bin/tsc -b decky/library-source
+  cp -R decky/library-source/dist/. decky/node_modules/@decky/api/dist/
+  npm --prefix decky test
+  python3 scripts/package-plugin.py --output Deck-AI-modified.zip
+
+The application is rebuilt against your modified library; no signature lock is used.
 Keep the library's interface compatible or adapt the supplied application source.
 Do not run npm ci again after replacing the library; it restores the lockfile copy.
 
