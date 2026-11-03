@@ -19,7 +19,7 @@ def clean_subprocess_environment(environ=None):
 
 class Plugin:
     async def _main(self):
-        self.child=None;self.lock=threading.RLock();self.pending={};self.seq=0
+        self.child=None;self.lock=threading.RLock();self.pending={};self.seq=0;self.stopping=False
         self.home=Path.home()
         app_dir=resolve_app_dir(self.home)
         self.base=Path(__file__).resolve().parent
@@ -27,12 +27,13 @@ class Plugin:
         self.start_bridge()
     def start_bridge(self):
         with self.lock:
+            if getattr(self,"stopping",False):raise RuntimeError("Deck AI перезапускается. Откройте панель снова через несколько секунд.")
             if self.child and self.child.poll() is None:return
             env=clean_subprocess_environment();env.update({"HOME":str(self.home),"XDG_RUNTIME_DIR":f"/run/user/{os.getuid()}","PYTHONNOUSERSITE":"1"})
             self.child=subprocess.Popen([self.python,"-u",str(self.base/"bridge.py")],
                 cwd=str(self.base),env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,bufsize=1)
             self.stderr_tail=""
-            threading.Thread(target=self.read_errors,args=(self.child,),daemon=True).start()
+            self.error_reader=threading.Thread(target=self.read_errors,args=(self.child,),daemon=True);self.error_reader.start()
             self.reader=threading.Thread(target=self.read_bridge,args=(self.child,),daemon=True);self.reader.start()
     def read_errors(self,child):
         for line in child.stderr:
@@ -42,6 +43,7 @@ class Plugin:
             for line in child.stdout:
                 try:message=json.loads(line)
                 except ValueError:continue
+                if not isinstance(message,dict) or type(message.get("id")) is not int:continue
                 with self.lock:
                     future=self.pending.get(message.get("id"))
                     if future and future.get("child") is child:self.pending.pop(message.get("id"),None)
@@ -63,7 +65,9 @@ class Plugin:
             except Exception:self.pending.pop(ident,None);raise RuntimeError("Не удалось связаться с Codex.")
         if not future["event"].wait(timeout):
             with self.lock:self.pending.pop(ident,None)
-            raise RuntimeError("Codex долго не отвечает. Попробуйте ещё раз.")
+            if method in {"send","retry","approve","file_write","queue_front","queue_remove","custom_save","custom_remove","share_add_key"}:
+                raise RuntimeError("Подтверждение действия не получено вовремя. Оно могло выполниться: проверьте чат и очередь перед повтором.")
+            raise RuntimeError("Deck AI долго не отвечает. Повторите подключение в настройках.")
         response=future["response"]
         if "error" in response:raise RuntimeError(str(response["error"]))
         return response.get("result")
@@ -100,10 +104,28 @@ class Plugin:
     async def diagnose(self):return await self._rpc("diagnose",timeout=80)
     async def unload_models(self):return await self._rpc("unload_models",timeout=10)
     async def set_provider_key(self,key):return await self._rpc("provider_key",{"key":key},timeout=20)
-    async def _unload(self):
-        try:
-            with self.lock:
-                if self.child and self.child.poll() is None:
-                    self.child.stdin.write('{"method":"shutdown"}\n');self.child.stdin.flush();self.child.terminate()
-        except Exception:pass
+    def stop_bridge(self):
+        with self.lock:
+            self.stopping=True;child=self.child
+            if child and child.poll() is None:
+                try:child.stdin.write('{"method":"shutdown"}\n');child.stdin.flush()
+                except (OSError,ValueError):pass
+        if child:
+            try:child.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                child.terminate()
+                try:child.wait(timeout=1)
+                except subprocess.TimeoutExpired:child.kill();child.wait(timeout=2)
+            for reader in (getattr(self,'reader',None),getattr(self,'error_reader',None)):
+                if reader and reader is not threading.current_thread():reader.join(timeout=1)
+            for stream in (child.stdin,child.stdout,child.stderr):
+                if stream:
+                    try:stream.close()
+                    except (OSError,ValueError):pass
+        with self.lock:
+            for ident,future in list(self.pending.items()):
+                if future.get('child') is child:
+                    future['response']={'error':'Deck AI перезапускается. Проверьте чат и очередь после подключения.'};future['event'].set();self.pending.pop(ident,None)
+            if self.child is child:self.child=None
+    async def _unload(self):await asyncio.to_thread(self.stop_bridge)
     async def _uninstall(self):await self._unload()
