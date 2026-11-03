@@ -6,10 +6,33 @@ The reproducible build uses decky/package-lock.json and unmodified upstream pack
 Font Awesome 5 icons are provided through react-icons as React components; artwork by Font Awesome, licensed CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
 https://fontawesome.com/
 
+qrcode-generator 2.0.4
+Source: https://github.com/kazuhikoarase/qrcode-generator
+License: MIT
+Copyright (c) 2009 Kazuhiko Arase
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
 
 Corresponding source for the bundled @decky/api library and the application,
 including exact upstream source, used npm source/modules and rebuild instructions:
-https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.9/deck-ai-1.0.0-rc.9-lgpl-sources.zip
+https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.10/deck-ai-1.0.0-rc.10-lgpl-sources.zip
 Upstream source commit: d1b7f16070777a0ada939cbacd3606eeba0574f5
 
 

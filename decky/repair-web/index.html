@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Deck AI · Диагностика запуска</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <main>
+    <header><span class="brand">DECK AI</span><h1>Диагностика запуска</h1></header>
+    <p id="status" role="status">Связываюсь со Steam Deck…</p>
+    <section id="pairing" hidden>
+      <h2 id="code"></h2>
+      <p>Сверьте код и подтвердите браузер в разделе диагностики на Steam Deck.</p>
+    </section>
+    <section id="case" hidden>
+      <h2 id="game"></h2>
+      <p id="proton"></p>
+      <ul id="checks"></ul>
+      <p id="repair-status" role="status"></p>
+      <p id="result-status"></p>
+      <div id="decision" hidden>
+        <p id="question"></p>
+        <div class="actions">
+          <button id="accept" type="button">Подтвердить</button>
+          <button id="decline" type="button" class="secondary">Отклонить</button>
+        </div>
+      </div>
+      <div id="result" hidden>
+        <p>Игра запустилась после сброса?</p>
+        <div class="actions">
+          <button id="started" type="button">Запустилась</button>
+          <button id="failed" type="button" class="secondary">Не запустилась</button>
+        </div>
+      </div>
+      <p id="last-note" hidden></p>
+      <label for="note">Уточнение для Deck</label>
+      <textarea id="note" rows="3" maxlength="500" placeholder="Что произошло при повторном запуске?"></textarea>
+      <button id="send-note" type="button" class="secondary">Передать уточнение</button>
+    </section>
+    <p id="error" role="alert" hidden></p>
+  </main>
+</body>
+</html>

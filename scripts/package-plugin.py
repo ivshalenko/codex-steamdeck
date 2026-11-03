@@ -3,6 +3,7 @@
 import hashlib
 from pathlib import Path
 RUNTIME=('backend.py','chat_media.py','providers.py','speech_accuracy.py','deck_share.py','speech-languages.json')
+REPAIR_FILES=('launch_repair.py','repair_remote.py','repair-web/index.html','repair-web/app.js','repair-web/style.css')
 WHEEL='websockets-15.0.1-py3-none-any.whl'
 WHEEL_SHA='f7a866fbc1e97b5c617ee4116daaa09b722101d4a3c170c787450ba409f9736f'
 def files(root):
@@ -10,6 +11,7 @@ def files(root):
  wheel=plugin/'vendor'/WHEEL
  if hashlib.sha256(wheel.read_bytes()).hexdigest()!=WHEEL_SHA:raise ValueError('WebSocket dependency checksum mismatch')
  result={Path(name):plugin/name for name in ('plugin.json','package.json','main.py','bridge.py','runtime_paths.py','deck-ai.png','LICENSE','NOTICE','THIRD_PARTY_NOTICES.txt')}
+ result.update({Path(name):plugin/name for name in REPAIR_FILES})
  result.update({Path('runtime')/name:root/name for name in RUNTIME})
  result.update({Path('vendor')/name:plugin/'vendor'/name for name in (WHEEL,'LICENSE-websockets.txt')})
  result.update({p.relative_to(plugin):p for p in (plugin/'dist').rglob('*') if p.is_file() and p.suffix!='.map'})

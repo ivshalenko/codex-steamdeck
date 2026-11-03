@@ -19,8 +19,12 @@ import backend as device
 from backend import Backend, ssh_command, CODEX
 import providers
 from speech_accuracy import multilingual_ready
+from launch_repair import LaunchRepair, STEAM_ID_BASE, valid_account
+from repair_remote import RepairRemote
 ROOT=Path.home(); STATE=resolve_state_dir()
 STEAM=ROOT/'.local/share/Steam/userdata'
+repair_services_lock = threading.Lock()
+repair_services = None
 READ_ONLY_BLOCKED={'send','retry','stop','new_thread','approve','file_write','share_add_key','custom_save','custom_remove','queue_front','queue_remove','account_login','account_logout','video_frames','settings'}
 WATCH_INTERVAL=12
 THREAD_LIST_TTL=6;HISTORY_TTL_ACTIVE=4;HISTORY_TTL_IDLE=12;VOSK_IDLE_SECONDS=180
@@ -283,9 +287,10 @@ def tool_text(item):
     names=', '.join(str(c.get('path','')) for c in changes[:6])
     diff='\n'.join(str(c.get('diff','')) for c in changes[:3] if c.get('diff'))[:1200]
     return ('Изменены файлы: '+names+('\n'+diff if diff else '')).strip()
-def list_screenshots():
+def list_screenshots(directory=None):
     found=[]
-    for p in STEAM.glob('*/760/remote/*/screenshots/*'):
+    paths = STEAM.glob('*/760/remote/*/screenshots/*') if directory is None else directory.iterdir() if directory.is_dir() else ()
+    for p in paths:
         if not p.is_file() or p.parent.name=='thumbnails' or p.suffix.lower() not in ('.png','.jpg','.jpeg','.webp'):continue
         try:
             st=p.stat()
@@ -808,10 +813,52 @@ def diagnose():
     add('Многоязычная модель Whisper',multilingual_ready(APP_DIR),'нужна только для других языков')
     for tool in ('ffmpeg','pactl'):add('Утилита '+tool,Path('/usr/bin/'+tool).exists())
     return {'checks':checks}
+
+
+def launch_repair_call(method, params):
+    global repair_services
+    with repair_services_lock:
+        if repair_services is None:
+            repair = LaunchRepair(STATE, ROOT, STEAM, lambda: not read_only)
+            repair_services = repair, RepairRemote(repair)
+    repair, remote = repair_services
+    account = params.get("account", "")
+    if method == "repair_status":
+        account = account if valid_account(account) else ""
+        return {"case": repair.view(account), "remote": remote.local_status(account)}
+    if not valid_account(account):
+        raise ValueError("Откройте библиотеку Steam под своим аккаунтом.")
+    if method == "repair_screenshots":
+        app_id = params.get("appId")
+        if type(app_id) is not int or not 0 < app_id <= 0xffffffff:
+            raise ValueError("Выберите игру в Steam.")
+        directory = STEAM / str(int(account) - STEAM_ID_BASE) / "760" / "remote" / str(app_id) / "screenshots"
+        return list_screenshots(directory)
+    if method == "repair_inspect":
+        return repair.inspect(account, params.get("app"), params.get("screenshot", ""))
+    case_id, verb = params.get("caseId"), params.get("verb")
+    fields = params.get("fields") or {}
+    if not isinstance(fields, dict):
+        raise ValueError("Неверные параметры диагностики.")
+    if verb == "pair":
+        return remote.begin(account, case_id, fields.get("address"))
+    if verb == "pair_confirm":
+        return remote.confirm(account, fields.get("code"))
+    if verb == "pair_stop":
+        return remote.stop(account)
+    if verb == "close":
+        result = repair.command(account, case_id, verb, fields)
+        remote.stop(account)
+        return result
+    return repair.command(account, case_id, verb, fields)
+
+
 def _call(method,params):
     global thread_id,cache_time,status,active,remote_host,bridge,model_cache_time,account_cache_time,cache_media_time,model_catalog,account_cache,provider,provider_active,provider_status
     params=params or {}
     if read_only and method in READ_ONLY_BLOCKED:raise ValueError('Включён режим только чтения: действия запрещены. Отключите его в настройках.')
+    if method in ("repair_status", "repair_screenshots", "repair_inspect", "repair_command"):
+        return launch_repair_call(method, params)
     if method=='snapshot':return get_snapshot()
     if method=='older_messages':
         key=(remote_host,thread_id);history_limits[key]=history_limits.get(key,40)+80

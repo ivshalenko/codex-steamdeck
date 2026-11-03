@@ -102,6 +102,15 @@ class Plugin:
     async def poll_events(self,since=None):return await self._rpc("events",{"since":since},timeout=10)
     async def approve(self,ident,decision):return await self._rpc("approve",{"id":ident,"decision":decision},timeout=20)
     async def diagnose(self):return await self._rpc("diagnose",timeout=80)
+    async def repair_status(self, account):
+        return await self._rpc("repair_status", {"account": account}, timeout=8)
+    async def repair_screenshots(self, account, app_id):
+        return await self._rpc("repair_screenshots", {"account": account, "appId": app_id}, timeout=8)
+    async def repair_inspect(self, account, app, screenshot):
+        return await self._rpc("repair_inspect", {"account": account, "app": app, "screenshot": screenshot}, timeout=15)
+    async def repair_command(self, account, case_id, verb, fields):
+        params = {"account": account, "caseId": case_id, "verb": verb, "fields": fields}
+        return await self._rpc("repair_command", params, timeout=10)
     async def unload_models(self):return await self._rpc("unload_models",timeout=10)
     async def set_provider_key(self,key):return await self._rpc("provider_key",{"key":key},timeout=20)
     def stop_bridge(self):

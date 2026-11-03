@@ -287,3 +287,14 @@ div:has(> .dai-root:not(.dai-fullscreen)){display:flex!important;flex-direction:
 .dai-chat-main.has-approvals .dai-messages{min-height:0}
 .dai-approvals{flex:0 1 auto;min-height:48px;max-height:45%;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
 .dai-approval{flex-shrink:0;overflow-wrap:anywhere}
+
+.dai-repair .dai-section{display:flex;flex-direction:column;gap:10px;overflow-wrap:anywhere}
+.dai-repair h4{margin:0;font-size:1.15em}
+.dai-repair-checks{margin:0;padding-left:1.25em}
+.dai-repair-checks li+li{margin-top:5px}
+.dai-repair-preview{max-width:100%;max-height:220px;object-fit:contain;align-self:flex-start;border-radius:8px}
+.dai-repair-qr{width:min(100%,260px);height:auto;align-self:flex-start;image-rendering:pixelated}
+.dai-repair-confirm{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--dai-line);border-radius:8px}
+.dai-repair-actions{display:flex;gap:8px;flex-wrap:wrap}
+.dai-root .dai-repair-actions>.dai-button.DialogButton{width:auto!important;flex:1}
+.dai-repair-error{color:#ffb9b3}
