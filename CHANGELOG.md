@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0-rc.8
+
+- Keep long permission requests in a bounded, scrollable Decky panel so allow/decline actions remain reachable in short windows.
+- Let chat history yield its minimum height while a permission request is shown.
+
 ## 1.0.0-rc.7
 
 - Keep cached history visible with a clear warning when a refresh fails; first-load failures no longer masquerade as an empty successful chat.
