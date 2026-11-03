@@ -1,5 +1,10 @@
 type DraftStorage=Pick<Storage,'getItem'|'setItem'>;
 const key=(thread?:string)=>'codex-game-draft:'+(thread||'new');
+export function draftOwner(view?:{provider:string;remoteHost?:string;threadId:string}|null){
+ if(!view)return "";
+ if(view.provider==="codex"&&!view.remoteHost)return view.threadId;
+ return JSON.stringify([view.provider,view.remoteHost||"",view.threadId]);
+}
 export function createDraftStore(storage:DraftStorage){
  const listeners=new Set<(thread:string,text:string)=>void>();
  return {
@@ -19,5 +24,25 @@ export function createViewGate(){
   begin(){if(active)return false;active=true;revision++;for(const listener of listeners)listener(true);return true;},
   end(){active=false;revision++;for(const listener of listeners)listener(false);},
   subscribe(listener:(busy:boolean)=>void){listeners.add(listener);listener(active);return ()=>{listeners.delete(listener);};}
+ };
+}
+
+// The quick panel and the full-screen page can be mounted together. Share
+// their periodic reads without reusing a response across navigation.
+export function createSnapshotReader<T>(request:()=>Promise<T>,now=()=>performance.now()){
+ let cached:{revision:number;received:number|null;value:Promise<T>}|null=null;
+ return (revision:number,maxAge:number)=>{
+  if(cached?.revision===revision&&(cached.received===null||now()-cached.received<maxAge)){
+   return cached.value;
+  }
+  const entry={revision,received:null as number|null,value:Promise.resolve().then(request)};
+  cached=entry;
+  return entry.value=entry.value.then(value=>{
+   entry.received=now();
+   return value;
+  },error=>{
+   if(cached===entry)cached=null;
+   throw error;
+  });
  };
 }

@@ -13,17 +13,33 @@ let rendered = "";
 let busy = false;
 let fetching = false;
 let mutation = 0;
+let timer;
+let delay = 2200;
+let ended = false;
+
+class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
 
 async function api(path, body) {
-  const response = await fetch("/api/" + path, {
-    ...(body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {}),
-    cache: "no-store",
-    signal: AbortSignal.timeout(5500),
-  });
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(result.error || "Связь с Deck прервана.");
-  if (!result.state) throw new Error("Пульт получил неполный ответ от Deck.");
-  return result;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5500);
+  try {
+    const response = await fetch("/api/" + path, {
+      ...(body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {}),
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new HttpError(response.status, result.error || "Связь с Deck прервана.");
+    if (!result.state) throw new Error("Пульт получил неполный ответ от Deck.");
+    return result;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function render(value) {
@@ -47,9 +63,11 @@ function render(value) {
     return li;
   }));
   const actionStatus = action?.state === "pending" ? "Требуется подтверждение." :
-    action ? "Steam Deck проверяет изменение." : labels[state];
+    action ? "Steam Deck проверяет изменение." :
+    state === "applied" && launchResult ? "Параметры сброшены. Результат запуска отмечен." : labels[state];
   text("repair-status", [actionStatus, detail, readOnly && "Режим только чтения."].filter(Boolean).join(" "));
-  show("decision", action?.state === "pending" && !readOnly);
+  show("decision", action?.state === "pending");
+  element("accept").disabled = readOnly;
   text("question", action?.kind === "restore" ? "Восстановить исходные параметры этой игры?" :
     "Временно сбросить параметры запуска этой игры? Deck сохранит исходное значение для отката.");
   show("result", state === "applied" && !action && !launchResult);
@@ -60,7 +78,8 @@ function render(value) {
 }
 
 function problem(error) {
-  text("error", error instanceof Error ? error.message : "Связь с Deck прервана.");
+  const message = error instanceof Error && error.name !== "AbortError" ? error.message : "Связь с Deck прервана.";
+  text("error", message);
   show("error", true);
 }
 
@@ -72,12 +91,14 @@ async function action(path, fields) {
   show("error", false);
   try {
     render(await api(path, { ...fields, caseId: current.id }));
-    if (path === "note") element("note").value = "";
+    if (path === "note" && element("note").value === fields.note) element("note").value = "";
   } catch (error) {
     problem(error);
   } finally {
     buttons.forEach(button => { button.disabled = false; });
+    element("accept").disabled = Boolean(current?.readOnly);
     busy = false;
+    schedule(0);
   }
 }
 
@@ -87,14 +108,21 @@ element("started").onclick = () => void action("result", { result: "started" });
 element("failed").onclick = () => void action("result", { result: "failed" });
 element("send-note").onclick = () => void action("note", { note: element("note").value });
 
+function schedule(ms) {
+  clearTimeout(timer);
+  if (ended || document.hidden || !navigator.onLine) return;
+  timer = setTimeout(() => void refresh(), ms);
+}
+
 async function refresh() {
-  if (busy || fetching) return;
+  if (busy || fetching || ended || document.hidden || !navigator.onLine) return;
   fetching = true;
   const revision = mutation;
   try {
     const value = await api("status");
     if (revision !== mutation) return;
     render(value);
+    delay = 2200;
     if (element("error").dataset.connection) show("error", false);
     delete element("error").dataset.connection;
   } catch (error) {
@@ -103,11 +131,14 @@ async function refresh() {
     current = null;
     show("case", false);
     show("pairing", false);
-    text("status", "Подключение приостановлено");
+    ended = error instanceof HttpError && (error.status === 401 || error.status === 410);
+    text("status", ended ? "Нужен новый QR с Steam Deck" : "Подключение приостановлено");
+    delay = Math.min(20000, delay * 2);
     problem(error);
     element("error").dataset.connection = "1";
   } finally {
     fetching = false;
+    schedule(delay);
   }
 }
 
@@ -118,4 +149,15 @@ if (challenge) {
   catch (error) { problem(error); }
 }
 await refresh();
-setInterval(() => void refresh(), 2200);
+document.addEventListener("visibilitychange", () => schedule(0));
+window.addEventListener("online", () => schedule(0));
+window.addEventListener("offline", () => {
+  clearTimeout(timer);
+  if (!ended) {
+    text("status", "Ожидаю подключения к сети");
+    current = null;
+    rendered = "";
+    show("case", false);
+    show("pairing", false);
+  }
+});

@@ -108,6 +108,29 @@ class LaunchRepairTests(unittest.TestCase):
         self.now += 46
         self.assertIsNone(self.repair.view(ACCOUNT)["action"])
 
+    def test_read_only_still_allows_rejecting_pending_action(self):
+        action = self.request()
+        self.write_allowed = False
+        with self.assertRaises(ValueError):
+            self.command("decide", actionId=action, decision=True)
+        self.assertIsNone(self.command("decide", actionId=action, decision=False)["action"])
+
+    def test_end_wait_keeps_backup_when_steam_never_answers(self):
+        action = self.request()
+        self.command("decide", actionId=action, decision=True)
+        self.command("claim", actionId=action, options=APP["options"], shortcut=False)
+        with self.assertRaises(ValueError):
+            self.command("end_wait", actionId=action)
+        self.now += 21
+        self.assertTrue(self.repair.view(ACCOUNT)["canEndWait"])
+        review = self.command("end_wait", actionId=action)
+        self.assertEqual("conflict", review["state"])
+        self.assertIsNone(review["action"])
+        self.assertNotIn(APP["options"], json.dumps(review))
+        self.assertEqual({"options": APP["options"]}, self.command("original"))
+        with self.assertRaises(ValueError):
+            self.command("observe", actionId=action, options="", shortcut=False)
+
     def test_only_matching_screenshots_and_redacted_log_signals(self):
         folder = self.steam / "1/760/remote/42/screenshots"
         folder.mkdir(parents=True)
@@ -152,6 +175,29 @@ class LaunchRepairTests(unittest.TestCase):
         restore = self.request("restore")
         self.command("decide", actionId=restore, decision=True)
         self.assertEqual({"options": APP["options"]}, self.command("claim", actionId=restore, options="", shortcut=True))
+
+    def test_missing_shortcut_and_rotated_log_without_private_paths(self):
+        game_id = steam_ids(APP["appId"], True)[1]
+        location = self.home / "removed-drive" / "test-launcher"
+        logs = self.steam.parent / "logs"
+        logs.mkdir()
+        (logs / "gameprocess_log.txt").write_text(
+            "[2026-11-04 02:32:00] AppID 4242 no longer tracking PID 66, exit code 9\n")
+        (logs / "gameprocess_log.previous.txt").write_text(
+            f"[2026-11-04 02:27:36] AppID {game_id} no longer tracking PID 55, exit code 1\n")
+        proton = self.home / f"steam-{game_id}.log"
+        proton.write_text("permission denied with private values")
+        os.utime(proton, (1, 1))
+        result = self.repair.inspect(ACCOUNT, {**APP, "shortcut": True, "location": f'"{location}"'}, "")["case"]
+        self.assertTrue(any("Цель ярлыка не найдена" in item for item in result["checks"]))
+        self.assertTrue(any("предыдущий журнал" in item and "код 1." in item for item in result["checks"]))
+        self.assertTrue(any("старше часа" in item for item in result["checks"]))
+        self.assertNotIn(str(location), str(result))
+        self.assertNotIn("private values", str(result))
+        location.parent.mkdir()
+        location.touch()
+        refreshed = self.repair.command(ACCOUNT, result["id"], "recheck", {})
+        self.assertIn("Файл, указанный в ярлыке Steam, найден.", refreshed["checks"])
 
     def test_real_http_pairing_scope_and_single_use_decision(self):
         remote = RepairRemote(self.repair, port=0, clock=lambda: self.now)

@@ -11,6 +11,14 @@ bridge=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bridge)
 
 class DeckyBridgeTests(unittest.TestCase):
+    def test_history_window_never_reads_attachments_outside_requested_tail(self):
+        thread = {"turns": [{"items": [{"type": "userMessage", "id": str(i),
+                  "content": [{"type": "text", "text": "Fixture"}]}]} for i in range(240)]}
+        with patch.object(bridge, "attachments", return_value=[]) as preview:
+            rows = bridge.extract_messages(thread, limit=41)
+        self.assertEqual([str(i) for i in range(199, 240)], [row["id"] for row in rows])
+        self.assertEqual([str(i) for i in range(239, 198, -1)], [call.args[0]["id"] for call in preview.call_args_list])
+
     @unittest.skipUnless(shutil.which('ffmpeg'),'FFmpeg required for media integration test')
     def test_short_and_long_recordings_produce_jpeg_frames(self):
         root=Path(self.temp.name)/'recordings';root.mkdir()

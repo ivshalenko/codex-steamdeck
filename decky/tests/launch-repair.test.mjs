@@ -67,3 +67,22 @@ test("Steam adapter writes only a claimed change, checks readback and detects a 
  assert.equal(wrote, 1);
  assert.equal(options, "manually edited");
 });
+
+test("idle repair stops polling and reopens on a view subscription", async () => {
+ let calls=0;
+ globalThis.repairCallable=method=>async()=>{
+  assert.equal(method,"repair_status");
+  calls++;
+  return {case:null,remote:{state:"off"}};
+ };
+ const repair=await import("data:text/javascript;base64,"+Buffer.from(outputText).toString("base64")+"#idle");
+ const stop=repair.startRepairPolling();
+ try{
+  await new Promise(resolve=>setTimeout(resolve,1950));
+  assert.equal(calls,1);
+  const unsubscribe=repair.subscribeRepair(()=>{});
+  await new Promise(resolve=>setTimeout(resolve,20));
+  assert.equal(calls,2);
+  unsubscribe();
+ }finally{stop();}
+});

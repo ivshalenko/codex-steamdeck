@@ -64,39 +64,96 @@ def screenshot_dirs(steam, account, app_id, shortcut):
 
 
 def steam_process_check(steam, app_id, shortcut):
-    try:
-        data, _ = read_regular(steam.parent / "logs" / "gameprocess_log.txt", 256 * 1024, tail=True)
-    except (OSError, ValueError):
-        return "Журнал процессов Steam недоступен."
     identifiers = {identifier.encode("ascii") for identifier in steam_ids(app_id, shortcut)}
-    for line in reversed(data.splitlines()):
-        event = STEAM_PROCESS.match(line)
-        if not event or event[2] not in identifiers:
+    readable = False
+    for filename in ("gameprocess_log.txt", "gameprocess_log.previous.txt"):
+        try:
+            data, _ = read_regular(steam.parent / "logs" / filename, 256 * 1024, tail=True)
+        except (OSError, ValueError):
             continue
-        timestamp = event[1].decode("ascii")
-        if event[3] == b"adding":
-            return f"Steam зарегистрировал процесс игры · {timestamp}."
-        if event[4] is not None:
-            code = event[4].decode("ascii")
-            return f"Steam зарегистрировал завершение процесса · {timestamp} · код {code}."
-        return f"Steam зарегистрировал завершение процесса · {timestamp}."
-    return "В недавних событиях Steam процессы этой игры не найдены."
+        readable = True
+        for line in reversed(data.splitlines()):
+            event = STEAM_PROCESS.match(line)
+            if not event or event[2] not in identifiers:
+                continue
+            timestamp = event[1].decode("ascii")
+            source = "Steam" if filename == "gameprocess_log.txt" else "Steam (предыдущий журнал)"
+            if event[3] == b"adding":
+                return f"{source} зарегистрировал процесс игры · {timestamp}."
+            code = f" · код {event[4].decode('ascii')}" if event[4] is not None else ""
+            return f"{source} зарегистрировал завершение процесса · {timestamp}{code}."
+    if readable:
+        return "В недавних событиях Steam процессы этой игры не найдены."
+    return "Журнал процессов Steam недоступен."
 
 
-def collect_checks(home, steam, app_id, shortcut):
+def absolute_path(value):
+    """Accept a Steam-supplied local path, including quoted shortcut fields."""
+    if not isinstance(value, str) or len(value) > 4096 or any(not c.isprintable() for c in value):
+        return ""
+    value = value.strip()
+    if value.startswith('"') and value.endswith('"'):
+        value = value[1:-1]
+    return value if value.startswith("/") else ""
+
+
+def storage_checks(home, location, shortcut):
     checks = []
     try:
-        gib = shutil.disk_usage(home).free / (1024 ** 3)
-        checks.append(f"Свободно в домашнем разделе Steam Deck: {gib:.1f} ГБ.")
+        free = shutil.disk_usage(home).free / (1024 ** 3)
+        checks.append(f"Свободно в домашнем разделе Steam Deck · {free:.1f} ГБ.")
+        if free < 2:
+            checks.append("На домашнем разделе осталось меньше 2 ГБ. Проверьте хранилище Steam.")
     except OSError:
         checks.append("Размер свободного места недоступен.")
+    if not location:
+        return checks
+    path = Path(location)
     try:
-        data, mtime = read_regular(home / f"steam-{app_id}.log", 128 * 1024, tail=True)
+        info = path.stat()
+    except FileNotFoundError:
+        checks.append("Цель ярлыка не найдена. Проверьте путь и подключение накопителя." if shortcut
+                      else "Папка библиотеки недоступна. Проверьте подключение накопителя.")
+        return checks
+    except OSError:
+        checks.append("Steam Deck не смог проверить путь игры. Проверьте доступ к накопителю.")
+        return checks
+    if shortcut and not stat.S_ISREG(info.st_mode):
+        checks.append("Цель ярлыка не является обычным файлом. Проверьте свойства ярлыка.")
+        return checks
+    if shortcut:
+        checks.append("Файл, указанный в ярлыке Steam, найден.")
+    try:
+        if info.st_dev != home.stat().st_dev:
+            free = shutil.disk_usage(path).free / (1024 ** 3)
+            checks.append(f"Свободно на накопителе игры · {free:.1f} ГБ.")
+            if free < 2:
+                checks.append("На накопителе игры осталось меньше 2 ГБ. Проверьте хранилище Steam.")
+    except OSError:
+        checks.append("Свободное место на накопителе игры недоступно.")
+    return checks
+
+
+def collect_checks(home, steam, app_id, shortcut, location=""):
+    checks = storage_checks(home, location, shortcut)
+    latest = None
+    for identifier in steam_ids(app_id, shortcut):
+        try:
+            log = read_regular(home / f"steam-{identifier}.log", 128 * 1024, tail=True)
+        except (OSError, ValueError):
+            continue
+        if latest is None or log[1] > latest[1]:
+            latest = log
+    if latest:
+        data, mtime = latest
         age = max(0, int((time.time() - mtime) / 60))
         checks.append(f"Найден журнал Proton для игры. Возраст: {age} мин.")
-        hits = [message for pattern, message in LOG_SIGNALS.items() if pattern in data.lower()]
+        if age >= 60:
+            checks.append("Журнал Proton старше часа. Сигналы могут относиться к предыдущему запуску.")
+        lower = data.lower()
+        hits = [message for pattern, message in LOG_SIGNALS.items() if pattern in lower]
         checks.extend(hits or ["В конце журнала не найдено известных ошибок из списка проверок."])
-    except (OSError, ValueError):
+    else:
         checks.append("Доступный журнал Proton для игры отсутствует.")
     checks.append(steam_process_check(steam, app_id, shortcut))
     return checks
@@ -175,6 +232,9 @@ class LaunchRepair:
         result["canReset"] = bool(case["original"].strip()) and case["state"] in ("inspected", "restored")
         result["action"] = ({key: case["action"][key] for key in ("id", "kind", "state")}
                             if case["action"] else None)
+        result["canEndWait"] = bool(case["action"] and case["action"]["state"] == "running"
+                                    and case["action"]["until"] <= self.clock())
+        result["hasBackup"] = bool(case["original"]) and case["state"] in ("applied", "conflict")
         result["readOnly"] = not self.can_write()
         return result
 
@@ -195,7 +255,8 @@ class LaunchRepair:
                 or not isinstance(original, str) or len(original) > 8192 or "\0" in original
                 or type(app.get("shortcut")) is not bool or not isinstance(screenshot, str) or len(screenshot) > 4096):
             raise ValueError("Steam не предоставил данные о параметрах запуска игры.")
-        checks = collect_checks(self.home, self.steam, app_id, app["shortcut"])
+        location = absolute_path(app.get("location"))
+        checks = collect_checks(self.home, self.steam, app_id, app["shortcut"], location)
         preview = screenshot_preview(self.steam, account, app_id, app["shortcut"], screenshot) if screenshot else ""
         with self.lock:
             self._expire()
@@ -203,7 +264,7 @@ class LaunchRepair:
                 raise ValueError("Завершите предыдущую диагностику под тем же аккаунтом Steam.")
             self._save({
                 "schema": 1, "id": secrets.token_hex(16), "account": account, "appId": app_id,
-                "name": name, "proton": proton, "original": original, "shortcut": app["shortcut"],
+                "name": name, "proton": proton, "original": original, "shortcut": app["shortcut"], "location": location,
                 "checks": checks, "state": "inspected", "action": None, "detail": "",
                 "launchResult": "", "note": "",
             })
@@ -213,7 +274,8 @@ class LaunchRepair:
         with self.lock:
             case = self._current(account, case_id)
             action = case["action"]
-            if verb in ("request", "decide", "claim") and not self.can_write():
+            writes = verb in ("request", "claim") or (verb == "decide" and params.get("decision") is True)
+            if writes and not self.can_write():
                 raise ValueError("В Deck AI включён режим только чтения.")
             if verb == "request":
                 kind = params.get("kind")
@@ -263,8 +325,18 @@ class LaunchRepair:
                     raise ValueError("Сначала дождитесь проверки сброса параметров.")
                 self._update(launchResult=params["result"])
             elif verb == "recheck":
-                checks = collect_checks(self.home, self.steam, case["appId"], case["shortcut"])
+                checks = collect_checks(self.home, self.steam, case["appId"], case["shortcut"], case.get("location", ""))
                 self._update(checks=checks)
+            elif verb == "end_wait":
+                if (not action or action["state"] != "running" or action["id"] != params.get("actionId")
+                        or action["until"] > self.clock()):
+                    raise ValueError("Подождите, пока Steam проверяет изменение.")
+                self._update(action=None, state="conflict",
+                             detail="Steam не подтвердил результат. Исходные параметры можно скопировать для ручного восстановления.")
+            elif verb == "original":
+                if action or not self._public(case)["hasBackup"]:
+                    raise ValueError("Исходные параметры сейчас недоступны.")
+                return {"options": case["original"]}
             elif verb == "note":
                 note = clean_text(params.get("note"), 500)
                 if not note:

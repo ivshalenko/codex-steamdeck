@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { ConfirmModal, DialogButton, Dropdown, Focusable, Router, showModal, TextField } from "@decky/ui";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ConfirmModal, DialogButton, Dropdown, Focusable, Navigation, Router, showModal, TextField } from "@decky/ui";
 import qrcode from "qrcode-generator";
-import { inspectLaunch, libraryGames, repairCommand, repairScreenshots, repairView, steamAccount, subscribeRepair } from "./launch-repair";
+import { inspectLaunch, libraryGames, originalLaunchOptions, repairCommand, repairScreenshots, repairView, steamAccount, subscribeRepair } from "./launch-repair";
 
 const status = {
  inspected: "Диагностика готова.",
@@ -30,6 +30,7 @@ export function RepairPanel({ copy }: { copy: (value: string) => void }) {
  const [preview, setPreview] = useState("");
  const [error, setError] = useState("");
  const [busy, setBusy] = useState(false);
+ const operationPending = useRef(false);
  const [pairOpen, setPairOpen] = useState(false);
  const [address, setAddress] = useState(() => localStorage.getItem(originKey) || "");
  useEffect(() => subscribeRepair(setView), []);
@@ -51,11 +52,13 @@ export function RepairPanel({ copy }: { copy: (value: string) => void }) {
  useEffect(() => { setPreview(""); }, [account]);
 
  async function run(operation: () => Promise<unknown>) {
+  if(operationPending.current)return;
+  operationPending.current = true;
   setBusy(true);
   setError("");
   try { await operation(); }
   catch (failure) { setError(String(failure)); }
-  finally { setBusy(false); }
+  finally { operationPending.current = false; setBusy(false); }
  }
  const action = current?.action;
  const remote = view.remote;
@@ -91,7 +94,8 @@ export function RepairPanel({ copy }: { copy: (value: string) => void }) {
     <p className="dai-muted">{current.proton ? "Совместимость Steam · " + current.proton : "Steam не указал инструмент совместимости."}</p>
     {preview && <img className="dai-repair-preview" src={preview} alt="Выбранный скриншот Steam" />}
     <ul className="dai-repair-checks">{current.checks.map(check => <li key={check}>{check}</li>)}</ul>
-    <p role="status">{action?.state === "pending" ? "Ожидаю подтверждение." : action ? "Сверяю параметры со Steam…" : status[current.state]}</p>
+    <p role="status">{action?.state === "pending" ? "Ожидаю подтверждение." : action ? "Сверяю параметры со Steam…" :
+     current.state === "applied" && current.launchResult ? "Параметры сброшены. Результат запуска отмечен." : status[current.state]}</p>
     {current.detail && <p className="dai-muted">{current.detail}</p>}
     <Focusable className="dai-repair-actions" flow-children="horizontal">
      <DialogButton className="dai-button" disabled={busy || !!action} onClick={() => send("recheck")}>Повторить проверку</DialogButton>
@@ -114,11 +118,17 @@ export function RepairPanel({ copy }: { copy: (value: string) => void }) {
      <Focusable className="dai-repair-actions" flow-children="horizontal">
       <DialogButton className="dai-button dai-primary" disabled={busy || current.readOnly}
        onClick={() => send("decide", { actionId: action.id, decision: true })}>Подтвердить</DialogButton>
-      <DialogButton className="dai-button" disabled={busy || current.readOnly}
+      <DialogButton className="dai-button" disabled={busy}
        onClick={() => send("decide", { actionId: action.id, decision: false })}>Отклонить</DialogButton>
      </Focusable>
     </div>}
+    {current.canEndWait && action && <DialogButton className="dai-button" disabled={busy}
+     onClick={() => send("end_wait", { actionId: action.id })}>Завершить ожидание Steam</DialogButton>}
+    {current.hasBackup && !action && <DialogButton className="dai-button" disabled={busy}
+     onClick={() => void run(async () => copy(await originalLaunchOptions(current.id)))}>Скопировать исходные параметры</DialogButton>}
     {!action && current.state === "applied" && <>
+     {!current.launchResult && <DialogButton className="dai-button"
+      onClick={() => Navigation.Navigate("/library/app/" + current.appId)}>Открыть игру в библиотеке</DialogButton>}
      {current.launchResult ? <p>{current.launchResult === "started" ? "Отмечено: игра запустилась." : "Отмечено: игра не запустилась."}</p> : <>
       <p>Игра запустилась после сброса?</p>
       <Focusable className="dai-repair-actions" flow-children="horizontal">
