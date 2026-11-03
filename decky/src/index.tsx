@@ -31,7 +31,9 @@ const refresh=callable<[],Snapshot>("refresh");
 const selectThread=callable<[id:string],Snapshot>("select_thread");
 const newThread=callable<[],Snapshot>("new_thread");
 const saveSettings=callable<[model:string,effort:string,tier:string],unknown>("save_settings");
-const sendMessage=callable<[text:string,images:string[],model:string,effort:string,tier:string],{queued:boolean;threadId?:string}>("send_message");
+type SendContext={provider:string;host:string;threadId:string};
+const sendContext=(value:Snapshot):SendContext=>({provider:value.provider,host:value.remoteHost||"",threadId:value.threadId});
+const sendMessage=callable<[text:string,images:string[],model:string,effort:string,tier:string,expected:SendContext],{queued:boolean;threadId?:string}>("send_message");
 const retry=callable<[id:string],unknown>("retry");
 const stop=callable<[],unknown>("stop");
 const gameVoice=callable<[language:string,silence:number],{voiceState:string;voiceText?:string;voiceId?:string}>("voice");
@@ -199,8 +201,8 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const [notify,setNotify]=useState(()=>flag("deck-ai-notify",true));
  const [autoSend,setAutoSend]=useState(()=>flag("deck-ai-auto-send",false));
  const [countdown,setCountdown]=useState<number|null>(null);
- const pendingAuto=useRef<string|null>(null);
- const countdownOwner=useRef<string|null>(null);
+ const pendingAuto=useRef<{owner:string;text:string}|null>(null);
+ const countdownDraft=useRef<{owner:string;text:string}|null>(null);
  const [quickOpen,setQuickOpen]=useState(false);
  const [quickSource,setQuickSource]=useState<string|null>(()=>localStorage.getItem("deck-ai-quick"));
  const quickActions=parseQuickActions(quickSource);
@@ -237,7 +239,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
   const nextOwner=draftOwner(next);
   if(nextOwner!==draftId.current){
    draftId.current=nextOwner;setDraft(drafts.read(nextOwner));setImagesState(session.attachments.get(nextOwner)||[]);
-   pendingAuto.current=null;countdownOwner.current=null;setCountdown(null);
+   pendingAuto.current=null;countdownDraft.current=null;setCountdown(null);
    followTail.current=true;setShowLatest(false);
   }
   historySnapshots.set(historyKey(next),next);
@@ -255,7 +257,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
    localStorage.setItem(dictationKey,JSON.stringify(session.dictation));
    if(update.value!==null){
     drafts.write(owner,update.value);if(owner===draftId.current)setDraft(update.value);
-    if(autoSendRef.current&&owner===draftId.current)pendingAuto.current=owner;
+    if(autoSendRef.current&&owner===draftId.current)pendingAuto.current={owner,text:update.value};
    }
    lastVoice.current=next.voiceText;session.voiceText=next.voiceText;
   }else if(!next.voiceId&&next.voiceState==="done"&&next.voiceText&&next.voiceText!==session.voiceText){
@@ -273,7 +275,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  useEffect(()=>{mounted.current=true;void load();const timer=setInterval(()=>void load(),voicePolling?500:2500);return()=>{mounted.current=false;clearInterval(timer);};},[load,voicePolling]);
  useEffect(()=>{const el=chatRef.current;if(el&&followTail.current)el.scrollTop=el.scrollHeight;},[data?.messages,tab]);
  const editDraft=(value:string,owner=draftId.current)=>{
-  if(owner===draftId.current){pendingAuto.current=null;countdownOwner.current=null;setCountdown(null);}
+  if(owner===draftId.current){pendingAuto.current=null;countdownDraft.current=null;setCountdown(null);}
   drafts.write(owner,value);
  };
  const run=async(work:()=>Promise<void>)=>{if(actionLock.current||!viewGate.begin())return;actionLock.current=true;setBusy(true);setError("");setNotice("");try{await work();}catch(e){setError(String(e));}finally{actionLock.current=false;viewGate.end();setBusy(false);}};
@@ -312,7 +314,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
   if(!data||!draft.trim()){setError("Нет текста для отправки. Завершите диктовку или введите сообщение.");return;}
   const sentThread=draftId.current,sentDraft=draft;
   const sentAttachments=session.attachments.get(sentThread);
-  await sendMessage(withGameContext(sentDraft,currentGame(),localStorage.getItem("deck-ai-game-context")==="on"),images.map(x=>x.path),model?.id||"",effort,tier);
+  await sendMessage(withGameContext(sentDraft,currentGame(),localStorage.getItem("deck-ai-game-context")==="on"),images.map(x=>x.path),model?.id||"",effort,tier,sendContext(data));
   if(drafts.read(sentThread)===sentDraft){
    drafts.write(sentThread,"");
    if(draftId.current===sentThread)setDraft("");
@@ -322,22 +324,24 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  });
  const submitRef=useRef(submit);submitRef.current=submit;
  useEffect(()=>{
-  if(pendingAuto.current===draftId.current&&!recording&&!voiceProcessing&&draft.trim()){
-   countdownOwner.current=pendingAuto.current;pendingAuto.current=null;setCountdown(3);
+  const pending=pendingAuto.current;
+  if(pending?.owner===draftId.current&&!recording&&!voiceProcessing&&draft.trim()){
+   pendingAuto.current=null;
+   if(pending.text===draft){countdownDraft.current=pending;setCountdown(3);}
   }
  },[draft,recording,voiceProcessing]);
  useEffect(()=>{
   if(countdown===null)return;
   if(countdown<=0){
    setCountdown(null);
-   if(countdownOwner.current===draftId.current)submitRef.current();
-   countdownOwner.current=null;
+   const pending=countdownDraft.current;countdownDraft.current=null;
+   if(pending?.owner===draftId.current&&drafts.read(pending.owner)===pending.text)submitRef.current();
    return;
   }
   const timer=setTimeout(()=>setCountdown(value=>value===null?null:value-1),1000);
   return()=>clearTimeout(timer);
  },[countdown]);
- const quick=(text:string)=>void run(async()=>{await sendMessage(text,[],model?.id||"",effort,tier);setNotice("Запрос принят · в очереди");setQuickOpen(false);followTail.current=true;accept(await snapshot());});
+ const quick=(text:string)=>void run(async()=>{if(!data)return;await sendMessage(text,[],model?.id||"",effort,tier,sendContext(data));setNotice("Запрос принят · в очереди");setQuickOpen(false);followTail.current=true;accept(await snapshot());});
  const ro=!!data?.readOnly;
  const names:Record<string,string>={...providerNames,...Object.fromEntries((data?.customProviders||[]).map(c=>[c.id,c.name]))};
  const isCustom=!!data?.customProviders?.some(c=>c.id===data.provider);

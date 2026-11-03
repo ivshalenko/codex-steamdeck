@@ -953,7 +953,14 @@ def _call(method,params):
     if method=='account_login':return start_account_login()
     if method=='account_cancel_login':return cancel_account_login()
     if method=='account_logout':return logout_account()
-    if method=='send':return send_message(params.get('text',''),params.get('images',[]),params.get('model'),params.get('effort'),params.get('tier'))
+    if method == "send":
+        expected = params.get("expected")
+        selected = provider_thread_ids.get(provider, "") if provider in provider_chats else thread_id
+        current = {"provider": provider, "host": remote_host, "threadId": selected}
+        if expected is not None and expected != current:
+            raise ValueError("Чат или устройство изменились. Обновите экран перед отправкой.")
+        return send_message(params.get("text", ""), params.get("images", []), params.get("model"),
+                            params.get("effort"), params.get("tier"))
     if method=='retry':
         job=next((j for j in outbox if j['id']==params.get('id')),None)
         if not job:raise ValueError('Сообщение не найдено.')

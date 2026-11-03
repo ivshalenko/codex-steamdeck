@@ -155,7 +155,9 @@ function createSnapshotReader(request, now = () => performance.now()) {
         if (cached?.revision === revision && (cached.received === null || now() - cached.received < maxAge)) {
             return cached.value;
         }
-        const entry = { revision, received: null, value: Promise.resolve().then(request) };
+        // Decky serializes every argument to Python. Do not pass the fulfillment
+        // value (undefined) as an extra argument to the no-argument snapshot RPC.
+        const entry = { revision, received: null, value: Promise.resolve().then(() => request()) };
         cached = entry;
         return entry.value = entry.value.then(value => {
             entry.received = now();
@@ -3012,7 +3014,7 @@ function RepairPanel({ copy }) {
                                             current.proton && `Совместимость Steam · ${current.proton}`,
                                             ...current.checks,
                                         ].filter(Boolean).join("\n")), children: "\u0421\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0432\u043E\u0434\u043A\u0443" })] }), current.readOnly && SP_JSX.jsx("p", { className: "dai-muted", children: "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u043F\u0440\u0438\u043E\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u044B \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u00AB\u0422\u043E\u043B\u044C\u043A\u043E \u0447\u0442\u0435\u043D\u0438\u0435\u00BB." }), current.note && SP_JSX.jsxs("p", { className: "dai-muted", children: ["\u0423\u0442\u043E\u0447\u043D\u0435\u043D\u0438\u0435 \u0441 \u043F\u0443\u043B\u044C\u0442\u0430 \u00B7 ", current.note] }), !action && current.canReset && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("p", { children: "\u0415\u0441\u0442\u044C \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u0437\u0430\u043F\u0443\u0441\u043A\u0430. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439\u0442\u0435 \u0437\u0430\u043F\u0443\u0441\u043A \u0441\u043E \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u044B\u043C \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435\u043C. \u0421\u043E\u0445\u0440\u0430\u043D\u0438\u043C \u0442\u0435\u043A\u0443\u0449\u0438\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u0434\u043B\u044F \u043E\u0442\u043A\u0430\u0442\u0430." }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy || current.readOnly, onClick: () => send("request", { kind: "reset" }), children: "\u041F\u0440\u0435\u0434\u043B\u043E\u0436\u0438\u0442\u044C \u0441\u0431\u0440\u043E\u0441 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u0432" })] }), !action && current.state === "inspected" && !current.canReset &&
-                                SP_JSX.jsx("p", { children: "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u0437\u0430\u043F\u0443\u0441\u043A\u0430 \u043F\u0443\u0441\u0442\u044B. \u041F\u043E \u044D\u0442\u043E\u0439 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0435 \u0438\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u043D\u0435 \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F." }), action?.state === "pending" && SP_JSX.jsxs("div", { className: "dai-repair-confirm", children: [SP_JSX.jsx("p", { children: action.kind === "reset" ? "Временно сбросить параметры запуска этой игры?" : "Вернуть исходные параметры запуска этой игры?" }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-repair-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button dai-primary", disabled: busy || current.readOnly, onClick: () => send("decide", { actionId: action.id, decision: true }), children: "\u041F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044C" }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("decide", { actionId: action.id, decision: false }), children: "\u041E\u0442\u043A\u043B\u043E\u043D\u0438\u0442\u044C" })] })] }), current.canEndWait && action && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("end_wait", { actionId: action.id }), children: "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C \u043E\u0436\u0438\u0434\u0430\u043D\u0438\u0435 Steam" }), current.hasBackup && !action && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => void run(async () => copy(await originalLaunchOptions(current.id))), children: "\u0421\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0438\u0441\u0445\u043E\u0434\u043D\u044B\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B" }), !action && current.state === "applied" && SP_JSX.jsxs(SP_JSX.Fragment, { children: [!current.launchResult && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", onClick: () => DFL.Navigation.Navigate("/library/app/" + current.appId), children: "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0438\u0433\u0440\u0443 \u0432 \u0431\u0438\u0431\u043B\u0438\u043E\u0442\u0435\u043A\u0435" }), current.launchResult ? SP_JSX.jsx("p", { children: current.launchResult === "started" ? "Отмечено: игра запустилась." : "Отмечено: игра не запустилась." }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("p", { children: "\u0418\u0433\u0440\u0430 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0430\u0441\u044C \u043F\u043E\u0441\u043B\u0435 \u0441\u0431\u0440\u043E\u0441\u0430?" }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-repair-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("result", { result: "started" }), children: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0430\u0441\u044C" }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("result", { result: "failed" }), children: "\u041D\u0435 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0430\u0441\u044C" })] })] }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy || current.readOnly, onClick: () => send("request", { kind: "restore" }), children: "\u041F\u0440\u0435\u0434\u043B\u043E\u0436\u0438\u0442\u044C \u043E\u0442\u043A\u0430\u0442" })] }), !action && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => {
+                                SP_JSX.jsx("p", { children: "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u0437\u0430\u043F\u0443\u0441\u043A\u0430 \u043F\u0443\u0441\u0442\u044B. \u041F\u043E \u044D\u0442\u043E\u0439 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0435 \u0438\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u043D\u0435 \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F." }), action?.state === "pending" && SP_JSX.jsxs("div", { className: "dai-repair-confirm", children: [SP_JSX.jsx("p", { children: action.kind === "reset" ? "Временно сбросить параметры запуска этой игры?" : "Вернуть исходные параметры запуска этой игры?" }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-repair-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button dai-primary", disabled: busy || current.readOnly, onClick: () => send("decide", { actionId: action.id, decision: true }), children: "\u041F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044C" }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("decide", { actionId: action.id, decision: false }), children: "\u041E\u0442\u043A\u043B\u043E\u043D\u0438\u0442\u044C" })] })] }), current.canEndWait && action && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("end_wait", { actionId: action.id }), children: "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C \u043E\u0436\u0438\u0434\u0430\u043D\u0438\u0435 Steam" }), current.hasBackup && !action && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => void run(async () => copy(await originalLaunchOptions(current.id))), children: "\u0421\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0438\u0441\u0445\u043E\u0434\u043D\u044B\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B" }), !action && current.state === "applied" && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", onClick: () => DFL.Navigation.Navigate("/library/app/" + current.appId), children: "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0438\u0433\u0440\u0443 \u0432 \u0431\u0438\u0431\u043B\u0438\u043E\u0442\u0435\u043A\u0435" }), current.launchResult ? SP_JSX.jsx("p", { children: current.launchResult === "started" ? "Отмечено: игра запустилась." : "Отмечено: игра не запустилась." }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("p", { children: "\u0418\u0433\u0440\u0430 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0430\u0441\u044C \u043F\u043E\u0441\u043B\u0435 \u0441\u0431\u0440\u043E\u0441\u0430?" }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-repair-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("result", { result: "started" }), children: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0430\u0441\u044C" }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("result", { result: "failed" }), children: "\u041D\u0435 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0430\u0441\u044C" })] })] }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy || current.readOnly, onClick: () => send("request", { kind: "restore" }), children: "\u041F\u0440\u0435\u0434\u043B\u043E\u0436\u0438\u0442\u044C \u043E\u0442\u043A\u0430\u0442" })] }), !action && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => {
                                     const close = () => void run(async () => { await repairCommand(current.id, "close"); setPreview(""); });
                                     if (current.state !== "applied" && current.state !== "conflict") {
                                         close();
@@ -3031,6 +3033,7 @@ const refresh = callable("refresh");
 const selectThread = callable("select_thread");
 const newThread = callable("new_thread");
 const saveSettings = callable("save_settings");
+const sendContext = (value) => ({ provider: value.provider, host: value.remoteHost || "", threadId: value.threadId });
 const sendMessage = callable("send_message");
 const retry = callable("retry");
 const stop = callable("stop");
@@ -3213,7 +3216,7 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
     const [autoSend, setAutoSend] = SP_REACT.useState(() => flag("deck-ai-auto-send", false));
     const [countdown, setCountdown] = SP_REACT.useState(null);
     const pendingAuto = SP_REACT.useRef(null);
-    const countdownOwner = SP_REACT.useRef(null);
+    const countdownDraft = SP_REACT.useRef(null);
     const [quickOpen, setQuickOpen] = SP_REACT.useState(false);
     const [quickSource, setQuickSource] = SP_REACT.useState(() => localStorage.getItem("deck-ai-quick"));
     const quickActions = parseQuickActions(quickSource);
@@ -3262,7 +3265,7 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
             setDraft(drafts.read(nextOwner));
             setImagesState(session.attachments.get(nextOwner) || []);
             pendingAuto.current = null;
-            countdownOwner.current = null;
+            countdownDraft.current = null;
             setCountdown(null);
             followTail.current = true;
             setShowLatest(false);
@@ -3287,7 +3290,7 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
                 if (owner === draftId.current)
                     setDraft(update.value);
                 if (autoSendRef.current && owner === draftId.current)
-                    pendingAuto.current = owner;
+                    pendingAuto.current = { owner, text: update.value };
             }
             lastVoice.current = next.voiceText;
             session.voiceText = next.voiceText;
@@ -3330,7 +3333,7 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
     const editDraft = (value, owner = draftId.current) => {
         if (owner === draftId.current) {
             pendingAuto.current = null;
-            countdownOwner.current = null;
+            countdownDraft.current = null;
             setCountdown(null);
         }
         drafts.write(owner, value);
@@ -3400,7 +3403,7 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
         }
         const sentThread = draftId.current, sentDraft = draft;
         const sentAttachments = session.attachments.get(sentThread);
-        await sendMessage(withGameContext(sentDraft, currentGame(), localStorage.getItem("deck-ai-game-context") === "on"), images.map(x => x.path), model?.id || "", effort, tier);
+        await sendMessage(withGameContext(sentDraft, currentGame(), localStorage.getItem("deck-ai-game-context") === "on"), images.map(x => x.path), model?.id || "", effort, tier, sendContext(data));
         if (drafts.read(sentThread) === sentDraft) {
             drafts.write(sentThread, "");
             if (draftId.current === sentThread)
@@ -3415,10 +3418,13 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
     const submitRef = SP_REACT.useRef(submit);
     submitRef.current = submit;
     SP_REACT.useEffect(() => {
-        if (pendingAuto.current === draftId.current && !recording && !voiceProcessing && draft.trim()) {
-            countdownOwner.current = pendingAuto.current;
+        const pending = pendingAuto.current;
+        if (pending?.owner === draftId.current && !recording && !voiceProcessing && draft.trim()) {
             pendingAuto.current = null;
-            setCountdown(3);
+            if (pending.text === draft) {
+                countdownDraft.current = pending;
+                setCountdown(3);
+            }
         }
     }, [draft, recording, voiceProcessing]);
     SP_REACT.useEffect(() => {
@@ -3426,15 +3432,17 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
             return;
         if (countdown <= 0) {
             setCountdown(null);
-            if (countdownOwner.current === draftId.current)
+            const pending = countdownDraft.current;
+            countdownDraft.current = null;
+            if (pending?.owner === draftId.current && drafts.read(pending.owner) === pending.text)
                 submitRef.current();
-            countdownOwner.current = null;
             return;
         }
         const timer = setTimeout(() => setCountdown(value => value === null ? null : value - 1), 1000);
         return () => clearTimeout(timer);
     }, [countdown]);
-    const quick = (text) => void run(async () => { await sendMessage(text, [], model?.id || "", effort, tier); setNotice("Запрос принят · в очереди"); setQuickOpen(false); followTail.current = true; accept(await snapshot()); });
+    const quick = (text) => void run(async () => { if (!data)
+        return; await sendMessage(text, [], model?.id || "", effort, tier, sendContext(data)); setNotice("Запрос принят · в очереди"); setQuickOpen(false); followTail.current = true; accept(await snapshot()); });
     const ro = !!data?.readOnly;
     const names = { ...providerNames, ...Object.fromEntries((data?.customProviders || []).map(c => [c.id, c.name])) };
     const isCustom = !!data?.customProviders?.some(c => c.id === data.provider);

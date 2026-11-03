@@ -27,7 +27,11 @@ test('new drafts and mirrored chat IDs are isolated by device and provider',()=>
 test('two views share one pending snapshot and invalidate it on navigation',async()=>{
  let now=0, calls=0;
  const pending=[];
- const read=createSnapshotReader(()=>{calls++;return new Promise(resolve=>pending.push(resolve));},()=>now);
+ const read=createSnapshotReader((...args)=>{
+  assert.equal(args.length,0);
+  calls++;
+  return new Promise(resolve=>pending.push(resolve));
+ },()=>now);
  const first=read(0,2000);
  assert.equal(first,read(0,2000));
  const switched=read(1,2000);

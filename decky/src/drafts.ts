@@ -35,7 +35,9 @@ export function createSnapshotReader<T>(request:()=>Promise<T>,now=()=>performan
   if(cached?.revision===revision&&(cached.received===null||now()-cached.received<maxAge)){
    return cached.value;
   }
-  const entry={revision,received:null as number|null,value:Promise.resolve().then(request)};
+  // Decky serializes every argument to Python. Do not pass the fulfillment
+  // value (undefined) as an extra argument to the no-argument snapshot RPC.
+  const entry={revision,received:null as number|null,value:Promise.resolve().then(()=>request())};
   cached=entry;
   return entry.value=entry.value.then(value=>{
    entry.received=now();

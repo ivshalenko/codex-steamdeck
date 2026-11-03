@@ -127,8 +127,8 @@ export function RepairPanel({ copy }: { copy: (value: string) => void }) {
     {current.hasBackup && !action && <DialogButton className="dai-button" disabled={busy}
      onClick={() => void run(async () => copy(await originalLaunchOptions(current.id)))}>Скопировать исходные параметры</DialogButton>}
     {!action && current.state === "applied" && <>
-     {!current.launchResult && <DialogButton className="dai-button"
-      onClick={() => Navigation.Navigate("/library/app/" + current.appId)}>Открыть игру в библиотеке</DialogButton>}
+     <DialogButton className="dai-button"
+      onClick={() => Navigation.Navigate("/library/app/" + current.appId)}>Открыть игру в библиотеке</DialogButton>
      {current.launchResult ? <p>{current.launchResult === "started" ? "Отмечено: игра запустилась." : "Отмечено: игра не запустилась."}</p> : <>
       <p>Игра запустилась после сброса?</p>
       <Focusable className="dai-repair-actions" flow-children="horizontal">
