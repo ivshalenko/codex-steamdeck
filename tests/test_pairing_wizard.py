@@ -6,10 +6,10 @@ class PairingTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as directory:
    home=Path(directory);ssh=home/'.ssh';ssh.mkdir();config=ssh/'config';original='Host work\n    HostName work.example\n';config.write_text(original)
    key=ssh/'id_ed25519_deck_ai';key.write_text('existing private fixture');key.with_suffix('.pub').write_text('ssh-ed25519 PUBLIC_FIXTURE')
-   self.assertEqual(m.configure('192.0.2.15',home),'ssh-ed25519 PUBLIC_FIXTURE');self.assertTrue(config.read_text().startswith(original))
+   self.assertEqual(m.configure('192.0.2.15',home),'ssh-ed25519 PUBLIC_FIXTURE');self.assertIn(original,config.read_text())
    once=config.read_text();m.configure('192.0.2.15',home);self.assertEqual(config.read_text(),once)
-   with self.assertRaises(ValueError):m.configure('192.0.2.16',home)
-   self.assertEqual(config.read_text(),once)
+   m.configure('192.0.2.16',home)
+   self.assertIn('HostName 192.0.2.16',config.read_text());self.assertIn(original,config.read_text())
  def test_command_instead_of_address_is_rejected_before_writing(self):
   with tempfile.TemporaryDirectory() as directory:
    home=Path(directory)

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.0-rc.7
+
+- Keep cached history visible with a clear warning when a refresh fails; first-load failures no longer masquerade as an empty successful chat.
+- Reuse the selected chat cache even when that conversation is outside the first list page; manual reconnect forces a fresh history read.
+- Update only the pairing wizard's own SSH block when the Deck IP changes, compare exact addresses, preserve host defaults and backups, and reject malformed addresses.
+- Ignore malformed JSON frames without losing the RPC reader; gracefully stop/reap the plugin worker and notify outstanding callers during reload.
+- Timed-out changes direct users to inspect the chat/queue before resubmitting, since a missing acknowledgement does not prove the action failed.
+- Second full validation cycle with regressions for the newly identified failure cases.
+
 ## 1.0.0-rc.6
 
 - Synchronize drafts and attachments between the compact panel and an already open full-screen workspace.

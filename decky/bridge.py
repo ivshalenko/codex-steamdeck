@@ -444,29 +444,28 @@ def _get_snapshot():
     try:preferences.update(json.loads((STATE/'runtime-preferences.json').read_text()))
     except (OSError,ValueError):pass
     refresh_threads()
-    current=next((t for t in cache if t.get('id')==thread_id),None);messages=[];history_total=0
-    if thread_id and current:
+    current=next((t for t in cache if t.get('id')==thread_id),None);messages=[];history_total=0;history_warning=''
+    if thread_id:
         history_key=(remote_host,thread_id)
         thread=history_caches.get(history_key)
-        # Refresh at most once per 4 seconds. Keep the last good snapshot if
-        # the server is slow, so the UI never blanks during a transient delay.
         if thread is None or now-history_cache_times.get(history_key,0)>=(HISTORY_TTL_ACTIVE if active else HISTORY_TTL_IDLE):
             try:
-                hist=bridge.request('thread/read',{'threadId':thread_id,'includeTurns':True},timeout=25)
-                thread=hist.get('thread',current);history_caches[history_key]=thread;history_cache_times[history_key]=now
-            except Exception:
-                thread=thread or current
-        active=any(t.get('status')=='inProgress' for t in thread.get('turns',[]));all_messages=extract_messages(thread,limit=None);history_total=len(all_messages);messages=all_messages[-history_limits.get((remote_host,thread_id),40):]
+                if thread is None and current is None:
+                    _,loaded=bridge.select_thread(thread_id)
+                else:
+                    loaded=bridge.request('thread/read',{'threadId':thread_id,'includeTurns':True},timeout=25).get('thread')
+                if not isinstance(loaded,dict):raise RuntimeError('Codex вернул неверную историю диалога.')
+                thread=loaded;history_caches[history_key]=thread;history_cache_times[history_key]=now
+            except Exception as exc:
+                if thread is None:raise RuntimeError('Не удалось загрузить историю диалога: '+str(exc)[:220]) from exc
+                history_warning='Не удалось обновить диалог. Показана сохранённая история; повторяю подключение. '+str(exc)[:140]
+        active=any(t.get('status')=='inProgress' for t in thread.get('turns',[]));all_messages=extract_messages(thread,limit=None);history_total=len(all_messages);messages=all_messages[-history_limits.get(history_key,40):]
         current_model=thread.get('model') or current_model;status='Deck AI работает…' if active else 'Готов'
-    elif thread_id:
-        try:
-            _,thread=bridge.select_thread(thread_id);all_messages=extract_messages(thread,limit=None);history_total=len(all_messages);messages=all_messages[-history_limits.get((remote_host,thread_id),40):];active=any(t.get('status')=='inProgress' for t in thread.get('turns',[]))
-        except Exception as exc:status=str(exc)[:160]
     account=read_account()
     models_list=model_catalog;saved_model=selected_models.get(thread_id) or (selected_models.get('') if not thread_id else None) or current_model
     if not saved_model and models_list:saved_model=models_list[0]['id']
     pref=preferences.get(thread_id or '',{}).get(saved_model,{})
-    return {'ready':True,'status':status,'provider':'codex','account':account.get('account'),'loginPending':bool(account_login_id),'remoteHost':remote_host,'sshHosts':ssh_hosts(),'threads':[thread_summary(t) for t in cache],'runningCount':sum(1 for t in cache if thread_running(t,t.get('id')==thread_id,active)),'hasOlderMessages':history_total>len(messages),'threadId':thread_id,'messages':messages,'active':active,'models':models_list,'model':saved_model,'effort':pref.get('effort'),'tier':pref.get('tier','default'),'videos':cache_media if not remote_host else [],'screenshots':cache_screens if not remote_host else [],'outbox':outbox[-200:],'queueTotal':len(outbox),'speechVersion':2,'speechReady':multilingual_ready(APP_DIR),'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
+    return {'ready':True,'status':status,'provider':'codex','account':account.get('account'),'loginPending':bool(account_login_id),'remoteHost':remote_host,'sshHosts':ssh_hosts(),'threads':[thread_summary(t) for t in cache],'runningCount':sum(1 for t in cache if thread_running(t,t.get('id')==thread_id,active)),'historyWarning':history_warning,'hasOlderMessages':history_total>len(messages),'threadId':thread_id,'messages':messages,'active':active,'models':models_list,'model':saved_model,'effort':pref.get('effort'),'tier':pref.get('tier','default'),'videos':cache_media if not remote_host else [],'screenshots':cache_screens if not remote_host else [],'outbox':outbox[-200:],'queueTotal':len(outbox),'speechVersion':2,'speechReady':multilingual_ready(APP_DIR),'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
 snapshot_cache={}
 def all_tasks():
     """Running and recent chats from every device visited in this session."""
@@ -489,7 +488,7 @@ def _safe_snapshot():
     except Exception as exc:
         previous=snapshot_cache.get((provider,remote_host,thread_id),{})
         return {**previous,'ready':False,'status':str(exc)[:350],
-            'provider':provider,'remoteHost':remote_host,'sshHosts':ssh_hosts(),
+            'provider':provider,'remoteHost':remote_host,'historyWarning':'','sshHosts':ssh_hosts(),
             'account':previous.get('account'),'loginPending':bool(account_login_id),
             'threads':previous.get('threads',[]),'threadId':previous.get('threadId',thread_id),
             'messages':previous.get('messages',[]),'active':False,
@@ -857,7 +856,9 @@ def _call(method,params):
     if method=='approve':return decide_approval(params.get('id'),str(params.get('decision','')))
     if method=='diagnose':return diagnose()
     if method=='unload_models':return unload_models()
-    if method=='refresh':cache_time=0;return get_snapshot()
+    if method=='refresh':
+        cache_time=0;history_cache_times[(remote_host,thread_id)]=0
+        return get_snapshot()
     if method=='select_thread':
         if provider in provider_chats:
             ident=str(params['id'])
