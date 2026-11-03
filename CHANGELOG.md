@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0-rc.5
+
+- Self-contained Decky text-chat package, including a pinned pure-Python WebSocket dependency; desktop companion is optional.
+- Visible Steam Deck installation wizard, downloadable desktop launcher, and guided Mac/Windows/Linux SSH pairing.
+- Chat selection reuses its history response and ignores outdated background refreshes; offline history stays with the correct chat.
+- Notifications poll immediately and open their corresponding conversation, including the correct remote device.
+- Atomic Decky installation retains the previous plugin for rollback; unrelated plugins and user data are preserved.
+- Improved language settings, message blocks, short-recording frame extraction and provider recovery from device-tested changes.
+- Quick-start, remote-control and release/testing documentation. Official Decky store eligibility remains subject to its AI-code policy and maintainer review.
+
 ## Unreleased
 
 - Design: seven colour themes (Ocean, Graphite, Violet, Forest, Amber, Rose, Light), three message styles (bubbles, lines, cards), three densities, and three layouts — tabs on top, tabs at the bottom (thumb-friendly), and two columns with a chat list beside the conversation in full screen. Settings → «Оформление». Pill-shaped tabs, card-style settings and composer, themed focus highlights.

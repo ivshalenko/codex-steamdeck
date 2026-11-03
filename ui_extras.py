@@ -1,6 +1,8 @@
 """App-local multilingual input; never injects keys into other applications."""
 import json
 import weakref
+import ast
+import re
 from decky.runtime_paths import resolve_state_dir
 from pathlib import Path
 from gi.repository import Gtk, Gdk
@@ -23,24 +25,86 @@ EN={
 'Сначала подключитесь к Codex. Черновик сохранён.':'Connect to Codex first. Your draft is saved.','Отправляю…':'Sending…',
 'Обычная':'Standard','Низкая':'Low','Средняя':'Medium','Высокая':'High','Повторить':'Retry','Вставить':'Paste','Пробел':'Space','Скрыть':'Hide',
 'Скрыть окно':'Hide window','Свернуть':'Minimize','Завершить приложение':'Quit application',
-'Аккаунт':'Account','Аккаунт: проверка…':'Account: checking…','Вход не выполнен':'Not signed in','Войти или сменить аккаунт':'Sign in or switch account','Выйти из аккаунта':'Sign out','Войти через ChatGPT':'Sign in with ChatGPT','Страница входа открыта в браузере.':'The sign-in page opened in your browser.','Вы вышли из аккаунта Codex.':'You signed out of your Codex account.','Не удалось открыть браузер.':'Could not open the browser.',
-'Браузер':'Browser','Открыть встроенный браузер':'Open built-in browser','Встроенный браузер':'Built-in browser','Войдите на сайт или введите адрес HTTPS.':'Sign in to a website or enter an HTTPS address.','Для встроенного браузера требуется WebKitGTK 4.1 или 4.0.':'The built-in browser requires WebKitGTK 4.1 or 4.0.','Встроенный браузер не удалось запустить. Проверьте установку WebKitGTK.':'Could not start the built-in browser. Check the WebKitGTK installation.','Разрешены только веб-адреса HTTP и HTTPS.':'Only HTTP and HTTPS web addresses are allowed.','Загружаю страницу…':'Loading page…','Страница загружена.':'Page loaded.',
+'Аккаунт':'Account','Аккаунт: проверка…':'Account: checking…','Вход не выполнен':'Not signed in','Войти или сменить аккаунт':'Sign in or switch account','Выйти из аккаунта':'Sign out','Войти через ChatGPT':'Sign in with ChatGPT','Страница входа открыта в браузере.':'The sign-in page opened in your browser.','Вы вышли из аккаунта Codex.':'You signed out of Codex.','Не удалось открыть браузер.':'Could not open the browser.',
 'Подключить ИИ-провайдера или устройство':'Connect an AI provider or device','Подключить Codex на другом компьютере':'Connect Codex on another computer','Подключить Claude Pro / Max':'Connect Claude Pro / Max','Подключить DeepSeek через OpenRouter':'Connect DeepSeek via OpenRouter',
 'Подключить DeepSeek через TokenHarbor':'Connect DeepSeek via TokenHarbor','DeepSeek · TokenHarbor':'DeepSeek · TokenHarbor','Настроить TokenHarbor':'Set up TokenHarbor',
 'Источник моделей':'Model provider','Выбрать ИИ-провайдера':'Choose AI provider','Codex · ChatGPT':'Codex · ChatGPT','Claude · Pro / Max':'Claude · Pro / Max','DeepSeek · OpenRouter':'DeepSeek · OpenRouter','Настроить DeepSeek / OpenRouter':'Set up DeepSeek / OpenRouter','Войти в Claude Code':'Sign in to Claude Code','Отправляю запрос…':'Sending request…','Ответ Claude готов':'Claude replied','Ответ DeepSeek готов':'DeepSeek replied',
 'УСТРОЙСТВО CODEX':'CODEX DEVICE','Этот Steam Deck · локальные чаты':'This Steam Deck · local chats','Подключить компьютер':'Connect a computer','Список Mac и Windows берётся из SSH-конфигурации Steam Deck.':'Mac and Windows devices are listed from the Steam Deck SSH configuration.','Выберите компьютер из SSH-конфигурации. На нём нужен Codex с активным входом.':'Choose a computer from SSH configuration. Codex must be installed and signed in there.','Других устройств пока нет. Добавьте SSH-хост кнопкой «Подключить компьютер».':'No other devices yet. Add an SSH host with “Connect a computer”.','Подключить удалённый Codex':'Connect remote Codex','Добавьте устройство или выберите готовый SSH-алиас.':'Add a device or choose an existing SSH alias.','Имя в Codex':'Codex device name','например, macbook':'for example, macbook','Адрес компьютера':'Computer address','IP или имя в сети':'IP address or network name','Пользователь SSH':'SSH user','учётная запись Mac/Windows':'Mac/Windows account','Путь к SSH-ключу':'SSH key path','Для нового подключения укажите адрес и пользователя. На втором компьютере включите SSH и разрешите вход по вашему публичному ключу; Codex CLI должен быть установлен и авторизован.':'For a new connection, enter the address and user. Enable SSH on the other computer and authorize your public key; Codex CLI must be installed and signed in.','Отмена':'Cancel','Подключить':'Connect','Проверьте адрес и имя пользователя SSH.':'Check the SSH address and username.','Укажите короткое имя устройства латиницей.':'Enter a short device name using Latin characters.','Проверьте путь к SSH-ключу.':'Check the SSH key path.','Обновить список SSH-устройств из ~/.ssh/config':'Refresh SSH devices from ~/.ssh/config',
 }
 EN.update({'Цветовая тема':'Colour theme','Графит':'Graphite','Фиалка':'Violet','Лес':'Forest','Янтарь':'Amber','Роза':'Rose','Свой облачный ИИ':'Your own cloud AI'})
+EN.update({'Язык и голос': 'Language and voice', 'Язык программы и диктовки': 'Application and dictation language', 'Голос для чтения ответов': 'Voice for reading replies', 'Модель распознавания': 'Speech recognition model', 'Подготовить и применить': 'Prepare and apply', 'Закрыть': 'Close', 'Без озвучки': 'No read-aloud', 'Обновить каталог нейроголосов': 'Refresh neural voice catalog', 'Читать новые ответы вслух': 'Read new replies aloud', 'Проверить голос': 'Test voice', 'Остановить озвучку': 'Stop read-aloud', 'Готово к выбору языка': 'Ready to choose a language', 'Установлена': 'Installed', 'Требуется загрузка': 'Download required', 'Язык выбран. Нажмите «Подготовить и применить».': 'Language selected. Click Prepare and apply.', 'Каталог недоступен. Системные и ранее загруженные голоса остаются доступны.': 'Catalog unavailable. System and previously downloaded voices remain available.', 'Выберите поддерживаемый язык из списка': 'Choose a supported language from the list', 'Подготовка отменена': 'Preparation cancelled', 'Язык и голос готовы': 'Language and voice are ready', 'Терминал': 'Terminal', 'Войти через терминал': 'Sign in using terminal', 'Быстрая пунктуация': 'Fast punctuation', 'Автоодобрять разрешения': 'Approve permission requests automatically', 'Точное распознавание речи (медленнее)': 'Accurate speech recognition (slower)', 'Вниз ↓': 'Down ↓', 'Разрешить': 'Allow', 'Отклонить': 'Decline', 'Ответить': 'Answer', 'Изменить': 'Edit', 'Отменить': 'Cancel', 'Отправить сейчас': 'Send now', 'Продолжить вход': 'Continue sign-in', 'Русский и английский встроены. Другие переводы готовятся выбранной моделью один раз и сохраняются на устройстве. Для перевода передаются статические надписи интерфейса.': 'Russian and English are built in. Other translations are prepared once by the selected model and saved on this device. Only static interface labels are provided for translation.', 'При подготовке загрузится только выбранный голос и недостающая модель распознавания. Общая модель Whisper используется для 99 языков. Нейроголоса доступны не для всех языков.': 'Preparation downloads the selected voice and any missing recognition model. A shared Whisper model supports 99 languages. Neural voices are not available for every language.', 'Выберите язык или введите его код: ru, en, de, fr, ja…': 'Choose a language or enter its code: ru, en, de, fr, ja…'})
+
+EN.update({'Копировать': 'Copy', 'Копировать ответ': 'Copy reply', 'Текст скопирован': 'Text copied', 'Не удалось скопировать текст': 'Could not copy text', 'Код': 'Code', 'Команда': 'Command', 'Готовый текст': 'Ready-to-copy text', 'Текст': 'Text', 'Язык интерфейса': 'Interface language', 'Язык распознавания речи': 'Speech recognition language'})
+
+EN.update({'Поиск по названию или коду': 'Search by name or code', 'В начало списка': 'Start of list', 'На страницу вверх': 'Page up', 'На страницу вниз': 'Page down', 'В конец списка': 'End of list', 'Ничего не найдено': 'No matches', 'Нажмите один раз, затем листайте список или используйте поиск': 'Click once, then scroll the list or use search'})
+
 class Translator:
     def __init__(self):
         self.language=STATE.read_text().strip() if STATE.exists() else 'en'
         self.widgets=weakref.WeakSet()
-    def text(self,value):return EN.get(value,value) if self.language=='en' else value
+        self.bindings=weakref.WeakKeyDictionary()
+        self.catalog={}
+        self._sources=None
+        self.load_catalog()
+
+    def load_catalog(self):
+        self.catalog={}
+        if self.language not in ('ru','en') and re.fullmatch(r'[a-z]{2,3}',self.language):
+            try:
+                data=json.loads((STATE.parent/'translations'/(self.language+'.json')).read_text())
+                if isinstance(data,dict):self.catalog={k:v for k,v in data.items() if isinstance(k,str) and isinstance(v,str)}
+            except (OSError,ValueError):pass
+
+    def source_strings(self):
+        if self._sources is None:
+            values=set(EN)
+            for name in ('app.py','ui_extras.py','language_settings.py'):
+                path=Path(__file__).parent/name
+                if not path.exists():continue
+                tree=ast.parse(path.read_text())
+                values.update(node.value for node in ast.walk(tree) if isinstance(node,ast.Constant) and isinstance(node.value,str) and re.search('[А-Яа-яЁё]',node.value) and 1<len(node.value)<1400)
+            self._sources=sorted(values)
+        return self._sources
+
+    def text(self,value):
+        if self.language=='ru':return value
+        return self.catalog.get(value,EN.get(value,value))
+
+    def bind_tree(self,widget):
+        reverse={value:key for key,value in EN.items()}
+        reverse.update({value:key for key,value in self.catalog.items()})
+        sources=set(self.source_strings())
+        def bind(item):
+            if item not in self.widgets:
+                candidates=[]
+                if isinstance(item,Gtk.Window) and item.get_title():candidates.append(('title',item.get_title()))
+                if isinstance(item,Gtk.Entry) and item.get_placeholder_text():candidates.append(('placeholder-text',item.get_placeholder_text()))
+                if isinstance(item,Gtk.Label) and not item.get_selectable():
+                    candidates.append(('label',item.get_text()))
+                tooltip=item.get_tooltip_text()
+                if tooltip:candidates.append(('tooltip-text',tooltip))
+                stored=self.bindings.setdefault(item,{})
+                for prop,value in candidates:
+                    source=reverse.get(value,value)
+                    if prop not in stored and source in sources:stored[prop]=source
+                for prop,source in stored.items():item.set_property(prop,self.text(source))
+            if isinstance(item,Gtk.Container):
+                for child in item.get_children():bind(child)
+        bind(widget)
+
+    def watch_dialog(self,dialog):
+        dialog.connect('map',lambda widget:self.bind_tree(widget))
+
     def set_language(self,code):
-        self.language=code if code in ('ru','en') else 'ru'
+        if not re.fullmatch(r'[a-z]{2,3}',code):raise ValueError('Invalid language code')
+        self.language=code
+        self.load_catalog()
         STATE.parent.mkdir(parents=True,exist_ok=True)
         STATE.write_text(self.language)
+        Gtk.Widget.set_default_direction(Gtk.TextDirection.RTL if code in ('ar','he','fa','ur') else Gtk.TextDirection.LTR)
         for widget in list(self.widgets):widget.refresh_translation()
+        for widget,properties in list(self.bindings.items()):
+            for prop,source in properties.items():widget.set_property(prop,self.text(source))
 translator=Translator()
 class UILabel(Gtk.Label):
     def __init__(self,label=None,**kwargs):
@@ -206,3 +270,85 @@ class CompactPicker(Gtk.MenuButton):
     def get_active_id(self):return self.active_id
     def choose(self,ident):
         self.set_active_id(ident);self.popup.popdown();self.set_active(False)
+
+
+class ScrollablePicker(CompactPicker):
+    """Click once, then search or page without holding a mouse/controller button."""
+    def __init__(self):
+        super().__init__()
+        from gi.repository import GLib
+        self.popup.set_position(Gtk.PositionType.BOTTOM)
+        self.popup.remove(self.scroller)
+        body=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=6,margin=6)
+        self.search=Gtk.Entry()
+        self.search.set_size_request(254,40)
+        self.search.set_placeholder_text(translator.text('Поиск по названию или коду'))
+        self.search.connect('changed',lambda *_:self.filter_items())
+        body.pack_start(self.search,False,False,0)
+        self.scroller.set_policy(Gtk.PolicyType.NEVER,Gtk.PolicyType.ALWAYS)
+        self.scroller.set_kinetic_scrolling(True)
+        self.scroller.set_min_content_height(110)
+        self.scroller.set_max_content_height(220)
+        body.pack_start(self.scroller,True,True,0)
+        navigation=Gtk.Box(spacing=5,homogeneous=True)
+        self.navigation_buttons=[]
+        for title,tooltip,action in [
+            ('⇤','В начало списка',lambda:self.scroll_to_edge(False)),
+            ('↑','На страницу вверх',lambda:self.scroll_page(-1)),
+            ('↓','На страницу вниз',lambda:self.scroll_page(1)),
+            ('⇥','В конец списка',lambda:self.scroll_to_edge(True))]:
+            button=Gtk.Button(label=title)
+            button.set_size_request(-1,40)
+            button.set_tooltip_text(translator.text(tooltip))
+            button.connect('clicked',lambda _,callback=action:callback())
+            navigation.pack_start(button,True,True,0)
+            self.navigation_buttons.append(button)
+        body.pack_start(navigation,False,False,0)
+        self.no_results=Gtk.Label(label=translator.text('Ничего не найдено'))
+        self.no_results.set_no_show_all(True)
+        body.pack_start(self.no_results,False,False,0)
+        self.popup.add(body);body.show_all()
+        self.popup.connect('map',lambda *_:GLib.idle_add(self.opened))
+
+    def append(self,ident,title,search_terms=''):
+        super().append(ident,title)
+        self.items[ident][1].set_size_request(-1,44)
+        self.items[ident][1].search_terms=(ident+' '+title+' '+search_terms).casefold()
+        if hasattr(self,'search'):self.filter_items()
+
+    def remove_all(self):
+        super().remove_all()
+        if hasattr(self,'search'):
+            self.search.set_text('');self.filter_items()
+
+    def filter_items(self):
+        query=self.search.get_text().strip().casefold()
+        found=False
+        for ident,(title,button,_) in self.items.items():
+            visible=query in getattr(button,'search_terms',(ident+' '+title).casefold())
+            button.set_no_show_all(not visible);button.set_visible(visible)
+            found=found or visible
+        self.no_results.set_visible(not found)
+        self.scroll_to_edge(False)
+
+    def scroll_to_edge(self,bottom):
+        adjustment=self.scroller.get_vadjustment()
+        if adjustment is None:return
+        lower=adjustment.get_lower()
+        adjustment.set_value(max(lower,adjustment.get_upper()-adjustment.get_page_size()) if bottom else lower)
+
+    def scroll_page(self,direction):
+        adjustment=self.scroller.get_vadjustment()
+        if adjustment is None:return
+        value=adjustment.get_value()+direction*max(40,adjustment.get_page_size()*.85)
+        adjustment.set_value(max(adjustment.get_lower(),min(adjustment.get_upper()-adjustment.get_page_size(),value)))
+
+    def opened(self):
+        if not self.popup.get_visible() or not self.scroller.get_realized():return False
+        self.search.set_text('');self.filter_items()
+        if self.active_id in self.items:
+            button=self.items[self.active_id][1]
+            adjustment=self.scroller.get_vadjustment()
+            value=button.get_allocation().y-adjustment.get_page_size()/2
+            adjustment.set_value(max(adjustment.get_lower(),min(adjustment.get_upper()-adjustment.get_page_size(),value)))
+        return False

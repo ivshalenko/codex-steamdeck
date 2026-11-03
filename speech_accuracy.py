@@ -2,6 +2,7 @@
 import json
 import importlib.util
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -63,6 +64,37 @@ def log_timing(root, entry):
             handle.write(json.dumps(entry, ensure_ascii=False)+'\n')
     except OSError:
         pass
+
+
+# Lightweight dictation formatting; no model load, network or word replacement.
+# These deliberately conservative rules are not a grammatical language model.
+_RU_CLAUSE = re.compile(r'(?<=[\w»)])\s+(?=(?:потому что|так как|хотя|но|зато|однако)\b)', re.I)
+_RU_REPORTED = re.compile(
+    r'\b(скажи|покажи|проверь|посмотри|объясни|узнай|уточни|расскажи|знаю|вижу|думаю|считаю|хочу|нужно|надо|важно|кажется|получается)\s+'
+    r'(?=(?:что|чтобы|как|почему|зачем|где|когда|какой|какая|какие|сколько|можно ли|работает ли|есть ли)(?![-\w]))', re.I)
+_EN_CLAUSE = re.compile(r'(?<=\w)\s+(?=(?:but|although|however)\b)', re.I)
+_QUESTION = {
+    'ru': re.compile(r'^(?:почему|зачем|когда|где|куда|откуда|сколько|какой|какая|какие|как|можно ли|нужно ли|есть ли|ты можешь|можешь ли)\b', re.I),
+    'en': re.compile(r'^(?:how|why|when|where|who|what|can you|could you|is|are|do you|does|should)\b', re.I),
+}
+_SENTENCE_START = re.compile(r'(^|[.!?]\s+)([a-zа-яё])', re.I)
+
+
+def fast_punctuation(text, language='ru'):
+    """Format plain dictation quickly, preserving its words and existing marks."""
+    text = re.sub(r'[ \t]+', ' ', text).strip()
+    if not text:
+        return ''
+    if language == 'ru':
+        text = _RU_CLAUSE.sub(', ', text)
+        text = _RU_REPORTED.sub(r'\1, ', text)
+    elif language == 'en':
+        text = _EN_CLAUSE.sub(', ', text)
+    text = _SENTENCE_START.sub(lambda match: match[1] + match[2].upper(), text)
+    if text[-1] not in '.!?…:;':
+        question = _QUESTION.get(language)
+        text += '?' if question and question.match(text) else '.'
+    return text
 
 def multilingual_ready(root):
     model=whisper_dir(root)

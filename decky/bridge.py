@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Small JSON-lines bridge for the Decky Quick Access plugin."""
-import json, os, sys, threading, uuid, time, subprocess
+import json, os, sys, threading, uuid, time, subprocess, shutil
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from array import array
@@ -8,7 +8,10 @@ import math
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from runtime_paths import resolve_app_dir,resolve_state_dir
 APP_DIR=resolve_app_dir()
-MODULES_DIR=Path(__file__).resolve().parents[1]
+PLUGIN_DIR=Path(__file__).resolve().parent
+for wheel in (PLUGIN_DIR/'vendor').glob('*.whl'):sys.path.insert(0,str(wheel))
+MODULES_DIR=PLUGIN_DIR/'runtime'
+if not (MODULES_DIR/'backend.py').is_file():MODULES_DIR=PLUGIN_DIR.parent
 if not (MODULES_DIR/'backend.py').is_file():MODULES_DIR=APP_DIR
 sys.path.insert(0,str(MODULES_DIR))
 from chat_media import attachments,archive_image,display_text
@@ -23,6 +26,8 @@ WATCH_INTERVAL=12
 THREAD_LIST_TTL=6;HISTORY_TTL_ACTIVE=4;HISTORY_TTL_IDLE=12;VOSK_IDLE_SECONDS=180
 notify_lock=threading.Lock();notifications=[];notify_seq=0;approvals={};retry_at=0.0
 custom_entries=[];read_only=False;watch_hosts=[];watch_stops={};watch_backends={};watch_status={};resumed=set()
+history_limits={}
+snapshot_lock=threading.RLock()
 lock=threading.RLock(); connect_lock=threading.Lock(); preference_lock=threading.Lock(); jobs=ThreadPoolExecutor(max_workers=8)
 bridge=None; thread_id=''; preferences={}; selected_models={}; cache=[]; cache_time=0; active=False; outbox=[]; remote_host=''
 thread_caches={}; thread_cache_times={}; history_caches={}; history_cache_times={}; model_caches={}; account_caches={}
@@ -62,7 +67,8 @@ def thread_title(tid,host=None):
     threads=cache if host is None or host==remote_host else thread_caches.get(host,[])
     for t in threads:
         if t.get('id')==tid:return t.get('name') or t.get('preview') or 'Новый чат'
-    return 'Задача'
+    job=next((j for j in reversed(outbox) if j.get('threadId')==tid and j.get('host','')==(remote_host if host is None else host)),None)
+    return (job.get('text','').strip().split('\n')[0][:120] if job else '') or 'Задача'
 def notify(kind,tid,host=None,**extra):
     """Queue a notification for the Decky plugin; it polls them while the panel is closed."""
     global notify_seq
@@ -116,7 +122,7 @@ def event(message):
         active=True;status='Deck AI работает…'
     if method=='turn/completed':
         if selected:active=False;status='Готов'
-        notify('failed' if turn.get('status')=='failed' else 'done',tid)
+        notify('failed' if turn.get('status')=='failed' else 'cancelled' if turn.get('status') in ('interrupted','cancelled') else 'done',tid)
         sending=next((j for j in outbox if j.get('host','')==remote_host and j['threadId']==tid and j.get('status')=='sending' and (not j.get('turnId') or j['turnId']==turn_id)),None)
         if sending:
             if turn.get('status')=='failed':
@@ -252,7 +258,7 @@ def subscribe_running(client,host,threads):
             resumed.add(key)
             try:client.request('thread/resume',{'threadId':t['id'],'excludeTurns':True},timeout=30)
             except Exception:resumed.discard(key)
-def extract_messages(thread):
+def extract_messages(thread,limit=40):
     items=[]
     for turn in thread.get('turns',[]):
         for item in turn.get('items',[]):
@@ -266,7 +272,7 @@ def extract_messages(thread):
             media=attachments(item)
             text=display_text(text)
             if text or media:items.append({'id':item.get('id',''),'role':'user' if item.get('type')=='userMessage' else 'assistant','text':text,'attachments':media})
-    return items[-40:]
+    return items[-limit:] if limit is not None else items
 def tool_text(item):
     """Compact, defensive summary of a command run or file change (with diff)."""
     if item.get('type')=='commandExecution':
@@ -310,7 +316,7 @@ def video_frames(path):
     if source.suffix.lower() not in ('.mpd','.mp4','.mkv','.webm','.mov'):raise ValueError('Неизвестный формат видео Steam.')
     generated=STATE/'game-frames';generated.mkdir(parents=True,exist_ok=True,mode=0o700);os.chmod(generated,0o700)
     dest=generated/str(uuid.uuid4());dest.mkdir(parents=True,exist_ok=True,mode=0o700)
-    args=['/usr/bin/ffmpeg','-nostdin','-hide_banner','-loglevel','error','-protocol_whitelist','file,crypto,data','-i',str(source),'-vf','fps=1/30,scale=960:-2','-frames:v','4','-q:v','3',str(dest/'frame-%02d.jpg')]
+    args=[shutil.which('ffmpeg') or '/usr/bin/ffmpeg','-nostdin','-hide_banner','-loglevel','error','-protocol_whitelist','file,crypto,data','-i',str(source),'-vf','fps=1/30:start_time=0:round=up,scale=960:-2,format=yuvj420p','-threads','2','-frames:v','4','-q:v','3',str(dest/'frame-%02d.jpg')]
     try:subprocess.run(args,timeout=90,check=True,capture_output=True,text=True)
     except subprocess.CalledProcessError as exc:raise RuntimeError('Не удалось прочитать запись Steam: '+(exc.stderr or '')[-500:])
     except subprocess.TimeoutExpired:raise RuntimeError('Не удалось извлечь кадры за 90 секунд.')
@@ -438,7 +444,7 @@ def _get_snapshot():
     try:preferences.update(json.loads((STATE/'runtime-preferences.json').read_text()))
     except (OSError,ValueError):pass
     refresh_threads()
-    current=next((t for t in cache if t.get('id')==thread_id),None);messages=[]
+    current=next((t for t in cache if t.get('id')==thread_id),None);messages=[];history_total=0
     if thread_id and current:
         history_key=(remote_host,thread_id)
         thread=history_caches.get(history_key)
@@ -450,17 +456,17 @@ def _get_snapshot():
                 thread=hist.get('thread',current);history_caches[history_key]=thread;history_cache_times[history_key]=now
             except Exception:
                 thread=thread or current
-        active=any(t.get('status')=='inProgress' for t in thread.get('turns',[]));messages=extract_messages(thread)
+        active=any(t.get('status')=='inProgress' for t in thread.get('turns',[]));all_messages=extract_messages(thread,limit=None);history_total=len(all_messages);messages=all_messages[-history_limits.get((remote_host,thread_id),40):]
         current_model=thread.get('model') or current_model;status='Deck AI работает…' if active else 'Готов'
     elif thread_id:
         try:
-            _,thread=bridge.select_thread(thread_id);messages=extract_messages(thread);active=any(t.get('status')=='inProgress' for t in thread.get('turns',[]))
+            _,thread=bridge.select_thread(thread_id);all_messages=extract_messages(thread,limit=None);history_total=len(all_messages);messages=all_messages[-history_limits.get((remote_host,thread_id),40):];active=any(t.get('status')=='inProgress' for t in thread.get('turns',[]))
         except Exception as exc:status=str(exc)[:160]
     account=read_account()
     models_list=model_catalog;saved_model=selected_models.get(thread_id) or (selected_models.get('') if not thread_id else None) or current_model
     if not saved_model and models_list:saved_model=models_list[0]['id']
     pref=preferences.get(thread_id or '',{}).get(saved_model,{})
-    return {'ready':True,'status':status,'provider':'codex','account':account.get('account'),'loginPending':bool(account_login_id),'remoteHost':remote_host,'sshHosts':ssh_hosts(),'threads':[thread_summary(t) for t in cache],'runningCount':sum(1 for t in cache if thread_running(t,t.get('id')==thread_id,active)),'threadId':thread_id,'messages':messages,'active':active,'models':models_list,'model':saved_model,'effort':pref.get('effort'),'tier':pref.get('tier','default'),'videos':cache_media if not remote_host else [],'screenshots':cache_screens if not remote_host else [],'outbox':outbox[-200:],'queueTotal':len(outbox),'speechVersion':2,'speechReady':multilingual_ready(APP_DIR),'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
+    return {'ready':True,'status':status,'provider':'codex','account':account.get('account'),'loginPending':bool(account_login_id),'remoteHost':remote_host,'sshHosts':ssh_hosts(),'threads':[thread_summary(t) for t in cache],'runningCount':sum(1 for t in cache if thread_running(t,t.get('id')==thread_id,active)),'hasOlderMessages':history_total>len(messages),'threadId':thread_id,'messages':messages,'active':active,'models':models_list,'model':saved_model,'effort':pref.get('effort'),'tier':pref.get('tier','default'),'videos':cache_media if not remote_host else [],'screenshots':cache_screens if not remote_host else [],'outbox':outbox[-200:],'queueTotal':len(outbox),'speechVersion':2,'speechReady':multilingual_ready(APP_DIR),'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
 snapshot_cache={}
 def all_tasks():
     """Running and recent chats from every device visited in this session."""
@@ -472,16 +478,16 @@ def all_tasks():
     return sorted(found,key=lambda x:(not x['running'],-x['updatedAt']))[:40]
 def snapshot_extras():
     return {'approvals':[a for a in approvals.values() if a['host']==remote_host],'retryIn':max(0,int(retry_at-time.time())) if retry_at else 0,'allTasks':all_tasks(),'loadedModels':len(vosk_models),'readOnly':read_only,'customProviders':[{'id':c['id'],'name':c['name'],'baseUrl':c['baseUrl']} for c in custom_entries],'presets':[{'name':n,'url':u} for n,u in providers.CUSTOM_PRESETS],'watchHosts':watch_hosts,'watchStatus':dict(watch_status),'recentEvents':list(reversed(notifications[-15:]))}
-def get_snapshot():
+def _safe_snapshot():
     # A failed backend must not remove settings, provider selection, drafts or
     # the reconnect action from the Game Mode UI.
-    key=(provider,remote_host)
+    key=(provider,remote_host,thread_id)
     try:
         result={**_get_snapshot(),**snapshot_extras()}
-        snapshot_cache[key]=result
+        snapshot_cache[(provider,remote_host,result.get('threadId',thread_id))]=result
         return result
     except Exception as exc:
-        previous=snapshot_cache.get(key,{})
+        previous=snapshot_cache.get((provider,remote_host,thread_id),{})
         return {**previous,'ready':False,'status':str(exc)[:350],
             'provider':provider,'remoteHost':remote_host,'sshHosts':ssh_hosts(),
             'account':previous.get('account'),'loginPending':bool(account_login_id),
@@ -491,6 +497,10 @@ def get_snapshot():
             'effort':previous.get('effort',''),'tier':previous.get('tier','default'),
             'screenshots':previous.get('screenshots',[]),'videos':previous.get('videos',[]),
             'outbox':outbox[-200:],'queueTotal':len(outbox),'speechVersion':2,'speechReady':multilingual_ready(APP_DIR),'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error,**snapshot_extras()}
+def get_snapshot():
+    # Snapshot reads and view changes share one lock: an older read cannot
+    # return another chat's messages under a newly selected thread ID.
+    with snapshot_lock:return _safe_snapshot()
 cache_screens=[];cache_media=[];cache_media_time=0;model_catalog=[];model_cache_time=0
 
 vosk_models={};vosk_used=0.0;vosk_lock=threading.Lock()
@@ -512,8 +522,10 @@ def voice_capture(language,silence=0.0):
     from speech_accuracy import prewarm_worker,cancel_worker
     recorder=None;refiner=None
     try:
-        from vosk import Model,KaldiRecognizer,SetLogLevel
-        SetLogLevel(-1)
+        if language in ('ru','en','ru-fast','en-fast'):
+            try:from vosk import Model,KaldiRecognizer,SetLogLevel
+            except ImportError:raise RuntimeError('Для голоса откройте настольный Deck AI → Настройки → Языки и загрузите языковой пакет. Текстовый чат уже доступен.')
+            SetLogLevel(-1)
         model_path=APP_DIR/'models'/('vosk-model-small-en-us-0.15' if language in ('en','en-fast') else 'vosk-model-small-ru-0.22')
         runtime=f"/run/user/{os.getuid()}"
         env=dict(os.environ);env.update({'HOME':str(ROOT),'XDG_RUNTIME_DIR':runtime,'PULSE_SERVER':f'unix:{runtime}/pulse/native','PULSE_COOKIE':str(ROOT/'.config/pulse/cookie')})
@@ -797,11 +809,14 @@ def diagnose():
     add('Многоязычная модель Whisper',multilingual_ready(APP_DIR),'нужна только для других языков')
     for tool in ('ffmpeg','pactl'):add('Утилита '+tool,Path('/usr/bin/'+tool).exists())
     return {'checks':checks}
-def call(method,params):
+def _call(method,params):
     global thread_id,cache_time,status,active,remote_host,bridge,model_cache_time,account_cache_time,cache_media_time,model_catalog,account_cache,provider,provider_active,provider_status
     params=params or {}
     if read_only and method in READ_ONLY_BLOCKED:raise ValueError('Включён режим только чтения: действия запрещены. Отключите его в настройках.')
     if method=='snapshot':return get_snapshot()
+    if method=='older_messages':
+        key=(remote_host,thread_id);history_limits[key]=history_limits.get(key,40)+80
+        return get_snapshot()
     if method=='share_status':
         import deck_share;return deck_share.status()
     if method=='share_add_key':
@@ -848,10 +863,16 @@ def call(method,params):
             ident=str(params['id'])
             if ident not in provider_chats[provider]:raise ValueError('Чат не найден.')
             provider_thread_ids[provider]=ident;save_provider_chats();provider_status='Готов';return get_snapshot()
-        thread_id=str(params['id']);cache_time=0;atomic_text(STATE/('thread-id-remote-'+remote_host if remote_host else 'thread-id'),thread_id+'\n');status='Готов';active=False
-        try:bridge.select_thread(thread_id)
+        thread_id=str(params['id']);atomic_text(STATE/('thread-id-remote-'+remote_host if remote_host else 'thread-id'),thread_id+'\n');status='Загружаю диалог…';active=False
+        connected()
+        try:
+            _,thread=bridge.select_thread(thread_id)
+            history_caches[(remote_host,thread_id)]=thread
+            history_cache_times[(remote_host,thread_id)]=time.time()
+            active=any(t.get('status')=='inProgress' for t in thread.get('turns',[]))
+            status='Deck AI работает…' if active else 'Готов'
         except Exception as exc:status=str(exc)[:160]
-        cache_time=0;return get_snapshot()
+        return get_snapshot()
     if method=='new_thread':
         if provider in provider_chats:
             ident=str(uuid.uuid4());now=int(time.time());provider_chats[provider][ident]={'id':ident,'provider':provider,'name':'New chat','createdAt':now,'updatedAt':now,'messages':[]};provider_thread_ids[provider]=ident;save_provider_chats();provider_status='New chat';return get_snapshot()
@@ -879,6 +900,11 @@ def call(method,params):
         if not launcher.exists():launcher=Path.home()/'.local/bin/codex-steamdeck'
         subprocess.Popen([str(launcher)],start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);return {'opened':True}
     raise ValueError('Неизвестная команда.')
+VIEW_COMMANDS={'send','retry','stop','settings','older_messages','snapshot','refresh','select_thread','new_thread','remote_host','provider'}
+def call(method,params):
+    if method in VIEW_COMMANDS:
+        with snapshot_lock:return _call(method,params)
+    return _call(method,params)
 def handle(msg):
     try:write({'id':msg.get('id'),'result':call(msg.get('method',''),msg.get('params',{}))})
     except Exception as exc:write({'id':msg.get('id'),'error':str(exc)[:550]})

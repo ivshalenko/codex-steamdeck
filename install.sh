@@ -19,9 +19,9 @@ python3 "$SOURCE/scripts/manage-install.py" validate "$SOURCE"
 if [[ ! -x "$APP_DIR/venv/bin/python" ]]; then
   python3 -m venv --system-site-packages "$APP_DIR/venv"
 fi
-"$APP_DIR/venv/bin/python" -m pip install -r "$SOURCE/requirements.txt"
+"$APP_DIR/venv/bin/python" -m pip install websockets==15.0.1
 python3 "$SOURCE/scripts/backup-state.py" || echo "State backup skipped." >&2
 python3 "$SOURCE/scripts/manage-install.py" install "$SOURCE"
 echo "Installed Deck AI in $APP_DIR"
-echo "Offline voice: $SOURCE/scripts/download-models.sh"
+echo "Optional voice: $APP_DIR/venv/bin/python -m pip install vosk==0.3.45; $SOURCE/scripts/download-models.sh"
 if [[ "$WITH_DECKY" == 1 ]]; then "$SOURCE/scripts/install-decky.sh"; else echo "Gaming Mode plugin: $SOURCE/install.sh --decky (or $SOURCE/scripts/install-decky.sh)"; fi

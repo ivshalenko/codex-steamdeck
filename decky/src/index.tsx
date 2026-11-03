@@ -4,7 +4,7 @@ import { DialogButton, Dropdown, Focusable, TextField, ConfirmModal, showModal, 
 import { FaMicrophone, FaComment, FaHistory, FaCog, FaExpand, FaCompress, FaArrowLeft, FaGamepad, FaCopy, FaPlus, FaFolderOpen, FaListUl, FaSyncAlt } from "react-icons/fa";
 import logo from "../deck-ai.png";
 import css from "./style.css";
-import { queueCounts, queueStatus, type QueueJob } from "./queue";
+import { chatFailures, queueCounts, queueStatus, type QueueJob } from "./queue";
 import { speechLanguages } from "./speech-languages";
 import { parseQuickActions } from "./quick";
 import { themes, densities, bubbleStyles, layouts, readAppearance, withChoice, effectiveLayout, appearanceKey, type Appearance } from "./appearance";
@@ -19,10 +19,10 @@ type Media = {path:string;name:string;when?:number};
 type Approval={key:string;id:string|number;threadId:string;title:string;summary:string};
 type TaskRow={host:string;id:string;name:string;updatedAt:number;running:boolean};
 type DeviceEvent={id:number;kind:string;title:string;host:string;at:number;summary?:string};
-type Share={sshActive:boolean;user:string;hostname:string;addresses:string[];keys:number;codex:boolean;snippet:string;enableHint:string};
+type Share={fingerprints?:string[];sshActive:boolean;user:string;hostname:string;addresses:string[];keys:number;codex:boolean;snippet:string;enableHint:string};
 type Check={name:string;ok:boolean;detail:string};
 type Model = {id:string;name:string;efforts:{id:string;name:string}[];defaultEffort:string;tiers:string[]};
-type Snapshot = {ready:boolean;status:string;provider:string;account?:{email?:string;planType?:string}|null;loginPending?:boolean;remoteHost?:string;sshHosts:string[];threads:{id:string;name:string;updatedAt:number;running?:boolean}[];runningCount?:number;approvals?:Approval[];retryIn?:number;allTasks?:TaskRow[];loadedModels?:number;readOnly?:boolean;watchHosts?:string[];watchStatus?:Record<string,string>;recentEvents?:DeviceEvent[];customProviders?:{id:string;name:string;baseUrl:string}[];presets?:{name:string;url:string}[];threadId:string;messages:Item[];active:boolean;models:Model[];model:string;effort:string;tier:string;screenshots:Media[];videos:Media[];outbox:QueueJob[];queueTotal?:number;speechVersion?:number;speechReady?:boolean;voiceId?:string;voiceState:string;voiceText:string;voiceError:string};
+type Snapshot = {hasOlderMessages?:boolean;ready:boolean;status:string;provider:string;account?:{email?:string;planType?:string}|null;loginPending?:boolean;remoteHost?:string;sshHosts:string[];threads:{id:string;name:string;updatedAt:number;running?:boolean}[];runningCount?:number;approvals?:Approval[];retryIn?:number;allTasks?:TaskRow[];loadedModels?:number;readOnly?:boolean;watchHosts?:string[];watchStatus?:Record<string,string>;recentEvents?:DeviceEvent[];customProviders?:{id:string;name:string;baseUrl:string}[];presets?:{name:string;url:string}[];threadId:string;messages:Item[];active:boolean;models:Model[];model:string;effort:string;tier:string;screenshots:Media[];videos:Media[];outbox:QueueJob[];queueTotal?:number;speechVersion?:number;speechReady?:boolean;voiceId?:string;voiceState:string;voiceText:string;voiceError:string};
 const snapshot=callable<[],Snapshot>("get_snapshot");
 const refresh=callable<[],Snapshot>("refresh");
 const selectThread=callable<[id:string],Snapshot>("select_thread");
@@ -38,7 +38,8 @@ const accountCancelLogin=callable<[],unknown>("account_cancel_login");
 const accountLogout=callable<[],unknown>("account_logout");
 const remoteHost=callable<[host:string],Snapshot>("remote_host");
 const setProvider=callable<[provider:string],Snapshot>("set_provider");
-const pollEvents=callable<[since:number|null],{latest:number;notifications:{id:number;kind:string;title:string;host:string;summary?:string}[]}>("poll_events");
+const olderMessages=callable<[],Snapshot>("older_messages");
+const pollEvents=callable<[since:number|null],{latest:number;notifications:{id:number;kind:string;title:string;host:string;summary?:string;threadId?:string}[]}>("poll_events");
 const approve=callable<[id:string,decision:string],unknown>("approve");
 const diagnose=callable<[],{checks:Check[]}>("diagnose");
 const watchHosts=callable<[hosts:string[]],unknown>("watch");
@@ -78,6 +79,8 @@ function Choice({label,value,options,onChange,disabled=false}:{label:string;valu
 // The compact panel and the full-screen route use the same session. Moving
 // between them must preserve the draft, attachments and consumed dictation.
 const dictationKey="deck-ai-dictation-v1";
+const historySnapshots=new Map<string,Snapshot>();
+const historyKey=(s:Pick<Snapshot,"provider"|"remoteHost"|"threadId">)=>JSON.stringify([s.provider,s.remoteHost||"",s.threadId]);
 const session={snapshot:null as Snapshot|null,attachments:new Map<string,Media[]>(),voiceText:"",voiceError:"",discardedVoice:localStorage.getItem("deck-ai-discarded-voice")||"",finishedVoice:"",dictation:restoreDictation(localStorage.getItem(dictationKey))};
 const textScaleKey="deck-ai-text-scale";
 const textScaleListeners=new Set<(value:number)=>void>();
@@ -205,7 +208,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const [openTool,setOpenTool]=useState("");
  useEffect(()=>{panelMounted++;return()=>{panelMounted--;};},[]);
  const lastVoice=useRef(session.voiceText);const lastVoiceError=useRef(session.voiceError);
- const inFlight=useRef(false);const mounted=useRef(true);
+ const inFlight=useRef(false);const mounted=useRef(true);const viewRevision=useRef(0);
  const queueRef=useRef<HTMLDivElement>(null);
  useEffect(()=>{if(queueOpen)requestAnimationFrame(()=>{const el=queueRef.current;if(el){el.scrollTop=0;el.querySelector<HTMLButtonElement>("button")?.focus();}});},[queueOpen]);
  const chatRef=useRef<HTMLDivElement>(null);const followTail=useRef(true);
@@ -215,6 +218,8 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
   // Change the draft and its storage key together; polling must never copy a
   // draft into a different chat when the selected conversation changes.
   if(next.threadId!==draftId.current){draftId.current=next.threadId;setDraft(localStorage.getItem(draftKey(next.threadId))||"");setImagesState(session.attachments.get(next.threadId)||[]);followTail.current=true;setShowLatest(false);}
+  historySnapshots.set(historyKey(next),next);
+  while(historySnapshots.size>12)historySnapshots.delete(historySnapshots.keys().next().value!);
   session.snapshot=next;setData(next);
   if(next.voiceId&&["recording","stopping","processing"].includes(next.voiceState)){
    session.dictation=bindDictation(session.dictation,next.voiceId,next.threadId,localStorage.getItem(draftKey(next.threadId))||"");
@@ -232,14 +237,14 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
   if(next.voiceError&&next.voiceError!==lastVoiceError.current){lastVoiceError.current=next.voiceError;session.voiceError=next.voiceError;setError(next.voiceError);}
  },[]);
  const load=useCallback(async()=>{
-  if(inFlight.current)return;
-  inFlight.current=true;
-  try{const next=await snapshot();if(mounted.current){accept(next);setConnectionError("");}}catch{if(mounted.current)setConnectionError("Связь с Deck AI прервалась. Повторяю подключение…");}finally{inFlight.current=false;}
+  if(inFlight.current||actionLock.current)return;
+  inFlight.current=true;const revision=viewRevision.current;
+  try{const next=await snapshot();if(mounted.current&&revision===viewRevision.current){accept(next);setConnectionError("");}}catch{if(mounted.current)setConnectionError("Связь с Deck AI прервалась. Повторяю подключение…");}finally{inFlight.current=false;}
  },[accept]);
  useEffect(()=>{mounted.current=true;void load();const timer=setInterval(()=>void load(),voicePolling?500:2500);return()=>{mounted.current=false;clearInterval(timer);};},[load,voicePolling]);
  useEffect(()=>{const el=chatRef.current;if(el&&followTail.current)el.scrollTop=el.scrollHeight;},[data?.messages,tab]);
  const editDraft=(value:string)=>{setDraft(value);localStorage.setItem(draftKey(draftId.current),value);};
- const run=async(work:()=>Promise<void>)=>{if(actionLock.current)return;actionLock.current=true;setBusy(true);setError("");setNotice("");try{await work();}catch(e){setError(String(e));}finally{actionLock.current=false;setBusy(false);}};
+ const run=async(work:()=>Promise<void>)=>{if(actionLock.current)return;actionLock.current=true;viewRevision.current++;setBusy(true);setError("");setNotice("");try{await work();}catch(e){setError(String(e));}finally{actionLock.current=false;setBusy(false);}};
  const model=data?.models.find(x=>x.id===data.model)||data?.models[0];
  const effort=data?.effort||model?.defaultEffort||model?.efforts[0]?.id||"";
  const tier=data?.tier||"default";
@@ -281,7 +286,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
   }
   session.attachments.delete(sentThread);
   if(draftId.current===sentThread)setImagesState([]);
-  setNotice("Запрос принят · в очереди");followTail.current=true;void load();
+  setNotice("Запрос принят · в очереди");followTail.current=true;accept(await snapshot());
  });
  const submitRef=useRef(submit);submitRef.current=submit;
  useEffect(()=>{if(pendingAuto.current&&!recording&&!voiceProcessing&&draft.trim()){pendingAuto.current=false;setCountdown(3);}},[draft,recording,voiceProcessing]);
@@ -291,7 +296,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
   const timer=setTimeout(()=>setCountdown(value=>value===null?null:value-1),1000);
   return()=>clearTimeout(timer);
  },[countdown]);
- const quick=(text:string)=>void run(async()=>{await sendMessage(text,[],model?.id||"",effort,tier);setNotice("Запрос принят · в очереди");setQuickOpen(false);followTail.current=true;void load();});
+ const quick=(text:string)=>void run(async()=>{await sendMessage(text,[],model?.id||"",effort,tier);setNotice("Запрос принят · в очереди");setQuickOpen(false);followTail.current=true;accept(await snapshot());});
  const ro=!!data?.readOnly;
  const names:Record<string,string>={...providerNames,...Object.fromEntries((data?.customProviders||[]).map(c=>[c.id,c.name]))};
  const isCustom=!!data?.customProviders?.some(c=>c.id===data.provider);
@@ -299,17 +304,23 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const decide=(item:Approval,decision:string)=>void run(async()=>{
   // Allowing runs a command on the machine: require a second, deliberate press.
   if(decision!=="decline"&&confirmApproval!==item.key){setConfirmApproval(item.key);setNotice("Нажмите «Разрешить» ещё раз, чтобы подтвердить");return;}
-  setConfirmApproval("");await approve(item.key,decision);setNotice(decision==="decline"?"Отклонено":"Разрешено");await load();
+  setConfirmApproval("");await approve(item.key,decision);setNotice(decision==="decline"?"Отклонено":"Разрешено");accept(await snapshot());
  });
  const openFolder=(path:string)=>void run(async()=>{const result=await fileList(path);setFolder(result.path);setEntries(sortEntries(result.entries));setFile(null);});
  const openFile=(path:string)=>void run(async()=>{const result=await fileRead(path);setFile(result);setFileText(result.text);});
  const saveFile=()=>void run(async()=>{if(!file)return;const result=await fileWrite(file.path,fileText,file.sha256);setFile({...file,text:fileText,sha256:result.sha256});setNotice("Файл сохранён · копия: "+file.path.split("/").pop()+".deckai.bak");});
- const startChat=()=>void run(async()=>{accept(await newThread());setTab("chat");});
+ const chooseThread=(id:string)=>void run(async()=>{
+  viewRevision.current++;
+  const current=session.snapshot;
+  if(current){const cached=historySnapshots.get(historyKey({...current,threadId:id}));accept(cached?{...cached,threads:current.threads}:{...current,threadId:id,messages:[],active:false,status:"Загружаю диалог…"});}
+  accept(await selectThread(id));setTab("chat");
+ });
+ const startChat=()=>void run(async()=>{viewRevision.current++;accept(await newThread());setTab("chat");});
  const openFiles=()=>{setTab("history");setFilesOpen(true);openFolder("~");};
  const sortedThreads=[...(data?.threads||[])].sort((a,b)=>Number(!!b.running)-Number(!!a.running));
  const sidebar=fullscreen&&layout==="split"?<GameScroll className="dai-split-side"><div className="dai-stack-content">
   <Action primary disabled={busy||!data?.ready||ro||data?.active} onClick={startChat}><FaPlus/>Новый чат</Action>
-  {sortedThreads.map(thread=><div className={"dai-history-item "+(thread.id===data?.threadId?"selected":"")+(thread.running?" running":"")} key={thread.id}><Action disabled={busy||(data?.active&&thread.id!==data.threadId&&!data.remoteHost)} onClick={()=>void run(async()=>{accept(await selectThread(thread.id));})}><span>{thread.running&&<span className="dai-dot working" aria-label="Выполняется"/>}{thread.name||"Новый чат"}</span></Action></div>)}
+  {sortedThreads.map(thread=><div className={"dai-history-item "+(thread.id===data?.threadId?"selected":"")+(thread.running?" running":"")} key={thread.id}><Action disabled={busy||(data?.active&&thread.id!==data.threadId&&!data.remoteHost)} onClick={()=>chooseThread(thread.id)}><span>{thread.running&&<span className="dai-dot working" aria-label="Выполняется"/>}{thread.name||"Новый чат"}</span></Action></div>)}
  </div></GameScroll>:null;
  const speak=(id:string,text:string)=>{
   const synth=(window as unknown as {speechSynthesis?:SpeechSynthesis}).speechSynthesis;
@@ -335,7 +346,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const jumpToLatest=()=>{followTail.current=true;setShowLatest(false);const el=chatRef.current;if(el)el.scrollTop=el.scrollHeight;};
  const settings=(id:string,depth:string,speed:string)=>void run(async()=>{await saveSettings(id,depth,speed);accept(await snapshot());});
  const attach=(media?:Media)=>{if(!media)return;setImages(old=>old.some(x=>x.path===media.path)?old:[...old,media]);setMediaOpen(false);};
- const signIn=()=>void run(async()=>{const result=await accountLogin();setLoginUrl(result.url+(result.userCode?" · Код: "+result.userCode:""));setNotice(result.opened?"Откройте страницу входа и завершите авторизацию.":"Ссылка для входа показана ниже.");await load();});
+ const signIn=()=>void run(async()=>{const result=await accountLogin();setLoginUrl(result.url+(result.userCode?" · Код: "+result.userCode:""));setNotice(result.opened?"Откройте страницу входа и завершите авторизацию.":"Ссылка для входа показана ниже.");accept(await snapshot());});
  const disconnect=!data?.ready;
  return <Focusable style={{"--dai-text-scale":textScale} as CSSProperties} data-text-scale={textScale} data-theme={appearance.theme} data-density={appearance.density} data-bubbles={appearance.bubbles} data-layout={layout} className={"dai-root"+(fullscreen?" dai-fullscreen":"")} onSecondaryButton={()=>{if(tab==="chat"&&!busy)void toggleVoice();}} onSecondaryActionDescription={tab==="chat"?(recording?"Стоп":"Голос"):undefined} onCancel={event=>{
   if(queueOpen){event.stopPropagation();setQueueOpen(false);}
@@ -369,9 +380,9 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
      <p className="dai-queue-text">{expandedJob===job.id?job.text:job.text.slice(0,180)+(job.text.length>180?"…":"")}</p>
      {job.text.length>180&&<Action onClick={()=>setExpandedJob(expandedJob===job.id?"":job.id)}>{expandedJob===job.id?"Свернуть текст":"Весь текст запроса"}</Action>}
      {job.error&&<p className="dai-muted">{job.error}</p>}
-     {job.status==="queued"&&<Action disabled={busy||ro} onClick={()=>void run(async()=>{await queueFront(job.id);await load();})}>↑ Отправить первым</Action>}
-     {(job.status==="queued"||job.status==="error")&&<Action disabled={busy||ro} onClick={()=>void run(async()=>{await queueRemove(job.id);await load();})}>Удалить из очереди</Action>}
-     {job.threadId&&<Action disabled={busy} onClick={()=>void run(async()=>{accept(await selectThread(job.threadId!));setQueueOpen(false);})}>Открыть чат</Action>}
+     {job.status==="queued"&&<Action disabled={busy||ro} onClick={()=>void run(async()=>{await queueFront(job.id);accept(await snapshot());})}>↑ Отправить первым</Action>}
+     {(job.status==="queued"||job.status==="error")&&<Action disabled={busy||ro} onClick={()=>void run(async()=>{await queueRemove(job.id);accept(await snapshot());})}>Удалить из очереди</Action>}
+     {job.threadId&&<Action disabled={busy} onClick={()=>void run(async()=>{viewRevision.current++;if((job.host||"")!==(data?.remoteHost||""))accept(await remoteHost(job.host||""));accept(await selectThread(job.threadId!));setTab("chat");setQueueOpen(false);})}>Открыть чат</Action>}
     </section>)}
    </div></GameScroll>:mediaOpen?<GameScroll className="dai-scroll dai-stack"><div className="dai-stack-content">
     <Action onClick={()=>setMediaOpen(false)}>← К сообщению</Action>
@@ -399,8 +410,9 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     </Focusable>
     <GameScroll className="dai-messages" ref={chatRef} onScroll={()=>{const el=chatRef.current;if(el){followTail.current=el.scrollHeight-el.scrollTop-el.clientHeight<60;setShowLatest(!followTail.current);}}}>
      <div className="dai-message-list">{!data?.messages.length&&<div className="dai-empty"><FaComment/><h3>Помощь прямо в игре</h3><p>Задайте вопрос текстом или голосом.<br/>Можно добавить скриншот.</p>{disconnect&&<Action onClick={()=>void run(async()=>accept(await refresh()))} disabled={busy}>{busy?"Подключение…":"Подключиться"}</Action>}</div>}
+     {data?.hasOlderMessages&&<Action disabled={busy} onClick={()=>void run(async()=>{followTail.current=false;accept(await olderMessages());requestAnimationFrame(()=>{if(chatRef.current)chatRef.current.scrollTop=0;});})}>Показать предыдущие сообщения</Action>}
      {data?.messages.map((message,i)=>message.role==="tool"?<Focusable key={message.id||i} className="dai-message tool" focusClassName="dai-focused" onActivate={()=>setOpenTool(openTool===(message.id||String(i))?"":(message.id||String(i)))}><pre>{openTool===(message.id||String(i))?message.text:message.text.split("\n").slice(0,3).join("\n")+(message.text.split("\n").length>3?"\n…":"")}</pre></Focusable>:<Focusable key={message.id||i} className={"dai-message "+message.role} focusClassName="dai-focused"><small>{message.role==="user"?"Вы":names[data.provider]?.split(" · ")[0]||"AI"}</small><div>{message.text}</div>{!!message.attachments?.length&&<MessageAttachments items={message.attachments}/>}<div className="dai-message-tools"><Action onClick={()=>copyMessage(message.text)}><FaCopy/>Копировать</Action>{message.role==="assistant"&&!!(window as unknown as {speechSynthesis?:unknown}).speechSynthesis&&<Action onClick={()=>speak(message.id||String(i),message.text)}>{speaking===(message.id||String(i))?"■ Стоп":"🔊 Озвучить"}</Action>}</div></Focusable>)}
-     {data?.outbox.filter(x=>x.status==="error").map(x=><div className="dai-failed" key={x.id}><p>{x.error||"Не удалось отправить"}</p><Action disabled={busy} onClick={()=>void run(async()=>{await retry(x.id);await load();})}>Повторить отправку</Action></div>)}
+     {(data?chatFailures(data.outbox,data.threadId,data.remoteHost||""):[]).map(x=><div className="dai-failed" key={x.id}><p>{x.error||"Не удалось отправить"}</p><Action disabled={busy} onClick={()=>void run(async()=>{await retry(x.id);accept(await snapshot());})}>Повторить отправку</Action></div>)}
     </div></GameScroll>
     {showLatest&&<div className="dai-latest"><Action onClick={jumpToLatest}>↓ К последнему сообщению</Action></div>}
     {ro&&<div className="dai-notice" role="status">Режим только чтения: отправка, подтверждения и правки отключены.</div>}
@@ -417,10 +429,10 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
       <Action recording={recording||voiceProcessing} disabled={!data||voiceProcessing||busy} onClick={()=>void toggleVoice()}><FaMicrophone/>{recording?"Стоп":"Голос"}</Action>
       {!!data?.threadId&&<Action disabled={recording||voiceProcessing} onClick={()=>setQuickOpen(!quickOpen)}>⚡</Action>}
       <Action disabled={voiceStarting||(!draft.trim()&&!recording&&!voiceProcessing)} onClick={clearDraft}>Очистить</Action>
-      {fullscreen&&data?.active&&data.provider==="codex"&&<Action disabled={busy} onClick={()=>void run(async()=>{await stop();await load();})}>Стоп</Action>}
+      {fullscreen&&data?.active&&data.provider==="codex"&&<Action disabled={busy} onClick={()=>void run(async()=>{await stop();accept(await snapshot());})}>Стоп</Action>}
       <Action primary disabled={busy||disconnect||ro||recording||voiceProcessing||!draft.trim()} onClick={submit}>{busy?"…":"Отправить"}</Action>
      </Focusable>
-     {!fullscreen&&data?.active&&data.provider==="codex"&&<Action disabled={busy} onClick={()=>void run(async()=>{await stop();await load();})}>Остановить ответ</Action>}
+     {!fullscreen&&data?.active&&data.provider==="codex"&&<Action disabled={busy} onClick={()=>void run(async()=>{await stop();accept(await snapshot());})}>Остановить ответ</Action>}
     </div>
    </>}
   </div></div>}
@@ -442,9 +454,9 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
    {(data?.provider==="codex"||!data)&&<Choice label="Устройство" value={data?.remoteHost||""} options={[{data:"",label:"Этот Steam Deck"},...(data?.sshHosts||[]).map(x=>({data:x,label:x}))]} disabled={busy||data?.active} onChange={value=>void run(async()=>accept(await remoteHost(value)))}/>}
    {data?.remoteHost&&<Action disabled={busy} onClick={()=>void run(async()=>{accept(await refresh());setNotice("Список задач обновлён");})}>↻ Обновить задачи на {data.remoteHost}</Action>}
    <TextField value={historyQuery} placeholder="Найти разговор…" onChange={e=>setHistoryQuery(e.target.value)}/>
-   {(data?.allTasks||[]).some(t=>t.host!==(data?.remoteHost||"")||t.running)&&<section className="dai-section dai-all-tasks"><h3>Задачи на всех устройствах</h3>{(data?.allTasks||[]).filter(t=>t.host!==(data?.remoteHost||"")||t.running).slice(0,12).map(t=><Action key={t.host+":"+t.id} disabled={busy||(data?.active&&!data.remoteHost&&t.host==="")} onClick={()=>void run(async()=>{if(t.host!==(data?.remoteHost||""))accept(await remoteHost(t.host));accept(await selectThread(t.id));setTab("chat");})}><span>{t.running&&<span className="dai-dot working" aria-label="Выполняется"/>}{(t.host||"Steam Deck")+" · "+t.name}</span></Action>)}</section>}
+   {(data?.allTasks||[]).some(t=>t.host!==(data?.remoteHost||"")||t.running)&&<section className="dai-section dai-all-tasks"><h3>Задачи на всех устройствах</h3>{(data?.allTasks||[]).filter(t=>t.host!==(data?.remoteHost||"")||t.running).slice(0,12).map(t=><Action key={t.host+":"+t.id} disabled={busy||(data?.active&&!data.remoteHost&&t.host==="")} onClick={()=>void run(async()=>{viewRevision.current++;if(t.host!==(data?.remoteHost||""))accept(await remoteHost(t.host));accept(await selectThread(t.id));setTab("chat");})}><span>{t.running&&<span className="dai-dot working" aria-label="Выполняется"/>}{(t.host||"Steam Deck")+" · "+t.name}</span></Action>)}</section>}
    {!data?.threads.length&&<p className="dai-muted">Ваши разговоры появятся здесь.</p>}
-   {data?.threads.filter(x=>x.name.toLocaleLowerCase().includes(historyQuery.toLocaleLowerCase())).sort((a,b)=>Number(!!b.running)-Number(!!a.running)).map(thread=><div className={"dai-history-item "+(thread.id===data.threadId?"selected":"")+(thread.running?" running":"")} key={thread.id}><Action disabled={busy||(data.active&&thread.id!==data.threadId&&!data.remoteHost)} onClick={()=>void run(async()=>{accept(await selectThread(thread.id));setTab("chat");})}><span>{thread.running&&<span className="dai-dot working" aria-label="Выполняется"/>}{thread.name||"Новый чат"}</span>{thread.id===data.threadId&&<small>Текущий</small>}</Action></div>)}
+   {data?.threads.filter(x=>x.name.toLocaleLowerCase().includes(historyQuery.toLocaleLowerCase())).sort((a,b)=>Number(!!b.running)-Number(!!a.running)).map(thread=><div className={"dai-history-item "+(thread.id===data.threadId?"selected":"")+(thread.running?" running":"")} key={thread.id}><Action disabled={busy||(data.active&&thread.id!==data.threadId&&!data.remoteHost)} onClick={()=>chooseThread(thread.id)}><span>{thread.running&&<span className="dai-dot working" aria-label="Выполняется"/>}{thread.name||"Новый чат"}</span>{thread.id===data.threadId&&<small>Текущий</small>}</Action></div>)}
   </div></GameScroll>}
   {tab==="settings"&&<GameScroll className="dai-scroll dai-stack dai-settings"><div className="dai-settings-grid"><div className="dai-settings-column">
    <section className="dai-section dai-model-settings"><h3>Модель и ответ</h3><div className="dai-model-fields">
@@ -500,8 +512,8 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     {share&&<><p className={"dai-muted dai-check "+(share.sshActive?"ok":"bad")}>{share.sshActive?"✓ SSH-сервер работает":"✗ SSH-сервер выключен"} · ключей: {share.keys}{share.codex?"":" · Codex не найден"}</p>
      {!share.sshActive&&<p className="dai-muted">{share.enableHint}</p>}
      <p className="dai-muted">Пользователь {share.user} · адреса: {share.addresses.join(", ")||"не найдены"}</p>
-     <p className="dai-muted">Добавьте на Mac в ~/.ssh/config:</p><pre className="dai-snippet">{share.snippet}</pre>
-     <p className="dai-muted">Вставьте открытый ключ с Mac (cat ~/.ssh/id_ed25519.pub):</p>
+     <p className="dai-muted">На Mac или ПК запустите мастер connect-deck.py из архива Remote Control. Адрес устройства указан выше.</p><p className="dai-muted">Отпечатки SSH для проверки первого соединения:</p><pre className="dai-snippet">{(share.fingerprints||[]).join("\n")||"SSH ещё не создал ключи: сначала включите сервер."}</pre><p className="dai-muted">Для ручной настройки ~/.ssh/config:</p><pre className="dai-snippet">{share.snippet}</pre>
+     <p className="dai-muted">Вставьте публичный ключ из мастера на Mac или ПК:</p>
      <TextField value={shareKey} placeholder="ssh-ed25519 AAAA…" onChange={e=>setShareKey(e.target.value)}/>
      <Action disabled={busy||ro||!shareKey.trim()} onClick={()=>void run(async()=>{const result=await shareAddKey(shareKey.trim());setShareKey("");setShare(await shareStatus());setNotice(result.added?"Ключ добавлен":"Такой ключ уже есть");})}>Разрешить этому компьютеру</Action></>}
    </section>
@@ -511,7 +523,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
    <section className="dai-section dai-account-settings"><h3>Аккаунт ChatGPT</h3>
     <div className="dai-account-meta"><p className="dai-account">{data?.account?.email||"Вход не выполнен"}</p>{data?.account?.planType&&<p className="dai-muted">{data.account.planType}</p>}</div><div className="dai-account-actions">
     <Action disabled={busy} onClick={signIn}>{data?.account?"Сменить аккаунт":"Войти в аккаунт"}</Action>
-    {data?.loginPending&&<Action disabled={busy} onClick={()=>void run(async()=>{await accountCancelLogin();setLoginUrl("");await load();})}>Отменить вход</Action>}
+    {data?.loginPending&&<Action disabled={busy} onClick={()=>void run(async()=>{await accountCancelLogin();setLoginUrl("");accept(await snapshot());})}>Отменить вход</Action>}
     {loginUrl&&<p className="dai-login-url">{loginUrl}</p>}
     {data?.account&&<Action disabled={busy} onClick={()=>showModal(<ConfirmModal strTitle="Выйти из ChatGPT?" strDescription="Для работы Codex потребуется снова войти." strOKButtonText="Выйти" strCancelButtonText="Отмена" onOK={()=>void run(async()=>{await accountLogout();accept(await refresh());})}/>)}>Выйти из аккаунта</Action>}
    </div></section>
@@ -529,17 +541,22 @@ async function showNotifications(){
   for(const item of result.notifications.slice(-3)){
    const where=item.host?" · "+item.host:"";
    toaster.toast({
-    title:item.kind==="approval"?"Deck AI · нужно подтверждение":item.kind==="failed"?"Deck AI · ошибка":"Deck AI · задача готова",
+    title:item.kind==="approval"?"Deck AI · нужно подтверждение":item.kind==="failed"?"Deck AI · ошибка":item.kind==="cancelled"?"Deck AI · задача остановлена":"Deck AI · задача готова",
     body:(item.kind==="approval"&&item.summary?item.summary:item.title)+where,
     critical:item.kind==="approval",duration:item.kind==="approval"?15000:6000,
-    onClick:()=>openFullscreen("chat")
+    onClick:()=>{void(async()=>{
+     try{if((session.snapshot?.remoteHost||"")!==item.host)await remoteHost(item.host);
+      if(item.threadId)session.snapshot=await selectThread(item.threadId);
+     }finally{openFullscreen("chat");}
+    })().catch(()=>{});}
    });
   }
  }catch{}
 }
 export default definePlugin(()=>{
  routerHook.addRoute(FULLSCREEN_PATH,FullscreenPage,{exact:true});
- const notifier=setInterval(()=>void showNotifications(),8000);
+ void showNotifications();
+ const notifier=setInterval(()=>void showNotifications(),2000);
  return {name:"Deck AI",titleView:<span>Deck AI</span>,content:<Panel/>,icon:<img src={logo} alt="Deck AI" style={{width:20,height:20,objectFit:"contain"}}/>,onDismount(){
   if(returnToPanel)clearTimeout(returnToPanel);
   clearInterval(notifier);

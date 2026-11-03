@@ -1,22 +1,20 @@
 #!/usr/bin/env bash
-# Install the Deck AI plugin for Decky Loader (Steam Deck, Desktop Mode terminal).
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 DEST="${DECKY_PLUGIN_DIR:-$HOME/homebrew/plugins/Codex}"
-[[ -f "$ROOT/decky/dist/index.js" ]] || { echo "decky/dist is missing: run 'npm ci && npm test' in decky/ first." >&2; exit 1; }
+[[ -d "$HOME/homebrew" || -n "${DECKY_PLUGIN_DIR:-}" ]] || { echo 'Install Decky Loader first: https://decky.xyz'; exit 1; }
+# Validate all files before asking for administrator access.
+python3 - "$ROOT" <<'PY'
+import importlib.util,sys
+from pathlib import Path
+root=Path(sys.argv[1]);s=importlib.util.spec_from_file_location('package_plugin',root/'scripts/package-plugin.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m);m.files(root)
+PY
 SUDO=""
-if ! mkdir -p "$(dirname "$DEST")" 2>/dev/null || [[ -e "$DEST" && ! -w "$DEST" ]] || [[ ! -w "$(dirname "$DEST")" ]]; then
-  SUDO="sudo"; echo "Decky's plugin folder belongs to root; sudo will ask for your password."
+if ! mkdir -p "$(dirname "$DEST")" 2>/dev/null || [[ ! -w "$(dirname "$DEST")" || ( -e "$DEST" && ! -w "$DEST" ) ]]; then
+ SUDO="sudo";echo "Decky's plugin folder belongs to root. SteamOS will ask for your administrator password."
 fi
-$SUDO rm -rf "$DEST"
-$SUDO mkdir -p "$DEST"
-for file in plugin.json main.py bridge.py runtime_paths.py package.json deck-ai.png LICENSE NOTICE THIRD_PARTY_NOTICES.txt; do
-  [[ -f "$ROOT/decky/$file" ]] && $SUDO cp "$ROOT/decky/$file" "$DEST/$file"
-done
-$SUDO cp -R "$ROOT/decky/dist" "$DEST/dist"
-echo "Deck AI plugin installed in $DEST"
+$SUDO python3 "$ROOT/scripts/install-plugin.py" "$DEST"
 if [[ -z "${DECK_AI_SKIP_RESTART:-}" ]] && command -v systemctl >/dev/null && systemctl is-active --quiet plugin_loader 2>/dev/null; then
-  echo "Restarting Decky Loader…"
-  sudo systemctl restart plugin_loader
+ echo 'Restarting Decky Loader…';sudo systemctl restart plugin_loader
 fi
-echo "Open Steam's Quick Access menu and choose Deck AI."
+echo 'Open Quick Access (…) → Decky → Deck AI. Sign in to ChatGPT in Settings.'

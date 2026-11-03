@@ -3,6 +3,7 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+import shutil,subprocess
 from unittest.mock import Mock, patch
 
 spec=importlib.util.spec_from_file_location('decky_bridge_test',Path(__file__).resolve().parents[1]/'decky/bridge.py')
@@ -10,6 +11,17 @@ bridge=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bridge)
 
 class DeckyBridgeTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('ffmpeg'),'FFmpeg required for media integration test')
+    def test_short_and_long_recordings_produce_jpeg_frames(self):
+        root=Path(self.temp.name)/'recordings';root.mkdir()
+        for seconds,expected in [(5,1),(125,4)]:
+            source=root/(str(seconds)+'.mp4')
+            subprocess.run(['ffmpeg','-nostdin','-v','error','-f','lavfi','-i',f'color=c=red:s=320x180:r=2:d={seconds}',
+                            '-c:v','mpeg4',str(source)],check=True,capture_output=True,timeout=15)
+            with patch.object(bridge,'media_roots',return_value=[root]):frames=bridge.video_frames(str(source))
+            self.assertEqual(len(frames),expected)
+            for frame in frames:self.assertTrue(Path(frame['path']).read_bytes().startswith(b'\xff\xd8'))
+
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory()
         self.state=patch.object(bridge,'STATE',Path(self.temp.name));self.state.start()
@@ -18,6 +30,43 @@ class DeckyBridgeTests(unittest.TestCase):
         bridge.outbox=[];bridge.active=False;bridge.bridge=None;bridge.cache=[];bridge.account_cache={'account':None}
         bridge.provider_chats={'claude':{},'deepseek':{},'tokenharbor':{}}
         bridge.provider_thread_ids={'claude':'','deepseek':'','tokenharbor':''}
+
+    def test_selected_history_is_read_once_and_reused_by_snapshot(self):
+        bridge.bridge=Mock(connected=True)
+        thread={'turns':[{'status':'completed','items':[{'type':'agentMessage','text':'loaded once'}]}]}
+        bridge.bridge.select_thread.return_value=({},thread)
+        bridge.history_caches={};bridge.history_cache_times={}
+        def snapshot():
+            self.assertEqual(bridge.history_caches[('', 'chosen')],thread)
+            return {'threadId':bridge.thread_id}
+        with patch.object(bridge,'connected'),patch.object(bridge,'get_snapshot',side_effect=snapshot):
+            result=bridge.call('select_thread',{'id':'chosen'})
+        self.assertEqual(result['threadId'],'chosen');bridge.bridge.select_thread.assert_called_once_with('chosen')
+
+    def test_offline_selection_never_shows_another_chats_messages(self):
+        bridge.thread_id='old'
+        old={'ready':True,'threadId':'old','messages':[{'text':'private old history'}]}
+        with patch.object(bridge,'_get_snapshot',return_value=old):bridge.get_snapshot()
+        bridge.thread_id='new'
+        with patch.object(bridge,'_get_snapshot',side_effect=RuntimeError('offline')):result=bridge.get_snapshot()
+        self.assertEqual(result['threadId'],'new');self.assertEqual(result['messages'],[])
+
+    def test_external_selection_caches_history_under_its_actual_chat(self):
+        bridge.thread_id='old'
+        def external_selection():
+            bridge.thread_id='new';return {'threadId':'new','messages':[{'text':'new history'}]}
+        with patch.object(bridge,'_get_snapshot',side_effect=external_selection):bridge.get_snapshot()
+        bridge.thread_id='old'
+        with patch.object(bridge,'_get_snapshot',side_effect=RuntimeError('offline')):result=bridge.get_snapshot()
+        self.assertEqual(result['messages'],[]);self.assertEqual(result['threadId'],'old')
+
+    def test_new_task_notification_has_question_and_cancel_is_not_success(self):
+        bridge.thread_id='demo';bridge.cache=[]
+        bridge.outbox=[{'id':'job','threadId':'demo','text':'Check my disk','status':'sending','host':''}]
+        with patch.object(bridge,'notify') as notify,patch.object(bridge.threading,'Thread'):
+            self.assertEqual(bridge.thread_title('demo'),'Check my disk')
+            bridge.event({'method':'turn/completed','params':{'threadId':'demo','turn':{'id':'turn','status':'interrupted'}}})
+            notify.assert_called_once_with('cancelled','demo')
 
     def test_image_only_history_is_not_dropped(self):
         thread={'turns':[{'items':[{'id':'image','type':'userMessage','content':[{'type':'localImage','path':'/home/test/a.png'}]}]}]}
@@ -175,7 +224,8 @@ class DeckyBridgeTests(unittest.TestCase):
 
     def test_offline_retains_last_conversation(self):
         messages=[{'id':'1','role':'assistant','text':'Saved answer'}]
-        bridge.snapshot_cache[('codex','')]={'messages':messages,'threadId':'saved'}
+        bridge.thread_id='saved'
+        bridge.snapshot_cache[('codex','','saved')]={'messages':messages,'threadId':'saved'}
         with patch.object(bridge,'connected',side_effect=RuntimeError('offline')):
             result=bridge.get_snapshot()
         self.assertEqual(result['messages'],messages)
@@ -227,3 +277,10 @@ class DeckyBridgeTests(unittest.TestCase):
         self.assertEqual(chat['messages'],[])
 
 if __name__=='__main__':unittest.main()
+
+class LongHistoryTests(unittest.TestCase):
+    def test_old_game_request_is_available_without_truncating_default_view(self):
+        thread={'turns':[{'items':[{'id':str(i),'type':'userMessage','content':[{'type':'text','text':'message '+str(i)}]} for i in range(100)]}]}
+        self.assertEqual(len(bridge.extract_messages(thread)),40)
+        full=bridge.extract_messages(thread,limit=None)
+        self.assertEqual(len(full),100);self.assertEqual(full[0]['text'],'message 0')

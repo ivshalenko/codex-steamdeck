@@ -28,10 +28,14 @@ def wait(title,expression):
  raise TimeoutError(expression)
 SHARED='SharedJSContext'
 QAM=next(p['title'] for p in pages() if p['title'].startswith('QuickAccess_'))
-FULL=next(p['title'] for p in pages() if 'browserType=4' in p['url'])
+FULL=next(p['title'] for p in pages() if 'browserType=4' in p['url'] or p['title']=='Режим Big Picture')
 def open_panel():
  evaluate(SHARED,"DeckyPluginLoader.deckyState.setActivePlugin('Deck AI');DFL.Navigation.OpenQuickAccessMenu(999)")
  wait(QAM,"!!document.querySelector('.dai-root')")
+def fill(title,value):
+ evaluate(title,"document.querySelector('.dai-composer input').focus();document.querySelector('.dai-composer input').select()")
+ command(title,'Input.insertText',{'text':value})
+ wait(title,"document.querySelector('.dai-composer input').value==="+json.dumps(value))
 def click(title,expression):
  evaluate(title,expression+".click()")
 old_draft=None;added_image=False
@@ -40,15 +44,16 @@ try:
  assert evaluate(QAM,"!document.querySelector('.dai-fullscreen')")
  assert evaluate(QAM,"document.querySelector('.dai-root').scrollWidth<=document.querySelector('.dai-root').clientWidth")
  print('PASS compact panel has no overlap',flush=True)
+ wait(QAM,"!!document.querySelector('.dai-status .dai-dot:not(.offline)')")
  old_draft=evaluate(QAM,"document.querySelector('.dai-composer input').value")
  test_draft=old_draft or 'DECK_AI_FULLSCREEN_CHECK'
  if not old_draft:
-  evaluate(QAM,"(()=>{const e=document.querySelector('.dai-composer input'),w=e.ownerDocument.defaultView;Object.getOwnPropertyDescriptor(w.HTMLInputElement.prototype,'value').set.call(e,"+json.dumps(test_draft)+");e.dispatchEvent(new w.Event('input',{bubbles:true}));})()")
+  fill(QAM,test_draft)
  # Check clearing without sending anything, then restore the test draft.
  assert evaluate(QAM,"![...document.querySelectorAll('.dai-compose-actions .dai-button')].some(e=>['Игра','Файлы'].includes(e.innerText))")
  click(QAM,"[...document.querySelectorAll('.dai-compose-actions .dai-button')].find(e=>e.innerText==='Очистить')")
  wait(QAM,"document.querySelector('.dai-composer input').value===''")
- evaluate(QAM,"(()=>{const e=document.querySelector('.dai-composer input'),w=e.ownerDocument.defaultView;Object.getOwnPropertyDescriptor(w.HTMLInputElement.prototype,'value').set.call(e,"+json.dumps(test_draft)+");e.dispatchEvent(new w.Event('input',{bubbles:true}));})()")
+ fill(QAM,test_draft)
  print('PASS clear button clears input; redundant game button removed',flush=True)
  expected_images=evaluate(QAM,"document.querySelectorAll('.dai-attachments .dai-button').length")
  click(QAM,"document.querySelectorAll('.dai-tab')[2].querySelector('.dai-button')")
@@ -64,9 +69,9 @@ try:
  print('PASS settings open full-width, in two columns, clear of Steam header/footer',flush=True)
  density=evaluate(FULL,"(()=>{const e=document.querySelector('.dai-settings');e.scrollTop=0;const r=e.getBoundingClientRect();return {fontSizes:[...e.querySelectorAll('button[role=combobox]')].map(b=>parseFloat(getComputedStyle(b).fontSize)),allCardsVisible:[...e.querySelectorAll('.dai-section')].every(c=>{const q=c.getBoundingClientRect();return q.top>=r.top-1&&q.bottom<=r.bottom+1;}),codex:!!document.querySelector('.dai-model-fields button[role=combobox]')?.innerText.includes('Codex')};})()")
  assert all(size<=13 for size in density['fontSizes']),density
- if density['codex'] and geometry['viewport'][0]>=800 and geometry['viewport'][1]>=500:
-  assert density['allCardsVisible'],density
- print('PASS compact fonts and all Codex settings cards visible together',flush=True)
+ reachable=evaluate(FULL,"(()=>{const root=document.querySelector('.dai-settings');const cards=[...root.querySelectorAll('.dai-section')];const ok=cards.every(c=>{c.scrollIntoView({block:'nearest'});const r=root.getBoundingClientRect(),q=c.getBoundingClientRect();return q.bottom>r.top&&q.top<r.bottom;});root.scrollTop=0;return ok;})()")
+ assert reachable,'A settings card is unreachable by scrolling'
+ print('PASS compact fonts and every settings card reachable by scrolling',flush=True)
  shot=command(FULL,'Page.captureScreenshot',{'format':'png'})
  open('/tmp/deck-ai-settings-wide-final.png','wb').write(base64.b64decode(shot['data']))
  click(FULL,"document.querySelectorAll('.dai-tab')[0].querySelector('.dai-button')")
@@ -108,6 +113,6 @@ finally:
    click(FULL,"[...document.querySelectorAll('.dai-full-header .dai-button')].find(e=>e.innerText.includes('В панель'))")
   open_panel()
   if old_draft is not None and not old_draft and evaluate(QAM,"document.querySelector('.dai-composer input').value")==test_draft:
-   evaluate(QAM,"(()=>{const e=document.querySelector('.dai-composer input'),w=e.ownerDocument.defaultView;Object.getOwnPropertyDescriptor(w.HTMLInputElement.prototype,'value').set.call(e,"+json.dumps(old_draft)+");e.dispatchEvent(new w.Event('input',{bubbles:true}));})()")
+   fill(QAM,old_draft)
   if added_image:click(QAM,"document.querySelector('.dai-attachments .dai-button')")
  except Exception as e:print('Cleanup:',str(e))

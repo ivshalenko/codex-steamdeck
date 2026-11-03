@@ -22,18 +22,10 @@ os.environ["GTK_IM_MODULE"] = "gtk-im-context-simple"
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, Gio, Pango, GdkPixbuf
-try:
-    gi.require_version('WebKit2', '4.1')
-    from gi.repository import WebKit2
-except (ValueError, ImportError):
-    try:
-        gi.require_version('WebKit2', '4.0')
-        from gi.repository import WebKit2
-    except (ValueError, ImportError):
-        WebKit2 = None
 from backend import Backend, RpcError, CODEX
 import providers
 from chat_media import attachments,display_text
+from message_blocks import split_message
 from ui_extras import UILabel, translator, AppKeyboard, CompactPicker
 
 ROOT = Path(__file__).resolve().parent
@@ -121,8 +113,15 @@ class Panel(Gtk.Application):
         try:self.outbox=json.loads((DRAFT.parent/'outbox.json').read_text())
         except (OSError,ValueError):self.outbox=[]
         for job in self.outbox:
+            if job.get('status')=='editing':job['status']='queued'
             if job.get('status')=='sending':job['status']='error';job['error']='Отправка была прервана. Проверьте историю и нажмите «Повторить», если сообщение не отправилось.'
         self.thread_activity={}
+        self.outbox_view_signature=None
+        self.voice_refinement=self.runtime_preferences.get('voiceRefinement',False)
+        self.auto_approve=bool(self.runtime_preferences.get('autoApprove',False))
+        self.speech_player=None
+        self.speech_cancel=None
+        self.language_settings=None
         self.outbox_loading=False
         self._updating_model=False
         self.follow_tail=True
@@ -214,9 +213,6 @@ class Panel(Gtk.Application):
             theme_switch.pack_start(button,False,False,0)
             self.theme_buttons[value]=button
         header.pack_start(theme_switch,False,False,6)
-        self.browser_button=self.button('web-browser-symbolic',translator.text('Браузер'),self.toggle_browser,'quiet')
-        self.browser_button.set_tooltip_text(translator.text('Открыть встроенный браузер'))
-        header.pack_start(self.browser_button,False,False,0)
         self.keyboard_button = self.button('input-keyboard-symbolic', 'Клавиатура', self.keyboard, 'quiet')
         header.pack_start(self.keyboard_button, False, False, 0)
         menu_button=Gtk.MenuButton()
@@ -234,10 +230,19 @@ class Panel(Gtk.Application):
         for key,title in THEME_TITLES.items():
             entry=Gtk.MenuItem(label=translator.text(title));entry.connect('activate',lambda _,value=key:self.apply_theme(value));theme_menu.append(entry)
         theme_item.set_submenu(theme_menu);menu.append(theme_item)
-        for code,title in [('ru','Интерфейс: Русский'),('en','Interface: English')]:
-            item=Gtk.MenuItem(label=title)
-            item.connect('activate',lambda _,c=code:self.change_language(c))
-            menu.append(item)
+        self.voice_refinement_item=Gtk.CheckMenuItem(label='Точное распознавание речи (медленнее)')
+        self.voice_refinement_item.set_active(self.voice_refinement)
+        self.voice_refinement_item.connect('toggled',self.toggle_voice_refinement)
+        menu.append(self.voice_refinement_item)
+        self.auto_approve_item=Gtk.CheckMenuItem(label='Автоодобрять разрешения')
+        self.auto_approve_item.set_tooltip_text('Автоматически разрешать команды, изменения файлов и запрошенный доступ. Вопросы с вводом ответа остаются ручными.')
+        self.auto_approve_item.set_active(self.auto_approve)
+        self.auto_approve_item.connect('toggled',self.toggle_auto_approve)
+        menu.append(self.auto_approve_item)
+        item=Gtk.MenuItem(label=translator.text('Язык и голос'))
+        item.translation_source='Язык и голос'
+        item.connect('activate',self.show_language_settings)
+        menu.append(item)
         for label,callback in [('Скрыть окно',self.close),('Свернуть',lambda *_:self.window.iconify())]:
             item=Gtk.MenuItem(label=label);item.translation_source=label;item.connect('activate',callback);menu.append(item)
         exit_item=Gtk.MenuItem(label='Завершить приложение')
@@ -360,11 +365,19 @@ class Panel(Gtk.Application):
         self.chat_scroll.get_vadjustment().connect('changed', self.scroll_changed)
         self.chat_scroll.get_vadjustment().connect('value-changed',self.scroll_value_changed)
         self.chat_scroll.connect('scroll-event',self.manual_scroll)
+        # GTK owns pointer grabs and releases, including focus loss and hide.
+        # A manual Gdk.Device grab could keep all clicks on the scrollbar.
         scrollbar=self.chat_scroll.get_vscrollbar()
-        scrollbar.add_events(Gdk.EventMask.POINTER_MOTION_MASK|Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK)
-        scrollbar.connect('button-press-event',self.scroll_press)
-        scrollbar.connect('motion-notify-event',self.scroll_motion)
-        scrollbar.connect('button-release-event',self.scroll_release)
+        scrollbar.connect('button-press-event',self.manual_scroll)
+        self.outbox_expander=Gtk.Expander(label='Очередь · 0')
+        self.outbox_list=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=5)
+        queue_scroll=Gtk.ScrolledWindow()
+        queue_scroll.set_policy(Gtk.PolicyType.NEVER,Gtk.PolicyType.AUTOMATIC)
+        queue_scroll.set_min_content_height(70);queue_scroll.set_max_content_height(190)
+        queue_scroll.set_propagate_natural_height(True)
+        queue_scroll.add(self.outbox_list)
+        self.outbox_expander.add(queue_scroll)
+        content.pack_start(self.outbox_expander,False,False,0)
         activity = Gtk.Box(spacing=8)
         self.spinner = Gtk.Spinner()
         activity.pack_start(self.spinner, False, False, 0)
@@ -377,8 +390,14 @@ class Panel(Gtk.Application):
         activity.pack_start(self.stop_button, False, False, 0)
         self.reconnect_button = self.button('view-refresh-symbolic', 'Подключиться', self.reconnect, 'quiet')
         activity.pack_start(self.reconnect_button, False, False, 0)
+        self.terminal_button = self.button('utilities-terminal-symbolic', 'Терминал', self.open_terminal, 'quiet')
+        self.terminal_button.set_tooltip_text('Открыть командную строку без повторного входа в Codex')
+        activity.pack_start(self.terminal_button, False, False, 0)
         self.recovery_button = self.button('utilities-terminal-symbolic', 'Войти через терминал', self.launch_codex_login, 'quiet')
         activity.pack_start(self.recovery_button, False, False, 0)
+        self.read_answer_button=self.button('audio-volume-high-symbolic',None,self.read_latest_answer,'icon-only')
+        self.read_answer_button.set_tooltip_text('Озвучить последний ответ / остановить озвучку')
+        activity.pack_start(self.read_answer_button,False,False,0)
         content.pack_start(activity, False, False, 0)
 
         composer = Gtk.Box(spacing=10); content.pack_start(composer, False, False, 0)
@@ -431,57 +450,18 @@ class Panel(Gtk.Application):
         language = Gtk.Button(label='🎙 '+self.voice_language.upper())
         language.get_style_context().add_class('clear')
         language.connect('clicked',lambda b:self.switch_voice_language(b))
+        self.voice_language_button=language
         footer.pack_start(language, False, False, 5)
+        self.fast_voice=Gtk.CheckButton(label='Быстрая пунктуация')
+        self.fast_voice.set_active(not self.voice_refinement)
+        self.fast_voice.set_sensitive(self.voice_language in ('ru','en'))
+        self.fast_voice.set_tooltip_text('Базовые запятые, заглавные буквы и окончания предложений без повторного распознавания. Для русского и английского; другим языкам нужна многоязычная модель.')
+        self.fast_voice.connect('toggled',lambda button:self.set_voice_refinement(not button.get_active()))
+        footer.pack_start(self.fast_voice,False,False,0)
         hint = UILabel(label='Проверьте текст перед отправкой'); hint.set_xalign(1)
         footer.pack_start(hint, True, True, 0)
         clear = self.button('edit-clear-symbolic', 'Очистить', self.clear, 'clear')
         footer.pack_start(clear, False, False, 4)
-
-        self.browser_revealer=Gtk.Revealer()
-        self.browser_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_LEFT)
-        self.browser_revealer.set_transition_duration(180)
-        self.browser_revealer.set_size_request(365,-1)
-        self.browser_revealer.get_style_context().add_class('browser-pane')
-        browser=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=8)
-        self.browser_revealer.add(browser)
-        browser_heading=Gtk.Box(spacing=6)
-        browser_title=UILabel(label='Встроенный браузер',xalign=0)
-        browser_title.get_style_context().add_class('chat-title')
-        browser_heading.pack_start(browser_title,True,True,0)
-        close_browser=self.button('window-close-symbolic',None,self.toggle_browser,'icon-only')
-        close_browser.set_tooltip_text('Закрыть браузер')
-        browser_heading.pack_end(close_browser,False,False,0)
-        browser.pack_start(browser_heading,False,False,0)
-        browser_nav=Gtk.Box(spacing=4)
-        for icon,tip,callback in [('go-previous-symbolic','Назад',lambda *_: self.browser_view.go_back() if self.browser_view else None),('go-next-symbolic','Вперёд',lambda *_: self.browser_view.go_forward() if self.browser_view else None),('view-refresh-symbolic','Обновить',lambda *_: self.browser_view.reload() if self.browser_view else None)]:
-            button=self.button(icon,None,callback,'icon-only');button.set_tooltip_text(tip);browser_nav.pack_start(button,False,False,0)
-        self.browser_address=Gtk.Entry();self.browser_address.set_placeholder_text('Адрес сайта');self.browser_address.connect('activate',self.browser_navigate)
-        browser_nav.pack_start(self.browser_address,True,True,0)
-        go=self.button('go-jump-symbolic',None,self.browser_navigate,'icon-only');go.set_tooltip_text('Перейти');browser_nav.pack_start(go,False,False,0)
-        browser.pack_start(browser_nav,False,False,0)
-        self.browser_view=None
-        if WebKit2 is not None:
-            try:
-                browser_data=STATE_DIR/'browser'
-                browser_data.mkdir(parents=True,exist_ok=True,mode=0o700)
-                manager=WebKit2.WebsiteDataManager(base_data_directory=str(browser_data),base_cache_directory=str(browser_data/'cache'))
-                context=WebKit2.WebContext.new_with_website_data_manager(manager)
-                self.browser_view=WebKit2.WebView.new_with_context(context)
-                self.browser_view.connect('notify::uri',self.browser_uri_changed)
-                self.browser_view.connect('decide-policy',self.browser_decide_policy)
-                self.browser_view.connect('load-changed',self.browser_load_changed)
-                web_scroll=Gtk.ScrolledWindow();web_scroll.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC);web_scroll.add(self.browser_view)
-                browser.pack_start(web_scroll,True,True,0)
-                browser_status=translator.text('Войдите на сайт или введите адрес HTTPS.')
-            except Exception:
-                self.browser_view=None;browser_status='Встроенный браузер не удалось запустить. Проверьте установку WebKitGTK.'
-        else:
-            browser_status=translator.text('Для встроенного браузера требуется WebKitGTK 4.1 или 4.0.')
-        self.browser_status=UILabel(label=browser_status,xalign=0)
-        self.browser_status.set_line_wrap(True);self.browser_status.get_style_context().add_class('browser-status')
-        browser.pack_start(self.browser_status,False,False,4)
-        browser.show_all();self.browser_revealer.set_reveal_child(False);self.browser_revealer.set_no_show_all(True);self.browser_revealer.hide()
-        body.pack_end(self.browser_revealer,False,False,0)
         self.app_keyboard=AppKeyboard(self.text,self.keyboard,ROOT)
         box.pack_start(self.app_keyboard,False,False,0)
         self.app_keyboard.set_no_show_all(True)
@@ -492,6 +472,7 @@ class Panel(Gtk.Application):
         settings.set_property('gtk-enable-animations',False)
         settings.set_property('gtk-primary-button-warps-slider',True)
         self.window.show_all()
+        self.refresh_outbox_view()
         self.draft_changed(self.text.get_buffer())
         self.position()
         GLib.timeout_add(80, self.animate)
@@ -504,57 +485,6 @@ class Panel(Gtk.Application):
         self.closed = threading.Event()
         self.change_language(translator.language)
         self.reconnect()
-
-    def toggle_browser(self,*_):
-        if not hasattr(self,'browser_revealer'):return
-        reveal=not self.browser_revealer.get_reveal_child()
-        self.browser_revealer.set_no_show_all(False)
-        if reveal:self.browser_revealer.show()
-        self.browser_revealer.set_reveal_child(reveal)
-        if reveal:
-            self.browser_address.grab_focus()
-            if self.browser_view is None:self.browser_status.set_text(translator.text('Для встроенного браузера требуется WebKitGTK 4.1 или 4.0.'))
-        context=self.browser_button.get_style_context()
-        if reveal:context.add_class('selected')
-        else:context.remove_class('selected')
-
-    def browser_navigate(self,*_):
-        if self.browser_view is None:return
-        from urllib.parse import urlsplit
-        address=self.browser_address.get_text().strip()
-        if not address:return
-        if '://' not in address:address='https://'+address
-        parsed=urlsplit(address)
-        if parsed.scheme not in ('https','http') or not parsed.netloc:
-            self.browser_status.set_text(translator.text('Разрешены только веб-адреса HTTP и HTTPS.'))
-            return
-        self.browser_address.set_text(address)
-        self.browser_status.set_text(translator.text('Загружаю страницу…'))
-        self.browser_view.load_uri(address)
-
-    def browser_uri_changed(self,view,*_):
-        uri=view.get_uri() or ''
-        if uri:self.browser_address.set_text(uri)
-
-    def browser_decide_policy(self,view,decision,decision_type):
-        try:
-            action=decision.get_navigation_action();uri=action.get_request().get_uri() or ''
-            scheme=uri.split(':',1)[0].lower()
-            if scheme in ('https','http','about'):
-                if decision_type==WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                    view.load_uri(uri);decision.ignore()
-                else:decision.use()
-            else:
-                decision.ignore()
-                self.browser_status.set_text(translator.text('Разрешены только веб-адреса HTTP и HTTPS.'))
-            return True
-        except Exception:
-            return False
-
-    def browser_load_changed(self,view,event):
-        if WebKit2 is None:return
-        if event==WebKit2.LoadEvent.FINISHED:self.browser_status.set_text(view.get_title() or translator.text('Страница загружена.'))
-        elif event==WebKit2.LoadEvent.STARTED:self.browser_status.set_text(translator.text('Загружаю страницу…'))
 
     def application_key_pressed(self,widget,event):
         control=bool(event.state & Gdk.ModifierType.CONTROL_MASK)
@@ -600,7 +530,7 @@ class Panel(Gtk.Application):
 
     def scroll_to_end(self):
         self._tail_idle_pending=False
-        if not self.follow_tail or self._scroll_dragging:return
+        if not self.follow_tail or self._scroll_dragging or not self.chat_scroll.get_realized():return
         adjustment=self.chat_scroll.get_vadjustment()
         self._programmatic_scroll=True
         adjustment.set_value(max(0,adjustment.get_upper()-adjustment.get_page_size()))
@@ -615,44 +545,10 @@ class Panel(Gtk.Application):
         self.follow_tail=False
         return False
 
-    def scroll_press(self,widget,event):
-        if event.button!=1:return False
-        self._scroll_dragging=True;self.follow_tail=False
-        adjustment=self.chat_scroll.get_vadjustment()
-        start,end=widget.get_slider_range()
-        self._slider_travel=max(1,widget.get_allocated_height()-(end-start))
-        if not start<=event.y<=end:
-            value=(event.y-(end-start)/2)/self._slider_travel
-            maximum=max(adjustment.get_lower(),adjustment.get_upper()-adjustment.get_page_size())
-            adjustment.set_value(max(adjustment.get_lower(),min(maximum,value*maximum)))
-        self._drag_origin=event.y_root
-        self._drag_value=adjustment.get_value()
-        widget.grab_add()
-        device=event.get_device()
-        if device:device.grab(widget.get_window(),Gdk.GrabOwnership.WINDOW,False,Gdk.EventMask.POINTER_MOTION_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK,None,event.time)
-        return True
-
-    def scroll_motion(self,widget,event):
-        if not self._scroll_dragging:return False
-        adjustment=self.chat_scroll.get_vadjustment()
-        maximum=max(adjustment.get_lower(),adjustment.get_upper()-adjustment.get_page_size())
-        value=self._drag_value+(event.y_root-self._drag_origin)*maximum/self._slider_travel
-        adjustment.set_value(max(adjustment.get_lower(),min(maximum,value)))
-        return True
-
-    def scroll_release(self,widget,event):
-        if not self._scroll_dragging:return False
-        self._scroll_dragging=False
-        widget.grab_remove()
-        device=event.get_device()
-        if device:device.ungrab(event.time)
-        self.scroll_value_changed(self.chat_scroll.get_vadjustment())
-        return True
-
     def flush_message_updates(self):
         for ident in list(self.dirty_messages):
             message=self.messages.get(ident)
-            if message:message['label'].set_text(message['text'])
+            if message:self.render_message_body(message)
         self.dirty_messages.clear()
         return True
 
@@ -706,6 +602,7 @@ class Panel(Gtk.Application):
 
     def prompt_remote_host(self,*_):
         dialog=Gtk.Dialog(title='Подключить удалённый Codex',transient_for=self.window,flags=Gtk.DialogFlags.MODAL)
+        translator.watch_dialog(dialog)
         dialog.add_buttons('Отмена',Gtk.ResponseType.CANCEL,'Подключить',Gtk.ResponseType.OK)
         box=dialog.get_content_area();box.set_spacing(8);box.set_margin_start(16);box.set_margin_end(16);box.set_margin_top(12);box.set_margin_bottom(12)
         box.pack_start(Gtk.Label(label='Добавьте устройство или выберите готовый SSH-алиас.',xalign=0),False,False,0)
@@ -995,6 +892,7 @@ class Panel(Gtk.Application):
         menu=Gtk.Menu()
         choices=[
             ('Подключить Codex на другом компьютере',self.prompt_remote_host),
+            ('Управлять этим Steam Deck с Mac / ПК',self.show_remote_access),
             ('Подключить Claude Pro / Max',self.connect_claude_provider),
             ('Подключить DeepSeek через OpenRouter',self.connect_deepseek_provider),
             ('Подключить DeepSeek через TokenHarbor',self.connect_tokenharbor_provider),
@@ -1004,6 +902,10 @@ class Panel(Gtk.Application):
             item=Gtk.MenuItem(label=translator.text(label));item.connect('activate',callback);menu.append(item)
         menu.show_all()
         menu.popup_at_widget(self.add_device_button,Gdk.Gravity.SOUTH_WEST,Gdk.Gravity.NORTH_WEST,None)
+
+    def show_remote_access(self,*_):
+        import remote_access
+        remote_access.show(self.window,translator.language)
 
     def connect_claude_provider(self,*_):
         self.provider_picker.set_active_id('claude')
@@ -1019,6 +921,7 @@ class Panel(Gtk.Application):
 
     def configure_openrouter(self,*_):
         dialog=Gtk.Dialog(title='DeepSeek через OpenRouter',transient_for=self.window,flags=Gtk.DialogFlags.MODAL)
+        translator.watch_dialog(dialog)
         dialog.add_buttons('Отмена',Gtk.ResponseType.CANCEL,'Сохранить ключ',Gtk.ResponseType.OK)
         dialog.set_default_size(430,-1)
         box=dialog.get_content_area();box.set_spacing(10);box.set_margin_top(14);box.set_margin_bottom(14);box.set_margin_start(14);box.set_margin_end(14)
@@ -1071,6 +974,7 @@ class Panel(Gtk.Application):
 
     def configure_tokenharbor(self,*_):
         dialog=Gtk.Dialog(title='DeepSeek через TokenHarbor',transient_for=self.window,flags=Gtk.DialogFlags.MODAL)
+        translator.watch_dialog(dialog)
         dialog.add_buttons('Отмена',Gtk.ResponseType.CANCEL,'Сохранить ключ',Gtk.ResponseType.OK)
         dialog.set_default_size(430,-1)
         box=dialog.get_content_area();box.set_spacing(10);box.set_margin_top(14);box.set_margin_bottom(14);box.set_margin_start(14);box.set_margin_end(14)
@@ -1155,6 +1059,7 @@ class Panel(Gtk.Application):
         self.sending=False;self.send_button.set_sensitive(True)
         entry=self.custom_entry(provider)
         self.message(error or ('Ответ Claude готов' if provider=='claude' else ('Ответ: '+entry['name']) if entry else 'Ответ DeepSeek готов'))
+        if answer and self.provider==provider and self.thread_id==session and self.runtime_preferences.get('readReplies'):self.speak_text(answer)
         return False
 
     def custom_entry(self,ident):
@@ -1429,20 +1334,28 @@ class Panel(Gtk.Application):
             assistant_name={'claude':'CLAUDE','deepseek':'DEEPSEEK','tokenharbor':'DEEPSEEK','codex':'CODEX'}.get(getattr(self,'provider','codex'),custom['name'].upper()[:20] if custom else 'CODEX')
             heading = Gtk.Label(label='ВЫ' if kind=='userMessage' else assistant_name)
             heading.set_xalign(0); heading.get_style_context().add_class('message-author')
-            content.pack_start(heading,False,False,0)
+            heading_row=Gtk.Box(spacing=8)
+            heading_row.pack_start(heading,True,True,0)
+            if kind=='agentMessage':
+                copy=self.button('edit-copy-symbolic','Копировать ответ',lambda _,key=ident:self.copy_message(key),'quiet')
+                heading_row.pack_start(copy,False,False,0)
+            content.pack_start(heading_row,False,False,0)
             label = Gtk.Label()
             label.set_xalign(0); label.set_yalign(0)
             label.set_line_wrap(True); label.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
             label.set_selectable(True);label.set_width_chars(1);label.set_max_width_chars(80)
             label.get_style_context().add_class('message-body')
-            content.pack_start(label,True,True,0); frame.add(content)
+            content.pack_start(label,True,True,0)
+            rich=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=9)
+            rich.set_no_show_all(True)
+            content.pack_start(rich,False,False,0);frame.add(content)
             self.chat.pack_start(frame,False,False,0)
             media_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=6)
             content.pack_start(media_box,False,False,0)
-            self.messages[ident] = {'label':label,'text':'','frame':frame,'media_box':media_box,'attachments':[]}
+            self.messages[ident] = {'label':label,'text':'','frame':frame,'media_box':media_box,'attachments':[],'type':kind,'rich_box':rich,'block_widgets':[]}
             frame.show_all()
         self.messages[ident]['text'] = text
-        self.messages[ident]['label'].set_text(text or ('' if media else '…'))
+        self.render_message_body(self.messages[ident])
         message=self.messages[ident]
         if message.get('attachments')!=media:
             box=message['media_box']
@@ -1464,8 +1377,69 @@ class Panel(Gtk.Application):
             message['attachments']=media;box.show_all()
         self.dirty_messages.discard(ident)
 
+    def copy_text(self,text):
+        if not text:return False
+        try:
+            clipboard=Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            clipboard.set_text(text,-1);clipboard.store()
+            self.message(translator.text('Текст скопирован'))
+            return True
+        except Exception:
+            self.message(translator.text('Не удалось скопировать текст'));return False
+
+    def copy_message(self,ident):
+        message=self.messages.get(ident)
+        if message:self.copy_text(message['text'])
+
+    def render_message_body(self,message):
+        text=message['text']
+        if message.get('rendered_text')==text:return
+        message['rendered_text']=text
+        message['label'].set_text(text or '…')
+        if message.get('type')!='agentMessage' or 'rich_box' not in message:return
+        parts=split_message(text)
+        rich=message['rich_box']
+        if not any(part['kind']!='text' for part in parts):
+            message['label'].set_no_show_all(False);message['label'].show()
+            rich.set_no_show_all(True);rich.hide()
+            return
+        message['label'].set_no_show_all(True);message['label'].hide()
+        existing=message['block_widgets']
+        structure=[(part['kind'],part['language']) for part in parts]
+        if message.get('block_structure')!=structure:
+            for child in rich.get_children():child.destroy()
+            existing=[]
+            for part in parts:
+                record={'text':part['text']}
+                label=Gtk.Label(xalign=0,yalign=0)
+                label.set_selectable(True);label.set_line_wrap(True)
+                label.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
+                label.set_width_chars(1);label.set_max_width_chars(80)
+                label.get_style_context().add_class('message-body')
+                record['label']=label
+                if part['kind']=='text':rich.pack_start(label,False,False,0)
+                else:
+                    frame=Gtk.Frame();frame.set_shadow_type(Gtk.ShadowType.NONE)
+                    frame.get_style_context().add_class('copy-block')
+                    block=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=6,margin=10)
+                    header=Gtk.Box(spacing=8)
+                    title={'code':'Код','command':'Команда','post':'Готовый текст','quote':'Текст'}.get(part['kind'],'Текст')
+                    caption=UILabel(label=title)
+                    header.pack_start(caption,True,True,0)
+                    button=self.button('edit-copy-symbolic','Копировать',lambda _,current=record:self.copy_text(current['text']),'quiet')
+                    header.pack_start(button,False,False,0);record['copy_button']=button
+                    if part['kind'] in ('code','command'):label.get_style_context().add_class('code-body')
+                    block.pack_start(header,False,False,0);block.pack_start(label,False,False,0)
+                    frame.add(block);rich.pack_start(frame,False,False,0)
+                existing.append(record)
+            message['block_widgets']=existing;message['block_structure']=structure
+        for record,part in zip(existing,parts):
+            record['text']=part['text'];record['label'].set_text(part['text'])
+        rich.set_no_show_all(False);rich.show_all()
+
     def show_attachment(self,pixbuf,name):
         dialog=Gtk.Dialog(title=name,transient_for=self.window,modal=True)
+        translator.watch_dialog(dialog)
         dialog.add_button('Закрыть',Gtk.ResponseType.CLOSE)
         dialog.get_content_area().add(Gtk.Image.new_from_pixbuf(pixbuf))
         dialog.connect('response',lambda window,*_:window.destroy())
@@ -1509,6 +1483,7 @@ class Panel(Gtk.Application):
             self.turn_id = params['turn']['id']; self.set_working(True)
         elif method == 'turn/completed':
             self.set_working(False)
+            if self.runtime_preferences.get('readReplies') and not params.get('turn',{}).get('error'):self.read_latest_answer(automatic=True)
             self.refresh_threads()
             error = params.get('turn',{}).get('error')
             if error:
@@ -1545,24 +1520,43 @@ class Panel(Gtk.Application):
         if self.launch_codex_terminal(False):self.recovery_terminal_opened=True
         return False
 
+    def open_terminal(self,*_):
+        self.launch_codex_terminal(False)
+
     def launch_codex_login(self,*_):
         self.launch_codex_terminal(True)
+
+    def confirm_terminal_login(self):
+        dialog,content=self.request_dialog('Войти через терминал?')
+        label=Gtk.Label(label='Вы точно уверены?\n\nПовторный вход может завершить текущую сессию авторизации Codex и прервать выполняющийся запрос. После входа может потребоваться повторное подключение.\n\nЧтобы просто открыть командную строку, нажмите «Отмена» и выберите «Терминал».',xalign=0)
+        label.set_line_wrap(True);label.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
+        label.set_max_width_chars(60);label.set_width_chars(1)
+        content.pack_start(label,False,False,0)
+        dialog.add_button('Отмена',Gtk.ResponseType.CANCEL)
+        dialog.add_button('Продолжить вход',Gtk.ResponseType.OK)
+        dialog.set_default_response(Gtk.ResponseType.CANCEL)
+        dialog.show_all()
+        try:return dialog.run()==Gtk.ResponseType.OK
+        finally:dialog.destroy()
 
     def launch_codex_terminal(self,login):
         terminal=shutil.which('konsole') or shutil.which('xterm')
         if not terminal:
             self.message('Откройте терминал и выполните: codex login')
             return False
+        if login and not self.confirm_terminal_login():return False
         if self.remote_host:
             command=['ssh','-t',self.remote_host,'codex login' if login else 'exec "$SHELL" -l']
         elif login:command=[CODEX,'login']
-        else:
-            script="printf '%s\\n' "+shlex.quote("Deck AI: соединение прервано. Для входа выполните: "+CODEX+" login. После восстановления нажмите «Подключиться».")+"; exec bash -i"
-            command=['bash','-c',script]
+        else:command=['/bin/bash','-i']
+        # Native terminals must not inherit bundled libraries or Steam preload hooks.
+        environment=dict(os.environ)
+        environment.pop('LD_LIBRARY_PATH',None)
+        environment.pop('LD_PRELOAD',None)
         try:
             args=[terminal]+(['--hold'] if terminal.endswith('konsole') and login else ['-hold'] if login else [])+['-e']+command
-            subprocess.Popen(args,start_new_session=True)
-            self.message('Терминал открыт. После входа нажмите «Подключиться».')
+            subprocess.Popen(args,start_new_session=True,env=environment)
+            self.message('Терминал открыт. После входа нажмите «Подключиться».' if login else 'Терминал открыт без повторного входа в Codex.')
             return True
         except OSError as exc:
             self.message('Не удалось открыть терминал: '+str(exc)[:180])
@@ -1589,6 +1583,7 @@ class Panel(Gtk.Application):
 
     def confirm_account_logout(self,*_):
         dialog=Gtk.MessageDialog(transient_for=self.window,flags=Gtk.DialogFlags.MODAL,message_type=Gtk.MessageType.QUESTION,buttons=Gtk.ButtonsType.YES_NO,text='Выйти из аккаунта Codex?')
+        translator.watch_dialog(dialog)
         dialog.format_secondary_text('Для продолжения работы потребуется снова войти в ChatGPT.')
         response=dialog.run();dialog.destroy()
         if response==Gtk.ResponseType.YES:self.logout_account()
@@ -1615,45 +1610,103 @@ class Panel(Gtk.Application):
             except Exception: GLib.idle_add(self.message,'Не удалось остановить. Попробуйте снова.')
         threading.Thread(target=stop,daemon=True).start()
 
-    def server_request(self, event):
-        method = event['method']; params = event.get('params',{}); ident = event['id']
-        if method.endswith('/requestUserInput'):
-            self.input_request(ident,params); return
-        if method.endswith('/requestApproval'):
-            dialog = Gtk.MessageDialog(transient_for=self.window,modal=True,message_type=Gtk.MessageType.QUESTION,buttons=Gtk.ButtonsType.NONE,text='Codex запрашивает разрешение')
-            details = params.get('reason') or 'Проверьте действие перед подтверждением.'
-            if params.get('command'): details += '\n\n'+str(params['command'])
-            if params.get('permissions'): details += '\n\n'+json.dumps(params['permissions'],ensure_ascii=False,indent=2)
-            dialog.format_secondary_text(details)
-            dialog.add_button('Отклонить',Gtk.ResponseType.CANCEL)
-            dialog.add_button('Разрешить',Gtk.ResponseType.OK)
-            def answer(widget,response):
-                if '/permissions/' in method:
-                    result={'permissions':params.get('permissions',{}) if response==Gtk.ResponseType.OK else {},'scope':'turn'}
-                else: result={'decision':'accept' if response==Gtk.ResponseType.OK else 'decline'}
-                self.backend.respond(ident,result); widget.destroy()
-            dialog.connect('response',answer); self.window.present(); dialog.show_all()
+    def request_dialog(self,title):
+        dialog=Gtk.Dialog(title=title,transient_for=self.window,modal=True)
+        translator.watch_dialog(dialog)
+        dialog.set_name('voice-panel')
+        dialog.get_style_context().add_class('request-panel')
+        dialog.get_action_area().get_style_context().add_class('request-actions')
+        display=Gdk.Display.get_default()
+        monitor=display.get_monitor_at_window(self.window.get_window()) if self.window.get_window() else display.get_monitor(0)
+        rect=monitor.get_workarea()
+        if self.gaming_mode:
+            # Gamescope scales a small dialog independently of the main window.
+            # Keep the same native surface size and identity as the application.
+            width,height=self.window.get_size()
+            if width<320 or height<240:
+                geometry=monitor.get_geometry();width,height=geometry.width,geometry.height
+            dialog.set_wmclass('deckai','DeckAI')
+            dialog.set_decorated(False)
+            dialog.set_default_size(width,height)
+            dialog.resize(width,height)
+            dialog.fullscreen()
         else:
-            self.backend.respond(ident,error={'code':-32601,'message':'This client does not support '+method})
+            dialog.set_default_size(min(720,max(280,rect.width-40)),min(520,max(180,rect.height-60)))
+            dialog.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+        outer=dialog.get_content_area();outer.set_spacing(8);outer.set_border_width(12)
+        scroll=Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.ALWAYS)
+        scroll.set_overlay_scrolling(False)
+        scroll.set_min_content_height(0)
+        content=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=10)
+        scroll.add(content);outer.pack_start(scroll,True,True,0)
+        dialog.request_scroll=scroll
+        down=Gtk.Button(label='Вниз ↓')
+        down.set_halign(Gtk.Align.END)
+        down.connect('clicked',lambda *_:scroll.get_vadjustment().set_value(max(0,scroll.get_vadjustment().get_upper()-scroll.get_vadjustment().get_page_size())))
+        outer.pack_start(down,False,False,0)
+        return dialog,content
+
+    @staticmethod
+    def approval_result(method,params,accepted):
+        if method=='item/permissions/requestApproval':
+            return {'permissions':params.get('permissions',{}) if accepted else {},'scope':'turn'}
+        return {'decision':'accept' if accepted else 'decline'}
+
+    def server_request(self, event):
+        method=event['method'];params=event.get('params',{});ident=event['id']
+        backend=self.backend
+        if method.endswith('/requestUserInput'):
+            self.input_request(ident,params);return
+        supported={'item/commandExecution/requestApproval','item/fileChange/requestApproval','item/permissions/requestApproval'}
+        if method in supported:
+            available=params.get('availableDecisions')
+            can_accept=available is None or 'accept' in available
+            if self.auto_approve and can_accept:
+                backend.respond(ident,self.approval_result(method,params,True))
+                self.activity.set_text('Автоодобрено: '+str(params.get('reason') or params.get('command') or method)[:140])
+                return
+            dialog,content=self.request_dialog('Codex запрашивает разрешение')
+            details=params.get('reason') or 'Проверьте действие перед подтверждением.'
+            if params.get('command'):details+='\n\n'+str(params['command'])
+            if params.get('cwd'):details+='\n\nПапка: '+str(params['cwd'])
+            if params.get('grantRoot'):details+='\n\nДоступ к: '+str(params['grantRoot'])
+            for field in ('permissions','additionalPermissions'):
+                if params.get(field):details+='\n\n'+json.dumps(params[field],ensure_ascii=False,indent=2)
+            text=Gtk.TextView(wrap_mode=Gtk.WrapMode.WORD_CHAR)
+            text.set_editable(False);text.set_cursor_visible(False)
+            text.get_buffer().set_text(details)
+            scroll=dialog.request_scroll
+            scroll.remove(scroll.get_child());scroll.add(text)
+            dialog.add_button('Отклонить',Gtk.ResponseType.CANCEL)
+            allow=dialog.add_button('Разрешить',Gtk.ResponseType.OK)
+            allow.set_sensitive(can_accept)
+            def answer(widget,response):
+                backend.respond(ident,self.approval_result(method,params,response==Gtk.ResponseType.OK and can_accept))
+                widget.destroy()
+            dialog.connect('response',answer);self.window.present();dialog.show_all()
+        else:
+            backend.respond(ident,error={'code':-32601,'message':'This client does not support '+method})
             self.activity.set_text('Для этого действия пока нет интерфейса в приложении.')
 
     def input_request(self, ident, params):
-        dialog = Gtk.Dialog(title='Вопрос от Codex',transient_for=self.window,modal=True)
-        dialog.set_default_size(680,280)
+        backend=self.backend
+        dialog,box=self.request_dialog('Вопрос от Codex')
         dialog.add_button('Отмена',Gtk.ResponseType.CANCEL)
         dialog.add_button('Ответить',Gtk.ResponseType.OK)
-        box=dialog.get_content_area(); box.set_spacing(12); box.set_border_width(18)
         fields={}
         for question in params.get('questions',[]):
-            label=Gtk.Label(label=question['question'],xalign=0);label.set_line_wrap(True)
+            label=Gtk.Label(label=question['question'],xalign=0)
+            label.set_line_wrap(True);label.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
+            label.set_max_width_chars(60);label.set_width_chars(1)
             box.pack_start(label,False,False,0)
             entry=Gtk.ComboBoxText.new_with_entry()
-            for option in question.get('options') or []: entry.append_text(option['label'])
+            for option in question.get('options') or []:entry.append_text(option['label'])
             if question.get('isSecret'):entry.get_child().set_visibility(False)
             box.pack_start(entry,False,False,0);fields[question['id']]=entry
         def answer(widget,response):
             answers={key:{'answers':[entry.get_child().get_text()] if response==Gtk.ResponseType.OK else []} for key,entry in fields.items()}
-            self.backend.respond(ident,{'answers':answers});widget.destroy()
+            backend.respond(ident,{'answers':answers});widget.destroy()
         dialog.connect('response',answer);self.window.present();dialog.show_all()
 
     def button(self, icon, label, callback, style):
@@ -1768,8 +1821,6 @@ class Panel(Gtk.Application):
         self._updating_model=False
         self.provider_action_button.title_label.set_text(translator.text('Настроить DeepSeek / OpenRouter'))
         self.claude_action_button.title_label.set_text(translator.text('Войти в Claude Code'))
-        self.browser_button.title_label.set_text(translator.text('Браузер'))
-        self.browser_button.set_tooltip_text(translator.text('Открыть встроенный браузер'))
         self.chat_search.set_placeholder_text(translator.text('Найти чат'))
         for item in self.app_menu.get_children():
             source=getattr(item,'translation_source',None)
@@ -1777,6 +1828,70 @@ class Panel(Gtk.Application):
         self.update_account_menu(getattr(self,'current_account',None))
         self.update_runtime_pickers()
         self.app_keyboard.refresh()
+        translator.bind_tree(self.window)
+        translator.bind_tree(self.app_menu)
+
+    def save_runtime_preferences(self):
+        path=DRAFT.parent/'runtime-preferences.json'
+        path.parent.mkdir(parents=True,exist_ok=True)
+        temporary=path.with_suffix('.json.tmp')
+        fd=os.open(temporary,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
+        with os.fdopen(fd,'w') as stream:json.dump(self.runtime_preferences,stream)
+        os.replace(temporary,path)
+
+    def toggle_auto_approve(self,item):
+        self.auto_approve=item.get_active()
+        self.runtime_preferences['autoApprove']=self.auto_approve
+        self.save_runtime_preferences()
+        self.message('Автоодобрение разрешений включено' if self.auto_approve else 'Разрешения подтверждаются вручную')
+
+    def install_directory(self):return ROOT
+
+    def state_directory(self):return STATE_DIR
+
+    def show_language_settings(self,*_):
+        if self.language_settings is not None and not self.language_settings.closed:
+            self.language_settings.dialog.present();return
+        from language_settings import LanguageSettings
+        self.language_settings=LanguageSettings(self)
+
+    def stop_speaking(self,*_):
+        if self.speech_cancel:self.speech_cancel.set()
+        if self.speech_player:self.speech_player.stop()
+
+    def speak_text(self,text,voice_id=None):
+        from language_support import SpeechPlayer,Cancelled
+        voice_id=voice_id or self.runtime_preferences.get('ttsVoice')
+        if not voice_id or voice_id=='none':
+            self.message(translator.text('Выберите голос в настройках языка'));return
+        if not text.strip():return
+        self.stop_speaking()
+        if self.speech_player is None:self.speech_player=SpeechPlayer()
+        player=self.speech_player;cancel=threading.Event();self.speech_cancel=cancel
+        def worker():
+            try:player.speak(text,voice_id,ROOT,cancel)
+            except Cancelled:pass
+            except Exception as error:GLib.idle_add(self.message,str(error)[:300])
+        threading.Thread(target=worker,daemon=True).start()
+
+    def read_latest_answer(self,*_,automatic=False):
+        if not automatic and self.speech_player and self.speech_player.playing:
+            self.stop_speaking();return
+        message=next((item for item in reversed(list(self.messages.values())) if item.get('type')=='agentMessage' and item.get('text','').strip()),None)
+        if message:self.speak_text(message['text'])
+        else:self.message(translator.text('Нет ответа для озвучки'))
+
+    def set_voice_refinement(self,enabled):
+        self.voice_refinement=bool(enabled)
+        self.runtime_preferences['voiceRefinement']=self.voice_refinement
+        self.save_runtime_preferences()
+        if self.voice_refinement_item.get_active()!=self.voice_refinement:
+            self.voice_refinement_item.set_active(self.voice_refinement)
+        if hasattr(self,'fast_voice') and self.fast_voice.get_active()==self.voice_refinement:
+            self.fast_voice.set_active(not self.voice_refinement)
+
+    def toggle_voice_refinement(self,item):
+        self.set_voice_refinement(item.get_active())
 
     def switch_voice_language(self, button):
         if self.busy or self.recording:return
@@ -1784,6 +1899,7 @@ class Panel(Gtk.Application):
         menu=Gtk.Menu()
         def choose(item,code):
             self.voice_language=code;button.set_label('🎙 '+code.upper())
+            self.fast_voice.set_sensitive(code in ('ru','en'))
             STATE_DIR.mkdir(parents=True,exist_ok=True)
             (STATE_DIR/'voice-language').write_text(code)
         for code,name in [('auto','Определять автоматически'),('ru',SPEECH_LANGUAGES.get('ru','Русский')),('en','English')]+[(code,name) for code,name in sorted(SPEECH_LANGUAGES.items(),key=lambda item:item[1]) if code not in ('ru','en')]:
@@ -1808,6 +1924,11 @@ class Panel(Gtk.Application):
             self.mic.set_sensitive(False)
             self.message('Распознаю…')
         elif not self.busy:
+            from language_support import recognition_ready
+            if not recognition_ready(ROOT,self.voice_language):
+                self.message(translator.text('Для этого языка нужно подготовить модель распознавания'))
+                self.show_language_settings();return
+            self.stop_speaking()
             self.recording = self.busy = True
             self.stop_event = threading.Event()
             self.mic_text.set_text('Закончить')
@@ -1819,9 +1940,13 @@ class Panel(Gtk.Application):
         result = ''; error = None; refiner = None
         stop = self.stop_event
         try:
-            from vosk import Model, KaldiRecognizer, SetLogLevel
-            SetLogLevel(-1)
             lang=self.voice_language
+            if lang in ('ru','en'):
+                try:from vosk import Model, KaldiRecognizer, SetLogLevel
+                except ImportError:raise RuntimeError('Откройте Настройки → Языки и загрузите языковой пакет для диктовки.')
+                SetLogLevel(-1)
+            from speech_accuracy import fast_punctuation
+            refine=self.voice_refinement or lang not in ('ru','en')
             path=ROOT/'models'/('vosk-model-small-en-us-0.15' if lang=='en' else 'vosk-model-small-ru-0.22')
             source = command('pactl', 'get-default-source')
             if source.endswith('.monitor'):
@@ -1843,9 +1968,9 @@ class Panel(Gtk.Application):
                     recorder.terminate()
             threading.Thread(target=stop_capture, daemon=True).start()
             while not stop.is_set():
-                data = self.recorder.stdout.read(4000)
+                data = self.recorder.stdout.read(1600)
                 if not data: break
-                pcm.append(data)
+                if refine:pcm.append(data)
                 samples = array('h', data)
                 self.audio_level = min(1.0, math.sqrt(sum(s*s for s in samples)/len(samples))/3000)
                 if recognizer is None:continue
@@ -1855,8 +1980,8 @@ class Panel(Gtk.Application):
                 if partial:
                     GLib.idle_add(self.message, '● ' + partial[-85:])
             parts.append(json.loads(recognizer.FinalResult()).get('text', '') if recognizer else '')
-            result = ' '.join(p for p in parts if p).strip()
-            if not lang.endswith('-fast'):
+            result = ' '.join((fast_punctuation(part,lang) if not refine else part) for part in parts if part).strip()
+            if refine and not lang.endswith('-fast'):
                 GLib.idle_add(self.message,'Уточняю распознанную речь…')
                 from speech_accuracy import refine_dictation
                 result=refine_dictation(b''.join(pcm),lang,result,ROOT,refiner);refiner=None
@@ -1934,9 +2059,10 @@ class Panel(Gtk.Application):
         fd=os.open(temporary,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
         with os.fdopen(fd,'w') as stream:json.dump(self.outbox,stream,ensure_ascii=False)
         os.replace(temporary,path)
+        self.refresh_outbox_view()
 
     def show_outbox_job(self,job):
-        if job['threadId']!=self.thread_id:return
+        if self.provider!='codex' or job.get('host','')!=self.remote_host or job['threadId']!=self.thread_id:return
         ident='pending-'+job['id']
         self.add_item({'id':ident,'type':'userMessage','content':[{'type':'text','text':job['text']}]})
         self.pending_messages[job['id']]=ident
@@ -1954,6 +2080,85 @@ class Panel(Gtk.Application):
         message['retry'].get_child().show_all()
         message['retry'].set_visible(job['status']=='error')
 
+    def refresh_outbox_view(self):
+        if not hasattr(self,'outbox_expander'):return
+        signature=(self.remote_host,self.provider,json.dumps(self.outbox,sort_keys=True,ensure_ascii=False))
+        if signature==self.outbox_view_signature:return
+        self.outbox_view_signature=signature
+        for child in self.outbox_list.get_children():child.destroy()
+        self.outbox_expander.set_label(translator.text('Очередь')+' · '+str(len(self.outbox)))
+        if not self.outbox:
+            self.outbox_list.pack_start(Gtk.Label(label=translator.text('Нет ожидающих сообщений'),xalign=0),False,False,0)
+        for job in self.outbox:
+            row=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=3)
+            title=Gtk.Label(xalign=0)
+            state={'queued':'В очереди','sending':'Отправляю','error':'Ошибка','editing':'Редактирование'}.get(job['status'],job['status'])
+            title.set_text(translator.text(state)+' · '+(job.get('host') or 'Steam Deck')+' · '+(job.get('error') or job['text']).replace('\n',' '))
+            title.set_ellipsize(Pango.EllipsizeMode.END);title.set_max_width_chars(65)
+            title.set_tooltip_text(job.get('error') or job['text'])
+            row.pack_start(title,False,False,0)
+            buttons=Gtk.Box(spacing=5)
+            editable=job['status'] in ('queued','error')
+            for label,callback in [('Изменить',self.edit_outbox),('Отменить',self.cancel_outbox),('Отправить сейчас',self.send_outbox_now)]:
+                button=Gtk.Button(label=translator.text(label))
+                button.connect('clicked',lambda _,ident=job['id'],action=callback:action(ident))
+                enabled=editable
+                if callback==self.send_outbox_now:
+                    enabled=enabled and self.provider=='codex' and job.get('host','')==self.remote_host and not any(j['threadId']==job['threadId'] and j.get('host','')==job.get('host','') and j['status'] in ('sending','editing') for j in self.outbox)
+                button.set_sensitive(enabled)
+                buttons.pack_start(button,False,False,0)
+            row.pack_start(buttons,False,False,0)
+            self.outbox_list.pack_start(row,False,False,0)
+        self.outbox_list.show_all()
+
+    def remove_outbox_preview(self,job):
+        ident=self.pending_messages.pop(job['id'],'pending-'+job['id'])
+        message=self.messages.pop(ident,None)
+        self.dirty_messages.discard(ident)
+        if message:message['frame'].destroy()
+
+    def cancel_outbox(self,ident):
+        job=next((j for j in self.outbox if j['id']==ident),None)
+        if not job or job['status'] not in ('queued','error'):return
+        self.outbox.remove(job)
+        self.remove_outbox_preview(job)
+        self.save_outbox()
+        self.message('Сообщение удалено из очереди')
+
+    def edit_outbox(self,ident):
+        job=next((j for j in self.outbox if j['id']==ident),None)
+        if not job or job['status'] not in ('queued','error'):return
+        previous=job['status'];job['status']='editing';self.save_outbox()
+        dialog=Gtk.Dialog(title='Изменить сообщение',transient_for=self.window,modal=True)
+        translator.watch_dialog(dialog)
+        dialog.add_buttons('Назад',Gtk.ResponseType.CANCEL,'Сохранить',Gtk.ResponseType.OK)
+        dialog.set_default_size(560,280)
+        editor=Gtk.TextView(wrap_mode=Gtk.WrapMode.WORD_CHAR)
+        editor.get_buffer().set_text(job['text'])
+        scroll=Gtk.ScrolledWindow();scroll.add(editor)
+        dialog.get_content_area().pack_start(scroll,True,True,8)
+        dialog.show_all()
+        try:
+            response=dialog.run()
+            buffer=editor.get_buffer()
+            text=clean_text(buffer.get_text(buffer.get_start_iter(),buffer.get_end_iter(),False))
+            if response==Gtk.ResponseType.OK and text:
+                job['text']=text;job.pop('error',None);previous='queued'
+                self.remove_outbox_preview(job)
+        finally:
+            dialog.destroy();job['status']=previous
+            self.save_outbox();self.show_outbox_job(job)
+
+    def send_outbox_now(self,ident):
+        job=next((j for j in self.outbox if j['id']==ident),None)
+        if not job or job['status'] not in ('queued','error'):return
+        if self.provider!='codex' or job.get('host','')!=self.remote_host or not self.backend or not self.backend.connected or not self.history_ready:
+            self.message('Подключитесь к устройству этого сообщения');return
+        if any(j is not job and j['threadId']==job['threadId'] and j.get('host','')==self.remote_host and j['status'] in ('sending','editing') for j in self.outbox):return
+        job['status']='sending';job.pop('error',None)
+        self.save_outbox();self.show_outbox_job(job)
+        threading.Thread(target=self.deliver_job,args=(job,True),daemon=True).start()
+
     def retry_outbox(self,ident):
         job=next((j for j in self.outbox if j['id']==ident),None)
         if not job:return
@@ -1961,8 +2166,10 @@ class Panel(Gtk.Application):
         self.save_outbox();self.show_outbox_job(job)
 
     def pump_outbox(self):
+        self.refresh_outbox_view()
+        if self.provider!='codex':return True
         if not self.backend or not self.backend.connected or not self.history_ready:return True
-        active={j['threadId'] for j in self.outbox if j.get('status')=='sending'}
+        active={j['threadId'] for j in self.outbox if j.get('host','')==self.remote_host and j.get('status') in ('sending','editing')}
         for job in self.outbox:
             if job.get('status')!='queued' or job.get('host','')!=self.remote_host or job['threadId'] in active or self.thread_activity.get(job['threadId']) is True:continue
             job['status']='sending';active.add(job['threadId'])
@@ -1975,9 +2182,16 @@ class Panel(Gtk.Application):
         text=str(error).lower()
         return any(phrase in text for phrase in ['already has an active turn','turn is already in progress','turn is in progress','another turn is active','thread is busy','turn already running'])
 
-    def deliver_job(self,job):
+    def deliver_job(self,job,send_now=False):
         try:
             tid=job['threadId']
+            if send_now and tid not in self.empty_threads:
+                _,thread=self.backend.select_thread(tid)
+                turn=next((t for t in reversed(thread.get('turns',[])) if t.get('status')=='inProgress'),None)
+                if turn:
+                    self.backend.request('turn/steer',{'threadId':tid,'expectedTurnId':turn['id'],'clientUserMessageId':job['id'],'input':[{'type':'text','text':job['text'],'text_elements':[]}]})
+                    GLib.idle_add(self.job_finished,job,None)
+                    return
             if tid in self.empty_threads:
                 start={'cwd':self.backend.cwd if self.remote_host else str(Path.home()),'ephemeral':False}
                 if job.get('model'):start['model']=job['model']
@@ -2040,6 +2254,8 @@ class Panel(Gtk.Application):
         return True
 
     def shutdown_app(self):
+        self.stop_speaking()
+        if self.language_settings is not None:self.language_settings.cancel.set()
         if hasattr(self,'closed'):self.closed.set()
         self.stop_event.set()
         if self.recorder is not None and self.recorder.poll() is None:self.recorder.terminate()
