@@ -106,6 +106,22 @@ try:
  open_panel()
  assert evaluate(QAM,"document.querySelector('.dai-composer input').value")==test_draft
  print('PASS reopening panel retains draft',flush=True)
+ # Keep the full-screen Panel mounted while typing in QAM. Previously the
+ # shared storage changed but that existing Panel retained its old React state.
+ click(QAM,"document.querySelector('.dai-viewbar>.dai-button')")
+ wait(FULL,"!!document.querySelector('.dai-composer input')")
+ open_panel();two_view_draft=test_draft+' · TWO_VIEW_CHECK'
+ try:
+  fill(QAM,two_view_draft)
+  wait(FULL,"document.querySelector('.dai-composer input').value==="+json.dumps(two_view_draft))
+  click(QAM,"document.querySelectorAll('.dai-tab')[2].querySelector('.dai-button')")
+  wait(FULL,"!!document.querySelector('.dai-settings-grid')")
+  click(FULL,"document.querySelectorAll('.dai-tab')[0].querySelector('.dai-button')")
+  wait(FULL,"document.querySelector('.dai-composer input')?.value==="+json.dumps(two_view_draft))
+  print('PASS compact edits survive reopening an already mounted full-screen workspace',flush=True)
+ finally:
+  if evaluate(FULL,"!!document.querySelector('.dai-composer input')"):fill(FULL,test_draft)
+
 finally:
  try:
   # Leave the user's original draft and attachments unchanged.
