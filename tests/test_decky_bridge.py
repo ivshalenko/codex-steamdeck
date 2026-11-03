@@ -11,6 +11,25 @@ bridge=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bridge)
 
 class DeckyBridgeTests(unittest.TestCase):
+    def test_history_window_never_reads_attachments_outside_requested_tail(self):
+        thread = {"turns": [{"items": [{"type": "userMessage", "id": str(i),
+                  "content": [{"type": "text", "text": "Fixture"}]}]} for i in range(240)]}
+        with patch.object(bridge, "attachments", return_value=[]) as preview:
+            rows = bridge.extract_messages(thread, limit=41)
+        self.assertEqual([str(i) for i in range(199, 240)], [row["id"] for row in rows])
+        self.assertEqual([str(i) for i in range(239, 198, -1)], [call.args[0]["id"] for call in preview.call_args_list])
+
+    def test_stale_composer_context_cannot_send_to_another_chat_or_host(self):
+        with patch.multiple(bridge, provider="codex", remote_host="test-host", thread_id="active", read_only=False), \
+                patch.object(bridge, "send_message", return_value={"queued": True}) as send:
+            current = {"provider": "codex", "host": "test-host", "threadId": "active"}
+            for field, old in (("provider", "claude"), ("host", ""), ("threadId", "old")):
+                with self.subTest(field=field), self.assertRaisesRegex(ValueError, "Чат или устройство"):
+                    bridge.call("send", {"expected": {**current, field: old}, "text": "fixture"})
+            send.assert_not_called()
+            self.assertEqual({"queued": True}, bridge.call("send", {"expected": current, "text": "fixture"}))
+            send.assert_called_once()
+
     @unittest.skipUnless(shutil.which('ffmpeg'),'FFmpeg required for media integration test')
     def test_short_and_long_recordings_produce_jpeg_frames(self):
         root=Path(self.temp.name)/'recordings';root.mkdir()

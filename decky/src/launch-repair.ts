@@ -5,11 +5,12 @@ export type RepairCase = {
  id: string; appId: number; name: string; proton: string; checks: string[];
  state: "inspected" | "applied" | "restored" | "conflict"; action: RepairAction | null;
  detail: string; launchResult: "" | "started" | "failed"; note: string; canReset: boolean; readOnly: boolean;
+ canEndWait?: boolean; hasBackup?: boolean;
 };
 type Pairing = { state: "off" | "pairing" | "pending" | "connected"; url?: string; code?: string };
 type View = { case: RepairCase | null; remote: Pairing; error?: string };
 type Game = { appId: number; name: string; shortcut: boolean };
-type GameDetails = Game & { options: string; proton: string };
+type GameDetails = Game & { options: string; proton: string; shortcutExe?:string; folderIndex?:number; location?:string };
 type SteamDetails = NonNullable<ReturnType<Window["appDetailsStore"]["GetAppDetails"]>>;
 type Screenshot = { path: string; name: string; when?: number };
 
@@ -65,6 +66,8 @@ async function liveDetails(appId: number): Promise<GameDetails> {
    appId, name: overview.display_name, shortcut,
    options: shortcut ? details.strShortcutLaunchOptions : details.strLaunchOptions,
    proton: details.strCompatToolDisplayName || details.strCompatToolName || "",
+   shortcutExe: shortcut ? details.strShortcutExe : undefined,
+   folderIndex: shortcut ? undefined : details.iInstallFolder,
   };
  } finally {
   clearTimeout(timer);
@@ -72,17 +75,39 @@ async function liveDetails(appId: number): Promise<GameDetails> {
  }
 }
 
-let view: View = { case: null, remote: { state: "off" } };
-const listeners = new Set<(value: View) => void>();
+async function libraryPath(game:GameDetails){
+ if(game.shortcut)return game.shortcutExe||"";
+ const folder=window.SteamClient?.InstallFolder;
+ if(!folder?.GetInstallFolders)return "";
+ let timer:ReturnType<typeof setTimeout>|undefined;
+ try{
+  const timeout=new Promise<null>(resolve=>{timer=setTimeout(()=>resolve(null),1000);});
+  const folders=await Promise.race([folder.GetInstallFolders(),timeout]);
+  return folders?.find(item=>item.nFolderIndex===game.folderIndex)?.strFolderPath||"";
+ }catch{
+  return "";
+ }finally{
+  clearTimeout(timer);
+ }
+}
 
-export function repairView() { return view; }
+const emptyView: View = { case: null, remote: { state: "off" } };
+let view = emptyView;
+let viewOwner = "";
+const listeners = new Set<(value: View) => void>();
+let wakePolling = () => {};
+
+export function repairView() { return viewOwner === steamAccount() ? view : emptyView; }
 export function subscribeRepair(listener: (value: View) => void) {
  listeners.add(listener);
+ listener(repairView());
+ wakePolling();
  return () => { listeners.delete(listener); };
 }
-function publish(value: View) {
- if (JSON.stringify(value) === JSON.stringify(view)) return;
+function publish(value: View, account:string) {
+ if (account===viewOwner && JSON.stringify(value) === JSON.stringify(view)) return;
  view = value;
+ viewOwner = account;
  for (const listener of listeners) listener(view);
 }
 
@@ -90,13 +115,27 @@ export async function inspectLaunch(appId: number, screenshot: string) {
  const account = steamAccount();
  if (!account) throw new Error("Откройте библиотеку Steam под своим аккаунтом.");
  const game = await liveDetails(appId);
+ game.location = await libraryPath(game);
  if (steamAccount() !== account) throw new Error("Аккаунт Steam изменился.");
- return inspect(account, game, screenshot);
+ try {
+  return await inspect(account, game, screenshot);
+ } finally {
+  wakePolling();
+ }
 }
 
 export function repairScreenshots(appId: number, shortcut: boolean) { return screenshots(steamAccount(), appId, shortcut); }
-export function repairCommand(caseId: string, verb: string, fields: object = {}) {
- return command(steamAccount(), caseId, verb, fields);
+export async function repairCommand(caseId: string, verb: string, fields: object = {}) {
+ try {
+  return await command(steamAccount(), caseId, verb, fields);
+ } finally {
+  wakePolling();
+ }
+}
+
+export async function originalLaunchOptions(caseId:string){
+ const result=await repairCommand(caseId,"original") as {options:string};
+ return result.options;
 }
 
 const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
@@ -104,15 +143,31 @@ const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, m
 export function startRepairPolling() {
  let disposed = false;
  let polling = false;
+ let requested = false;
+ let failures = 0;
+ let timer: ReturnType<typeof setTimeout> | undefined;
  const sameAccount = (account: string) => !disposed && steamAccount() === account;
+ const needsPolling = () => listeners.size > 0 || view.remote.state !== "off"
+  || view.case?.action?.state === "approved" || view.case?.action?.state === "running";
+ function schedule(ms: number) {
+  clearTimeout(timer);
+  if (!disposed) timer = setTimeout(() => void tick(), ms);
+ }
+ function wake() {
+  if (polling) requested = true;
+  else schedule(0);
+ }
+ wakePolling = wake;
  async function tick() {
   if (polling || disposed) return;
   polling = true;
   const account = steamAccount();
+  let failed = false;
   try {
    const value = await repairStatus(account);
    if (!sameAccount(account)) return;
-   publish(value);
+   publish(value,account);
+   failures = 0;
    const current = value.case;
    const action = current?.action;
    if (!current || !action || action.state === "pending") return;
@@ -150,12 +205,24 @@ export function startRepairPolling() {
     }
    }
   } catch (error) {
-   if (sameAccount(account)) publish({ ...view, error: String(error) });
+   failed = true;
+   failures++;
+   if (sameAccount(account)) publish({ ...repairView(), error: String(error) },account);
   } finally {
    polling = false;
+   if (requested) {
+    requested = false;
+    schedule(0);
+   } else if (needsPolling() || failed) {
+    const recoveryDelay = needsPolling() ? 3500 : Math.min(30000, 3500 * 2 ** Math.min(failures - 1, 4));
+    schedule(failed ? recoveryDelay : 1800);
+   }
   }
  }
  void tick();
- const timer = setInterval(() => void tick(), 1800);
- return () => { disposed = true; clearInterval(timer); };
+ return () => {
+  disposed = true;
+  clearTimeout(timer);
+  if (wakePolling === wake) wakePolling = () => {};
+ };
 }

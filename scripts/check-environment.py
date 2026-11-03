@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 """Read-only preflight. Never prints keys, account details or SSH hosts."""
-import importlib.util,json,shutil,subprocess,sys
+import importlib.util,json,os,shutil,subprocess,sys
 from pathlib import Path
-sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'decky'))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(ROOT), str(ROOT/'decky')]
+from backend import find_codex
+from providers import claude_code_available
 from runtime_paths import resolve_app_dir,resolve_state_dir
 
 def check():
     app=resolve_app_dir();items={}
-    for program in ('ffmpeg','pactl','codex','claude','secret-tool'):items[program]=bool(shutil.which(program))
+    for program in ('ffmpeg','pactl','secret-tool'):items[program]=bool(shutil.which(program))
+    codex = Path(find_codex())
+    items['codex'] = codex.is_file() and os.access(codex, os.X_OK)
+    items['claude'] = bool(claude_code_available())
     for module in ('gi','websockets','vosk','faster_whisper'):items[module]=importlib.util.find_spec(module) is not None
     try:
         probe=subprocess.run(['pactl','get-default-source'],capture_output=True,text=True,timeout=4)

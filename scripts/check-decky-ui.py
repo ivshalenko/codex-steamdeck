@@ -38,7 +38,11 @@ def fill(title,value):
  wait(title,"document.querySelector('.dai-composer input').value==="+json.dumps(value))
 def click(title,expression):
  evaluate(title,expression+".click()")
-old_draft=None;added_image=False
+def select_tab(title,label):
+ selector="[...document.querySelectorAll('.dai-tab .dai-button')].find(e=>e.innerText.trim()==="+json.dumps(label)+")"
+ wait(title,"!!("+selector+")")
+ click(title,selector)
+old_draft=None
 try:
  open_panel()
  assert evaluate(QAM,"!document.querySelector('.dai-fullscreen')")
@@ -46,9 +50,10 @@ try:
  print('PASS compact panel has no overlap',flush=True)
  wait(QAM,"!!document.querySelector('.dai-status .dai-dot:not(.offline)')")
  old_draft=evaluate(QAM,"document.querySelector('.dai-composer input').value")
- test_draft=old_draft or 'DECK_AI_FULLSCREEN_CHECK'
- if not old_draft:
-  fill(QAM,test_draft)
+ if old_draft:
+  raise RuntimeError("Open a chat with an empty draft before running this check.")
+ test_draft='DECK_AI_FULLSCREEN_CHECK'
+ fill(QAM,test_draft)
  # Check clearing without sending anything, then restore the test draft.
  assert evaluate(QAM,"![...document.querySelectorAll('.dai-compose-actions .dai-button')].some(e=>['Игра','Файлы'].includes(e.innerText))")
  click(QAM,"[...document.querySelectorAll('.dai-compose-actions .dai-button')].find(e=>e.innerText==='Очистить')")
@@ -56,7 +61,7 @@ try:
  fill(QAM,test_draft)
  print('PASS clear button clears input; redundant game button removed',flush=True)
  expected_images=evaluate(QAM,"document.querySelectorAll('.dai-attachments .dai-button').length")
- click(QAM,"document.querySelectorAll('.dai-tab')[2].querySelector('.dai-button')")
+ select_tab(QAM,"Настройки")
  wait(FULL,"!!document.querySelector('.dai-fullscreen .dai-settings-grid')")
  assert evaluate(FULL,"document.querySelector('.dai-tab[aria-selected=true]').innerText")=='Настройки'
  wait(FULL,"document.querySelector('.dai-fullscreen').getBoundingClientRect().width>=innerWidth-1")
@@ -72,9 +77,9 @@ try:
  reachable=evaluate(FULL,"(()=>{const root=document.querySelector('.dai-settings');const cards=[...root.querySelectorAll('.dai-section')];const ok=cards.every(c=>{c.scrollIntoView({block:'nearest'});const r=root.getBoundingClientRect(),q=c.getBoundingClientRect();return q.bottom>r.top&&q.top<r.bottom;});root.scrollTop=0;return ok;})()")
  assert reachable,'A settings card is unreachable by scrolling'
  print('PASS compact fonts and every settings card reachable by scrolling',flush=True)
- shot=command(FULL,'Page.captureScreenshot',{'format':'png'})
+ shot=command(FULL,'Page.captureScreenshot',{'format':'png','captureBeyondViewport':False})
  open('/tmp/deck-ai-settings-wide-final.png','wb').write(base64.b64decode(shot['data']))
- click(FULL,"document.querySelectorAll('.dai-tab')[0].querySelector('.dai-button')")
+ select_tab(FULL,"Чат")
  wait(FULL,"!!document.querySelector('.dai-composer input')")
  assert evaluate(FULL,"document.querySelector('.dai-composer input').value")==test_draft
  assert evaluate(FULL,"document.querySelectorAll('.dai-attachments .dai-button').length")==expected_images
@@ -96,7 +101,7 @@ try:
  # Opening QAM over an existing workspace must select Settings in that same
  # workspace, rather than push duplicate routes or leave Chat selected.
  open_panel()
- click(QAM,"document.querySelectorAll('.dai-tab')[2].querySelector('.dai-button')")
+ select_tab(QAM,"Настройки")
  wait(FULL,"!!document.querySelector('.dai-fullscreen .dai-settings-grid')")
  assert evaluate(FULL,"document.querySelector('.dai-tab[aria-selected=true]').innerText")=='Настройки'
  print('PASS reopening Settings over full-screen Chat selects the right tab',flush=True)
@@ -106,6 +111,13 @@ try:
  open_panel()
  assert evaluate(QAM,"document.querySelector('.dai-composer input').value")==test_draft
  print('PASS reopening panel retains draft',flush=True)
+ select_tab(QAM,"Ремонт")
+ wait(FULL,"!!document.querySelector('.dai-fullscreen .dai-repair')")
+ select_tab(FULL,"Чат")
+ wait(FULL,"document.querySelector('.dai-composer input')?.value==="+json.dumps(test_draft))
+ print('PASS launch repair opens without replacing the chat draft',flush=True)
+ click(FULL,"[...document.querySelectorAll('.dai-full-header .dai-button')].find(e=>e.innerText.includes('В панель'))")
+ open_panel()
  # Keep the full-screen Panel mounted while typing in QAM. Previously the
  # shared storage changed but that existing Panel retained its old React state.
  click(QAM,"document.querySelector('.dai-viewbar>.dai-button')")
@@ -114,9 +126,9 @@ try:
  try:
   fill(QAM,two_view_draft)
   wait(FULL,"document.querySelector('.dai-composer input').value==="+json.dumps(two_view_draft))
-  click(QAM,"document.querySelectorAll('.dai-tab')[2].querySelector('.dai-button')")
+  select_tab(QAM,"Настройки")
   wait(FULL,"!!document.querySelector('.dai-settings-grid')")
-  click(FULL,"document.querySelectorAll('.dai-tab')[0].querySelector('.dai-button')")
+  select_tab(FULL,"Чат")
   wait(FULL,"document.querySelector('.dai-composer input')?.value==="+json.dumps(two_view_draft))
   print('PASS compact edits survive reopening an already mounted full-screen workspace',flush=True)
  finally:
@@ -130,5 +142,4 @@ finally:
   open_panel()
   if old_draft is not None and not old_draft and evaluate(QAM,"document.querySelector('.dai-composer input').value")==test_draft:
    fill(QAM,old_draft)
-  if added_image:click(QAM,"document.querySelector('.dai-attachments .dai-button')")
  except Exception as e:print('Cleanup:',str(e))

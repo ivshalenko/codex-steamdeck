@@ -77,7 +77,9 @@ class Plugin:
     async def select_thread(self,ident):return await self._rpc("select_thread",{"id":ident},timeout=60)
     async def new_thread(self):return await self._rpc("new_thread",timeout=60)
     async def save_settings(self,model,effort,tier):return await self._rpc("settings",{"model":model,"effort":effort,"tier":tier})
-    async def send_message(self,text,images,model,effort,tier):return await self._rpc("send",{"text":text,"images":images,"model":model,"effort":effort,"tier":tier},timeout=40)
+    async def send_message(self, text, images, model, effort, tier, expected=None):
+        return await self._rpc("send", {"text": text, "images": images, "model": model,
+                                        "effort": effort, "tier": tier, "expected": expected}, timeout=40)
     async def retry(self,ident):return await self._rpc("retry",{"id":ident})
     async def stop(self):return await self._rpc("stop",timeout=25)
     async def voice(self,language,silence=0):return await self._rpc("voice",{"language":language,"silence":silence},timeout=8)

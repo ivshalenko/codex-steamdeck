@@ -263,20 +263,34 @@ def subscribe_running(client,host,threads):
             try:client.request('thread/resume',{'threadId':t['id'],'excludeTurns':True},timeout=30)
             except Exception:resumed.discard(key)
 def extract_messages(thread,limit=40):
-    items=[]
-    for turn in thread.get('turns',[]):
-        for item in turn.get('items',[]):
-            if item.get('type')=='userMessage':
-                text='\n'.join(part.get('text','') for part in item.get('content',[]) if part.get('type')=='text').strip()
-                text=text.split('<environment_context>')[0].strip()
-            elif item.get('type')=='agentMessage':text=item.get('text','').strip()
-            elif item.get('type') in ('commandExecution','fileChange'):
-                items.append({'id':item.get('id',''),'role':'tool','text':tool_text(item),'attachments':[]});continue
-            else:continue
-            media=attachments(item)
-            text=display_text(text)
-            if text or media:items.append({'id':item.get('id',''),'role':'user' if item.get('type')=='userMessage' else 'assistant','text':text,'attachments':media})
-    return items[-limit:] if limit is not None else items
+    """Render only the requested tail; image previews are the expensive part."""
+    if limit is not None and limit <= 0:
+        return []
+    items = []
+    for turn in reversed(thread.get("turns", [])):
+        for item in reversed(turn.get("items", [])):
+            kind = item.get("type")
+            if kind in ("commandExecution", "fileChange"):
+                row = {"id": item.get("id", ""), "role": "tool", "text": tool_text(item), "attachments": []}
+            else:
+                if kind == "userMessage":
+                    text = "\n".join(part.get("text", "") for part in item.get("content", [])
+                                     if part.get("type") == "text")
+                    text = text.split("<environment_context>", 1)[0].strip()
+                elif kind == "agentMessage":
+                    text = item.get("text", "").strip()
+                else:
+                    continue
+                media = attachments(item)
+                text = display_text(text)
+                if not text and not media:
+                    continue
+                role = "user" if kind == "userMessage" else "assistant"
+                row = {"id": item.get("id", ""), "role": role, "text": text, "attachments": media}
+            items.append(row)
+            if limit is not None and len(items) == limit:
+                return items[::-1]
+    return items[::-1]
 def tool_text(item):
     """Compact, defensive summary of a command run or file change (with diff)."""
     if item.get('type')=='commandExecution':
@@ -464,7 +478,11 @@ def _get_snapshot():
             except Exception as exc:
                 if thread is None:raise RuntimeError('Не удалось загрузить историю диалога: '+str(exc)[:220]) from exc
                 history_warning='Не удалось обновить диалог. Показана сохранённая история; повторяю подключение. '+str(exc)[:140]
-        active=any(t.get('status')=='inProgress' for t in thread.get('turns',[]));all_messages=extract_messages(thread,limit=None);history_total=len(all_messages);messages=all_messages[-history_limits.get(history_key,40):]
+        active = any(t.get("status") == "inProgress" for t in thread.get("turns", []))
+        limit = history_limits.get(history_key, 40)
+        window = extract_messages(thread, limit=limit + 1)
+        history_total = len(window)
+        messages = window[-limit:]
         current_model=thread.get('model') or current_model;status='Deck AI работает…' if active else 'Готов'
     account=read_account()
     models_list=model_catalog;saved_model=selected_models.get(thread_id) or (selected_models.get('') if not thread_id else None) or current_model
@@ -488,7 +506,11 @@ def _safe_snapshot():
     key=(provider,remote_host,thread_id)
     try:
         result={**_get_snapshot(),**snapshot_extras()}
-        snapshot_cache[(provider,remote_host,result.get('threadId',thread_id))]=result
+        cache_key = (provider, remote_host, result.get("threadId", thread_id))
+        snapshot_cache.pop(cache_key, None)
+        snapshot_cache[cache_key] = result
+        if len(snapshot_cache) > 12:
+            snapshot_cache.pop(next(iter(snapshot_cache)))
         return result
     except Exception as exc:
         previous=snapshot_cache.get((provider,remote_host,thread_id),{})
@@ -931,7 +953,14 @@ def _call(method,params):
     if method=='account_login':return start_account_login()
     if method=='account_cancel_login':return cancel_account_login()
     if method=='account_logout':return logout_account()
-    if method=='send':return send_message(params.get('text',''),params.get('images',[]),params.get('model'),params.get('effort'),params.get('tier'))
+    if method == "send":
+        expected = params.get("expected")
+        selected = provider_thread_ids.get(provider, "") if provider in provider_chats else thread_id
+        current = {"provider": provider, "host": remote_host, "threadId": selected}
+        if expected is not None and expected != current:
+            raise ValueError("Чат или устройство изменились. Обновите экран перед отправкой.")
+        return send_message(params.get("text", ""), params.get("images", []), params.get("model"),
+                            params.get("effort"), params.get("tier"))
     if method=='retry':
         job=next((j for j in outbox if j['id']==params.get('id')),None)
         if not job:raise ValueError('Сообщение не найдено.')
