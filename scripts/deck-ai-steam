@@ -2,9 +2,17 @@
 set -euo pipefail
 export DECK_AI_GAMING=1
 export GDK_BACKEND=x11
+# Use native Deck pixels consistently for the main window and dialogs.
+export GDK_SCALE=1
+export GDK_DPI_SCALE=1
+# Steam Input mouse emulation is delivered as core X11 pointer events.
+export GDK_CORE_DEVICE_EVENTS=1
 APP_DIR=""
 for candidate in "$HOME/.local/share/deck-ai" "$HOME/.local/share/deck-voice" "$HOME/.local/share/codex-steamdeck"; do
   if [[ -f "$candidate/app.py" ]]; then APP_DIR="$candidate"; break; fi
 done
 if [[ -z "$APP_DIR" ]]; then echo "Deck AI is not installed. Run install.sh first." >&2; exit 1; fi
+if [[ -f "$APP_DIR/scripts/configure-steam-input.py" ]]; then
+  "$APP_DIR/venv/bin/python" "$APP_DIR/scripts/configure-steam-input.py" --quiet || true
+fi
 exec "$APP_DIR/venv/bin/python" "$APP_DIR/app.py" "$@"

@@ -23,7 +23,7 @@ class ReleaseTests(unittest.TestCase):
    for name in ('package.json','package-lock.json'):(root/'decky'/name).write_text('{"version":"1.0.0"}')
    with self.assertRaisesRegex(ValueError,'LICENSE'):package.check(root)
  def test_archives_have_fixed_metadata_correct_checksums_and_repeatable_bytes(self):
-  with tempfile.TemporaryDirectory() as directory,patch.object(builder.subprocess,'run'),patch.object(builder.package,'check',return_value=('1.0.0-rc.1',[Path('VERSION')])),patch.object(builder.manager,'source_files',return_value=[Path('decky/plugin.json')]):
+  with tempfile.TemporaryDirectory() as directory,patch.object(builder.subprocess,'run'),patch.object(builder.package,'check',return_value=('1.0.0-rc.1',[Path('VERSION')])),patch.object(builder.plugin_package,'files',return_value={Path('plugin.json'):ROOT/'decky/plugin.json'}):
    output=builder.build(Path(directory));first={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in output.iterdir()}
    builder.build(output);second={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in output.iterdir()};self.assertEqual(first,second)
    with tarfile.open(output/'deck-ai-1.0.0-rc.1-steamdeck.tar.gz') as archive:

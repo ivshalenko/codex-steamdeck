@@ -94,9 +94,9 @@ def ssh_command(host, *remote, connect_timeout=8):
     if not valid_ssh_host(host):
         raise ValueError('Укажите SSH-алиас без пробелов и параметров командной строки.')
     control_dir = Path.home()/'.ssh'
-    args = ['/usr/bin/ssh', '-T', '-o', 'BatchMode=yes', '-o', f'ConnectTimeout={connect_timeout}',
+    args = [shutil.which('ssh') or '/usr/bin/ssh', '-T', '-o', 'BatchMode=yes', '-o', f'ConnectTimeout={connect_timeout}',
             '-o', 'ServerAliveInterval=15', '-o', 'ServerAliveCountMax=3']
-    if control_dir.is_dir():
+    if os.name!='nt' and control_dir.is_dir():
         # %C is a short hash, which keeps the socket path under the unix limit.
         args += ['-o', 'ControlMaster=auto', '-o', f'ControlPath={control_dir}/deck-ai-%C', '-o', 'ControlPersist=600']
     return [*args, '--', host, *remote]
@@ -153,6 +153,7 @@ class Backend:
                     raise RpcError('SSH вернул неверную домашнюю папку. Уберите вывод из shell startup файлов.')
                 self._start_process(ssh_command(self.remote_host, _REMOTE_SERVER))
             else:
+                if not os.access(CODEX,os.X_OK):raise RpcError('Codex CLI не установлен. В Desktop Mode запустите Install Deck AI и выберите установку Codex; затем войдите в ChatGPT в настройках.')
                 # Prefer the shared daemon; older official CLIs also work over stdio.
                 codex_home = Path(os.environ.get('CODEX_HOME') or Path.home()/'.codex').expanduser()
                 path = str(codex_home/'app-server-control/app-server-control.sock')

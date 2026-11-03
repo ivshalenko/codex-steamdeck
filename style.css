@@ -99,9 +99,6 @@ menu menuitem:hover { background-color: @accent; color: white; }
 #voice-panel searchentry { background-image: none; background-color: @surface; color: @text; caret-color: @text; }
 #voice-panel .sidebar row { background-image: none; background-color: transparent; }
 #voice-panel .sidebar row:selected { background-color: @tint; }
-#voice-panel .browser-pane { background-color: @surface; border-left: 1px solid @line; padding: 3px 0 3px 10px; }
-#voice-panel .browser-pane entry { background-color: @canvas; color: @text; border: 1px solid @line; border-radius: 9px; min-height: 28px; padding: 2px 8px; }
-#voice-panel .browser-status { color: @muted; font-size: 10px; }
 #voice-panel .sidebar row:hover { background-color: @hover; }
 
 /* Sidebar controls and their bounded popovers share the app palette. */
@@ -137,3 +134,9 @@ menu menuitem:hover { background-color: @accent; color: white; }
 #voice-panel .device-strip { background-color: @track; border: 1px solid alpha(@line,0.7); border-radius: 9px; padding: 2px; }
 #voice-panel .device-choice { min-height: 25px; min-width: 43px; padding: 0 8px; border-radius: 7px; color: @secondary; font-size: 11px; }
 #voice-panel .device-choice:checked { background-color: @raised; color: @text; box-shadow: 0 1px 3px rgba(0,0,0,0.12); border-color: alpha(@line,0.6); }
+
+#voice-panel .copy-block { background-color: @raised; border: 1px solid @line; border-radius: 10px; }
+#voice-panel .copy-block .code-body { font-family: monospace; font-size: 14px; }
+
+#voice-panel.request-panel { font-size: 14px; }
+#voice-panel .request-actions button { min-height: 36px; font-size: 14px; padding: 0 12px; }

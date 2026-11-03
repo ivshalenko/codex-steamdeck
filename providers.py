@@ -31,10 +31,17 @@ def _secret_tool(*args, secret=None, account='openrouter'):
     command = [tool, *args, 'application', 'codex-steamdeck', 'account', account]
     try:
         result = subprocess.run(command, input=secret, text=True, capture_output=True, timeout=12, check=False)
+        # Some Plasma installations activate Secret Service under KDE's compat
+        # name only. Start that service once, then retry the original operation.
+        if result.returncode and 'not activatable' in result.stderr and shutil.which('ksecretd'):
+            subprocess.run(['busctl', '--user', 'call', 'org.kde.secretservicecompat',
+                            '/SecretService', 'org.freedesktop.DBus.Peer', 'Ping'],
+                           capture_output=True, text=True, timeout=5, check=False)
+            result = subprocess.run(command, input=secret, text=True, capture_output=True, timeout=12, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise ProviderError('Не удалось обратиться к системному хранилищу секретов.') from exc
+        raise ProviderError('Не удалось открыть системное хранилище секретов. Разблокируйте KWallet и повторите попытку.') from exc
     if result.returncode:
-        if 'No such secret' in result.stderr or 'not found' in result.stderr.lower():
+        if 'No such secret' in result.stderr or 'not found' in result.stderr.lower() or (args[0] == 'lookup' and result.returncode == 1 and not result.stderr.strip()):
             return ''
         raise ProviderError('Системное хранилище секретов недоступно. Разблокируйте KWallet и повторите попытку.')
     return result.stdout.strip()

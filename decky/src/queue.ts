@@ -7,3 +7,7 @@ export function queueStatus(job:QueueJob,now=Date.now()){
  if(job.status==='sending')return began&&now-began*1000>15*60*1000?'Долго выполняется · проверьте чат':'Выполняется';
  return ({queued:'Ожидает отправки',recovering:'Проверяется на сервере',error:'Ошибка'} as Record<string,string>)[job.status]||job.status;
 }
+
+export function chatFailures(jobs:QueueJob[],threadId:string,host=""){
+ return jobs.filter(job=>job.status==='error'&&job.threadId===threadId&&(job.host||'')===host);
+}

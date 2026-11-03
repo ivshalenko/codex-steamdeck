@@ -76,10 +76,16 @@ class TransportTests(unittest.TestCase):
             self.assertEqual(command, [backend.CODEX, 'app-server', '--listen', 'stdio://'])
             start([sys.executable, '-u', str(ROOT/'tests/fake_app_server.py')])
         modules = {'websockets.sync.client': SimpleNamespace(unix_connect=Mock(side_effect=OSError('no socket')))}
-        with patch.dict(sys.modules, modules), patch.object(backend.subprocess, 'run', side_effect=subprocess.CalledProcessError(2, 'daemon')), patch.object(client, '_start_process', side_effect=fallback):
+        with patch.object(backend,'CODEX',sys.executable), patch.dict(sys.modules, modules), patch.object(backend.subprocess, 'run', side_effect=subprocess.CalledProcessError(2, 'daemon')), patch.object(client, '_start_process', side_effect=fallback):
             client.connect()
         self.assertTrue(client.connected)
         self.assertIn('data', client.request('thread/list', {}))
+
+    def test_missing_cli_has_installation_guidance_without_starting_process(self):
+        client=self.open_backend();client.remote_host=''
+        with patch.object(backend,'CODEX','/definitely/missing/codex'),patch.object(client,'_start_process') as start:
+            with self.assertRaisesRegex(backend.RpcError,'Install Deck AI'):client.connect()
+            start.assert_not_called()
 
     def test_ssh_option_and_shell_injection_are_rejected(self):
         for host in ('-oProxyCommand=touch-x', '-V', 'desk;id', 'desk\nwhoami', ''):

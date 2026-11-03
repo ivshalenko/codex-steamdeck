@@ -1,4 +1,4 @@
-import asyncio, json, os, subprocess, threading, time, sys
+import asyncio, json, os, subprocess, threading, time, sys, shutil
 from pathlib import Path
 import decky
 sys.path.insert(0,str(Path(__file__).resolve().parent))
@@ -22,15 +22,21 @@ class Plugin:
         self.child=None;self.lock=threading.RLock();self.pending={};self.seq=0
         self.home=Path.home()
         app_dir=resolve_app_dir(self.home)
-        self.base=app_dir/"decky"
+        self.base=Path(__file__).resolve().parent
+        self.python=str(app_dir/"venv/bin/python") if (app_dir/"venv/bin/python").is_file() else (shutil.which("python3") or "/usr/bin/python3")
         self.start_bridge()
     def start_bridge(self):
         with self.lock:
             if self.child and self.child.poll() is None:return
             env=clean_subprocess_environment();env.update({"HOME":str(self.home),"XDG_RUNTIME_DIR":f"/run/user/{os.getuid()}","PYTHONNOUSERSITE":"1"})
-            self.child=subprocess.Popen([str(self.base.parent/"venv/bin/python"),"-u",str(self.base/"bridge.py")],
-                cwd=str(self.base),env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True,bufsize=1)
+            self.child=subprocess.Popen([self.python,"-u",str(self.base/"bridge.py")],
+                cwd=str(self.base),env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,bufsize=1)
+            self.stderr_tail=""
+            threading.Thread(target=self.read_errors,args=(self.child,),daemon=True).start()
             self.reader=threading.Thread(target=self.read_bridge,args=(self.child,),daemon=True);self.reader.start()
+    def read_errors(self,child):
+        for line in child.stderr:
+            if self.child is child:self.stderr_tail=(self.stderr_tail+line)[-1600:]
     def read_bridge(self,child):
         try:
             for line in child.stdout:
@@ -61,6 +67,7 @@ class Plugin:
         response=future["response"]
         if "error" in response:raise RuntimeError(str(response["error"]))
         return response.get("result")
+    async def older_messages(self):return await self._rpc("older_messages",timeout=60)
     async def get_snapshot(self):return await self._rpc("snapshot",timeout=60)
     async def refresh(self):return await self._rpc("refresh",timeout=60)
     async def select_thread(self,ident):return await self._rpc("select_thread",{"id":ident},timeout=60)

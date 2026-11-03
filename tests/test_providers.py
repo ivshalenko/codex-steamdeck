@@ -1,12 +1,25 @@
 import json
 import io
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import providers
 
 
 class ProviderTests(unittest.TestCase):
+    def test_missing_key_is_not_reported_as_locked_wallet(self):
+        with patch.object(providers.shutil,'which',return_value='/usr/bin/secret-tool'), patch.object(providers.subprocess,'run',return_value=SimpleNamespace(returncode=1,stdout='',stderr='')):
+            self.assertEqual(providers.read_openrouter_key(),'')
+
+    def test_plasma_compat_activation_retries_secret_service(self):
+        missing=SimpleNamespace(returncode=1,stdout='',stderr='The name is not activatable')
+        ok=SimpleNamespace(returncode=0,stdout='',stderr='')
+        value=SimpleNamespace(returncode=0,stdout='test-placeholder',stderr='')
+        with patch.object(providers.shutil,'which',return_value='/usr/bin/secret-tool'), patch.object(providers.subprocess,'run',side_effect=[missing,ok,value]) as run:
+            self.assertEqual(providers.read_openrouter_key(),'test-placeholder')
+        self.assertEqual(run.call_args_list[1].args[0][:3],['busctl','--user','call'])
+
     def test_deepseek_catalog_keeps_ids_and_costs(self):
         with patch.object(providers.urllib.request, 'urlopen') as open_url:
             open_url.return_value = io.BytesIO(json.dumps({'data':[

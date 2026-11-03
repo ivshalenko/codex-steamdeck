@@ -66,6 +66,7 @@ def add_key(text, home=None):
     if '\n' in text.strip() or not valid_key(key):
         raise ValueError('Нужна одна строка открытого ключа (начинается с ssh-ed25519 или ssh-rsa). Закрытый ключ вставлять нельзя.')
     path = authorized_keys_path(home)
+    if path.is_symlink() or path.parent.is_symlink():raise ValueError('SSH paths are symbolic links. Configure access manually.')
     path.parent.mkdir(mode=0o700, exist_ok=True)
     os.chmod(path.parent, 0o700)
     existing = path.read_text() if path.exists() else ''
@@ -86,12 +87,19 @@ def ssh_snippet(address, user=None, alias='steamdeck'):
             '    ControlMaster auto\n    ControlPath ~/.ssh/cm-%C\n    ControlPersist 10m\n')
 
 
+def fingerprints():
+    found=[]
+    for key in sorted(Path("/etc/ssh").glob("ssh_host_*_key.pub")):
+        code,value=run("ssh-keygen","-l","-E","sha256","-f",str(key))
+        if code==0 and len(value.split())>=2:found.append(value.split()[1]+" "+key.stem)
+    return found
+
 def status(home=None):
     addrs = addresses()
     host = socket.gethostname()
     return {
         'sshActive': ssh_active(), 'user': getpass.getuser(), 'hostname': host, 'addresses': addrs,
-        'keys': key_count(home), 'codex': bool(shutil.which('codex') or (Path.home()/'.local/bin/codex').exists()),
+        'fingerprints':fingerprints(),'keys': key_count(home), 'codex': bool(shutil.which('codex') or (Path.home()/'.local/bin/codex').exists()),
         'snippet': ssh_snippet(addrs[0] if addrs else host + '.local'),
         'enableHint': 'В режиме рабочего стола откройте терминал: passwd (задайте пароль), затем sudo systemctl enable --now sshd. После обновления SteamOS проверьте снова.',
     }
