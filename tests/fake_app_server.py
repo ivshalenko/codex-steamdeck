@@ -40,11 +40,12 @@ for raw in sys.stdin:
         text = params['input'][0]['text']
         send({'method': 'turn/started', 'params': {'threadId': params['threadId'], 'turn': {'id': 'turn1'}}})
         if 'approve' in text:
+            approval_thread = params['threadId']
             send({'id': 'srv1', 'method': 'item/commandExecution/requestApproval', 'params': {'threadId': params['threadId'], 'command': 'rm -rf build'}})
             continue  # completes after the client answers
         send({'method': 'turn/completed', 'params': {'threadId': params['threadId'], 'turn': {'id': 'turn1', 'status': 'completed'}}})
     elif ident == 'srv1' and 'result' in message:
-        send({'method': 'turn/completed', 'params': {'threadId': 't1', 'turn': {'id': 'turn1', 'status': 'completed' if message['result'].get('decision') == 'accept' else 'failed'}}})
+        send({'method': 'turn/completed', 'params': {'threadId': approval_thread, 'turn': {'id': 'turn1', 'status': 'completed' if message['result'].get('decision') == 'accept' else 'failed'}}})
     elif method == 'thread/start':
         loaded.add('t2')
         send({'id': ident, 'result': {'thread': {'id': 't2'}}})

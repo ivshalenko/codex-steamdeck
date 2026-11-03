@@ -27,6 +27,8 @@ class Session:
         self.host, self.ask, self.out = host, ask, out
         self.done = threading.Event()
         self.turn_id = None
+        self.thread_id = None
+        self.completions = {}
         self.status = None
         self.backend = Backend(self.on_event, lambda: self.done.set(), host)
 
@@ -39,9 +41,12 @@ class Session:
             except EOFError:  # no terminal attached: never approve silently
                 answer = ''
             self.backend.respond(message['id'], {'decision': 'accept' if answer in ('y', 'yes', 'д', 'да') else 'decline'})
-        elif method == 'turn/completed' and (self.turn_id is None or (params.get('turn') or {}).get('id') == self.turn_id):
-            self.status = (params.get('turn') or {}).get('status') or 'completed'
-            self.done.set()
+        elif method == 'turn/completed' and params.get('threadId') == self.thread_id:
+            turn = params.get('turn') or {}
+            self.completions[turn.get('id')] = turn.get('status') or 'completed'
+            if self.turn_id is not None and turn.get('id') == self.turn_id:
+                self.status = self.completions[self.turn_id]
+                self.done.set()
 
     def __enter__(self):
         self.backend.connect(None)
@@ -57,15 +62,24 @@ class Session:
         return self.backend.request('thread/read', {'threadId': thread_id, 'includeTurns': True}, timeout=30).get('thread', {})
 
     def send(self, thread_id, text, wait=False, timeout=900):
+        self.done.clear()
+        self.turn_id = self.status = None
+        self.completions.clear()
         if thread_id is None:
             started = self.backend.request('thread/start', {'cwd': self.backend.cwd, 'ephemeral': False}, timeout=35)
             thread_id = (started.get('thread') or started)['id']
         else:
             self.backend.request('thread/resume', {'threadId': thread_id, 'excludeTurns': True}, timeout=50)
+        self.thread_id = thread_id
         params = {'threadId': thread_id, 'input': [{'type': 'text', 'text': text, 'text_elements': []}], 'clientUserMessageId': str(uuid.uuid4())}
         self.turn_id = self.backend.request('turn/start', params, timeout=35).get('turn', {}).get('id')
+        if self.turn_id in self.completions:
+            self.status = self.completions[self.turn_id]
+            self.done.set()
         if wait and not self.done.wait(timeout):
             raise RpcError('Агент не завершил задачу за отведённое время.')
+        if wait and self.status != 'completed':
+            raise RpcError('Задача не завершена: ' + (self.status or 'соединение прервано'))
         return thread_id
 
 
@@ -92,7 +106,8 @@ def setup(alias, address, user='deck', assume_yes=False, home=None, ask=input, o
     public = (key.with_suffix('.pub')).read_text().strip()
     out('\nНа Steam Deck (Desktop Mode, терминал) один раз выполните:')
     out('  sudo systemctl enable --now sshd')
-    out(f"  python3 ~/.local/share/deck-ai/deck_share.py add-key '{public}'")
+    for directory in ('deck-ai', 'deck-voice'):
+        out(f"  test ! -f ~/.local/share/{directory}/deck_share.py || python3 ~/.local/share/{directory}/deck_share.py add-key '{public}'")
     out('(или вставьте этот ключ в Deck AI → Настройки → «Доступ с другого компьютера»)\n')
     if assume_yes or ask('Нажмите Enter, когда сделаете это (или n, чтобы проверить позже): ').strip().lower() != 'n':
         result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', alias, 'echo ok'], capture_output=True, text=True)

@@ -37,6 +37,15 @@
 - Open thumbnails in a bounded image viewer; keep owned copies of sent images so temporary frame cleanup cannot remove them from history.
 - Show unavailable images and file attachments by name without fetching external URLs.
 
+## 1.0.0-rc.4 — Verified Steam Deck remote execution
+
+- Add the JSONL-to-WebSocket adapter required to connect SSH clients to the shared Codex Unix socket; use the companion Python environment when available and stdio otherwise.
+- Match remote completion events to their own chat and turn, retain fast replies and fail clearly on disconnection or an unsuccessful turn.
+- Restore the original library search path when launching Codex or the Decky bridge from PyInstaller, preventing Decky libraries from causing `GLIBC_2.42 not found` on SteamOS.
+- Account for both `deck-ai` and `deck-voice` installation folders during SSH setup.
+- Add a real Unix WebSocket adapter round trip and regressions for event matching, reconnect failures and frozen-process environment cleanup.
+- Verified actual SSH chat creation, continuation after reconnect/server restart, and shell execution on Steam Deck.
+
 ## 1.0.0-rc.3 — Connection fixes
 
 - Make the optional Pages deployment opt-in with `ENABLE_GITHUB_PAGES=true`, so repositories without Pages can publish code and pass checks.

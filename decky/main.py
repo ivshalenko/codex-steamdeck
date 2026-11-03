@@ -3,6 +3,20 @@ from pathlib import Path
 import decky
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from runtime_paths import resolve_app_dir
+def clean_subprocess_environment(environ=None):
+    """Keep Decky's frozen-process libraries out of normal child programs."""
+    env = dict(os.environ if environ is None else environ)
+    frozen = any(name.startswith('_PYI_') for name in env) or env.get('LD_LIBRARY_PATH', '').startswith('/tmp/_MEI')
+    if frozen:
+        original = env.pop('LD_LIBRARY_PATH_ORIG', None)
+        env.pop('LD_LIBRARY_PATH', None)
+        if original:
+            env['LD_LIBRARY_PATH'] = original
+        for name in tuple(env):
+            if name.startswith('_PYI_') or name == '_MEIPASS2':
+                env.pop(name, None)
+    return env
+
 class Plugin:
     async def _main(self):
         self.child=None;self.lock=threading.RLock();self.pending={};self.seq=0
@@ -13,7 +27,7 @@ class Plugin:
     def start_bridge(self):
         with self.lock:
             if self.child and self.child.poll() is None:return
-            env=dict(os.environ);env.update({"HOME":str(self.home),"XDG_RUNTIME_DIR":f"/run/user/{os.getuid()}","PYTHONNOUSERSITE":"1"})
+            env=clean_subprocess_environment();env.update({"HOME":str(self.home),"XDG_RUNTIME_DIR":f"/run/user/{os.getuid()}","PYTHONNOUSERSITE":"1"})
             self.child=subprocess.Popen([str(self.base.parent/"venv/bin/python"),"-u",str(self.base/"bridge.py")],
                 cwd=str(self.base),env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True,bufsize=1)
             self.reader=threading.Thread(target=self.read_bridge,args=(self.child,),daemon=True);self.reader.start()

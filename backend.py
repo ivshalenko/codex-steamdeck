@@ -9,6 +9,20 @@ import shlex
 import shutil
 import re
 
+def clean_subprocess_environment(environ=None):
+    """Keep Decky's frozen-process libraries out of normal child programs."""
+    env = dict(os.environ if environ is None else environ)
+    frozen = any(name.startswith('_PYI_') for name in env) or env.get('LD_LIBRARY_PATH', '').startswith('/tmp/_MEI')
+    if frozen:
+        original = env.pop('LD_LIBRARY_PATH_ORIG', None)
+        env.pop('LD_LIBRARY_PATH', None)
+        if original:
+            env['LD_LIBRARY_PATH'] = original
+        for name in tuple(env):
+            if name.startswith('_PYI_') or name == '_MEIPASS2':
+                env.pop(name, None)
+    return env
+
 def find_codex():
     for candidate in (shutil.which('codex'), Path.home()/'.local/bin/codex',
                       Path.home()/'.npm-global/bin/codex', '/opt/homebrew/bin/codex',
@@ -33,14 +47,36 @@ if ! command -v codex >/dev/null 2>&1; then
     fi
 fi
 '''
+# The daemon socket speaks WebSocket, whereas SSH clients exchange JSONL.
+# `codex app-server proxy` forwards raw bytes; it isn't a JSONL adapter.
+_REMOTE_JSONL_PROXY = r'''
+import os, sys, threading
+from pathlib import Path
+from websockets.sync.client import unix_connect
+home = Path(os.environ.get('CODEX_HOME') or Path.home()/'.codex').expanduser()
+with unix_connect(str(home/'app-server-control/app-server-control.sock'), uri='ws://localhost/', open_timeout=10, max_size=32*1024*1024) as ws:
+    def forward_input():
+        try:
+            for line in sys.stdin:
+                ws.send(line.rstrip('\n'))
+        finally:
+            ws.close()
+    threading.Thread(target=forward_input, daemon=True).start()
+    for message in ws:
+        print(message, flush=True)
+'''
 _REMOTE_SERVER = _REMOTE_CODEX + r'''
-# Share the daemon with local Codex clients when this CLI supports it.
+# Reuse a remote companion's Python environment when it is installed.
 if codex app-server proxy --help >/dev/null 2>&1 &&
    codex app-server daemon start >/dev/null 2>&1; then
-    codex app-server proxy
-else
-    codex app-server --listen stdio://
+    for python in "$HOME/.local/share/deck-ai/venv/bin/python" "$HOME/.local/share/deck-voice/venv/bin/python" python3; do
+        if "$python" -c 'from websockets.sync.client import unix_connect' >/dev/null 2>&1; then
+            exec "$python" -u -c ''' + shlex.quote(_REMOTE_JSONL_PROXY) + r'''
+        fi
+    done
 fi
+# Older installations still share persisted chats through the stdio server.
+codex app-server --listen stdio://
 '''
 
 
@@ -91,7 +127,7 @@ class Backend:
         self.process = subprocess.Popen(
             command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, encoding='utf-8', errors='replace', bufsize=1,
-            env={**os.environ, 'TERM': 'dumb'})
+            env={**clean_subprocess_environment(), 'TERM': 'dumb'})
         self.ws = self
         self.stderr_tail = ''
         def drain(process):
@@ -126,7 +162,7 @@ class Backend:
                         self.ws = unix_connect(path, uri='ws://localhost/', open_timeout=5, max_size=32*1024*1024)
                     except (OSError, TimeoutError):
                         subprocess.run([CODEX, 'app-server', 'daemon', 'start'], check=True,
-                                       capture_output=True, timeout=40)
+                                       capture_output=True, timeout=40, env=clean_subprocess_environment())
                         self.ws = unix_connect(path, uri='ws://localhost/', open_timeout=10, max_size=32*1024*1024)
                 except (ImportError, OSError, TimeoutError, subprocess.SubprocessError):
                     self._start_process([CODEX, 'app-server', '--listen', 'stdio://'])

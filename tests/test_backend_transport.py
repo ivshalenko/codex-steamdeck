@@ -99,10 +99,48 @@ class RemoteLauncherTests(unittest.TestCase):
                     'if [ "$1 $2 $3" = "app-server daemon start" ]; then exit 0; fi\n'
                     'printf "%s\\n" "$*"\n')
                 binary.chmod(0o755)
+                python = home/'.local/share/deck-ai/venv/bin/python'
+                python.parent.mkdir(parents=True)
+                python.write_text('#!/bin/sh\nif [ "$2" = "from websockets.sync.client import unix_connect" ]; then exit 0; fi\nprintf "JSONL adapter\\n"\n')
+                python.chmod(0o755)
                 result=subprocess.run(['/bin/sh','-c',backend._REMOTE_SERVER],capture_output=True,text=True,
                                       env={**os.environ,'HOME':str(home),'PATH':'/usr/bin:/bin'},timeout=5)
                 self.assertEqual(result.returncode,0,result.stderr)
-                self.assertEqual(result.stdout.strip(),'app-server proxy' if shared else 'app-server --listen stdio://')
+                self.assertEqual(result.stdout.strip(),'JSONL adapter' if shared else 'app-server --listen stdio://')
+
+    def test_stdio_fallback_accepts_shell_function_codex(self):
+        # The macOS app-bundle fallback defines codex as a shell function.
+        wrapper = 'codex() { if [ "$1 $2 $3" = "app-server proxy --help" ]; then return 2; fi; printf "%s\\n" "$*"; }\n'
+        result=subprocess.run(['/bin/sh','-c',wrapper+backend._REMOTE_SERVER],capture_output=True,text=True,timeout=5)
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertEqual(result.stdout.strip(),'app-server --listen stdio://')
+
+    def test_jsonl_adapter_round_trip_to_real_websocket_socket(self):
+        import json
+        from websockets.sync.server import unix_serve
+        with tempfile.TemporaryDirectory(prefix='deck-ws-',dir='/tmp') as home:
+            folder=Path(home)/'app-server-control';folder.mkdir()
+            def echo(ws):
+                for raw in ws:
+                    message=json.loads(raw)
+                    ws.send(json.dumps({'id':message['id'],'result':{'echo':message['params']}}))
+            with unix_serve(echo,str(folder/'app-server-control.sock')) as server:
+                worker=threading.Thread(target=server.serve_forever,daemon=True);worker.start()
+                # Keep stdin open until the reply arrives: EOF deliberately closes the adapter.
+                process=subprocess.Popen([sys.executable,'-u','-c',backend._REMOTE_JSONL_PROXY],
+                    stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,
+                    env={**os.environ,'CODEX_HOME':home})
+                try:
+                    process.stdin.write('{"id":2,"method":"check","params":{"text":"Привет"}}\n');process.stdin.flush()
+                    import select
+                    self.assertTrue(select.select([process.stdout],[],[],5)[0])
+                    self.assertEqual(json.loads(process.stdout.readline()),{'id':2,'result':{'echo':{'text':'Привет'}}})
+                    process.stdin.close();process.wait(timeout=5)
+                    self.assertEqual(process.returncode,0)
+                finally:
+                    if process.poll() is None:process.kill();process.wait(timeout=3)
+                    process.stdout.close();process.stderr.close()
+                server.shutdown();worker.join(timeout=3)
 
 
 class DesktopDeliveryTests(unittest.TestCase):

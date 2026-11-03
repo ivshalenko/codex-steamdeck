@@ -463,7 +463,38 @@ class DeckRemoteClientTests(unittest.TestCase):
         result, text = self.run_cli('new', 'please approve', '--wait', answer='y')
         self.assertEqual(result, 0); self.assertIn('completed', text)
         result, text = self.run_cli('new', 'please approve', '--wait', answer='n')
-        self.assertEqual(result, 0); self.assertIn('failed', text)
+        self.assertIn('failed', result)
+
+    def test_completion_from_other_chat_does_not_finish_request(self):
+        session = deck_remote.Session('desk')
+        session.thread_id = 'own'; session.turn_id = 'turn1'
+        session.on_event({'method':'turn/completed','params':{'threadId':'other','turn':{'id':'turn1','status':'completed'}}})
+        self.assertFalse(session.done.is_set())
+        session.on_event({'method':'turn/completed','params':{'threadId':'own','turn':{'id':'older','status':'completed'}}})
+        self.assertFalse(session.done.is_set())
+
+    def test_fast_completion_and_repeated_sends(self):
+        session = deck_remote.Session('desk')
+        session.backend = MagicMock()
+        sequence = iter(('one','two'))
+        def request(method, params, **kw):
+            if method != 'turn/start':return {}
+            ident = next(sequence)
+            session.on_event({'method':'turn/completed','params':{'threadId':'own','turn':{'id':ident,'status':'completed'}}})
+            return {'turn':{'id':ident}}
+        session.backend.request.side_effect = request
+        self.assertEqual(session.send('own','first',True,timeout=.1),'own')
+        self.assertEqual(session.send('own','second',True,timeout=.1),'own')
+        self.assertEqual(session.turn_id,'two')
+
+    def test_disconnect_is_reported_as_failure(self):
+        session = deck_remote.Session('desk'); session.backend = MagicMock()
+        def request(method, params, **kw):
+            if method=='turn/start':session.done.set(); return {'turn':{'id':'lost'}}
+            return {}
+        session.backend.request.side_effect=request
+        with self.assertRaisesRegex(backend.RpcError,'соединение прервано'):
+            session.send('own','text',True,timeout=.1)
 
 
 import providers

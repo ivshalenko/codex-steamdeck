@@ -136,7 +136,9 @@ ssh YOUR_ALIAS true
 ssh -o BatchMode=yes YOUR_ALIAS 'pwd'
 ```
 
-Deck AI runs JSONL RPC through SSH. Current CLIs use `app-server daemon start` and `app-server proxy` to share running Codex threads; CLIs without those commands use `app-server --listen stdio://`. Both desktop and Decky resume an existing thread before sending through the same RPC connection. A failed resume stays visible as an error instead of silently handing the message to another queue. For legacy CLIs, keep the client open while work is running; use `--wait` with `scripts/deck-remote.py`.
+Deck AI runs JSONL RPC through SSH. Current CLIs start the shared daemon and use a Python adapter to translate SSH JSONL into WebSocket messages on its Unix control socket. The adapter uses the installed companion Python environment, or system Python with `websockets`; installations without the required daemon or library use `app-server --listen stdio://`. Both desktop and Decky resume an existing thread before sending through the same RPC connection. A failed resume stays visible as an error instead of silently handing the message to another queue. For legacy CLIs, keep the client open while work is running; use `--wait` with `scripts/deck-remote.py`.
+
+When launched by Decky Loader, the client removes inherited PyInstaller library paths from child-process environments. This prevents Decky libraries from breaking normal shell commands on SteamOS.
 
 The SSH launcher also checks `~/.local/bin`, `~/.npm-global/bin`, Homebrew paths and the macOS Codex app binary when the SSH session has a minimal PATH. Remote account login uses a device code, so no browser callback needs to reach the other computer.
 
