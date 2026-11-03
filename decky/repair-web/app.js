@@ -12,7 +12,7 @@ let current = null;
 let rendered = "";
 let busy = false;
 let fetching = false;
-let mutation = 0;
+let viewRevision = 0;
 let timer;
 let delay = 2200;
 let ended = false;
@@ -86,14 +86,15 @@ function problem(error) {
 async function action(path, fields) {
   if (!current || busy) return;
   busy = true;
-  mutation++;
+  const revision = ++viewRevision;
   buttons.forEach(button => { button.disabled = true; });
   show("error", false);
   try {
-    render(await api(path, { ...fields, caseId: current.id }));
+    const value = await api(path, { ...fields, caseId: current.id });
+    if (revision === viewRevision) render(value);
     if (path === "note" && element("note").value === fields.note) element("note").value = "";
   } catch (error) {
-    problem(error);
+    if (revision === viewRevision) problem(error);
   } finally {
     buttons.forEach(button => { button.disabled = false; });
     element("accept").disabled = Boolean(current?.readOnly);
@@ -117,16 +118,16 @@ function schedule(ms) {
 async function refresh() {
   if (busy || fetching || ended || document.hidden || !navigator.onLine) return;
   fetching = true;
-  const revision = mutation;
+  const revision = viewRevision;
   try {
     const value = await api("status");
-    if (revision !== mutation) return;
+    if (revision !== viewRevision) return;
     render(value);
     delay = 2200;
     if (element("error").dataset.connection) show("error", false);
     delete element("error").dataset.connection;
   } catch (error) {
-    if (revision !== mutation) return;
+    if (revision !== viewRevision) return;
     rendered = "";
     current = null;
     show("case", false);
@@ -138,8 +139,19 @@ async function refresh() {
     element("error").dataset.connection = "1";
   } finally {
     fetching = false;
-    schedule(delay);
+    schedule(revision === viewRevision ? delay : 0);
   }
+}
+
+function networkLost() {
+  clearTimeout(timer);
+  if (ended) return;
+  viewRevision++;
+  text("status", "Ожидаю подключения к сети");
+  current = null;
+  rendered = "";
+  show("case", false);
+  show("pairing", false);
 }
 
 const challenge = location.hash.slice(1);
@@ -148,16 +160,8 @@ if (challenge) {
   try { render(await api("pair", { challenge })); }
   catch (error) { problem(error); }
 }
-await refresh();
 document.addEventListener("visibilitychange", () => schedule(0));
 window.addEventListener("online", () => schedule(0));
-window.addEventListener("offline", () => {
-  clearTimeout(timer);
-  if (!ended) {
-    text("status", "Ожидаю подключения к сети");
-    current = null;
-    rendered = "";
-    show("case", false);
-    show("pairing", false);
-  }
-});
+window.addEventListener("offline", networkLost);
+if (navigator.onLine) await refresh();
+else networkLost();
