@@ -14,6 +14,8 @@ class ReleaseTests(unittest.TestCase):
   self.assertFalse(any(p.parts[0]=='build' for p in files))
   self.assertFalse(any(p.parts[0]=='models' and str(p)!='models/README.md' for p in files))
   self.assertIn(Path('decky/runtime_paths.py'),files)
+  self.assertIn(Path('docs/brand/hero.svg'),files)
+  self.assertIn(Path('docs/README.ru.md'),files)
  def test_version_metadata_matches(self):
   version,_=package.check()
   self.assertEqual(json.loads((ROOT/'decky/package.json').read_text())['version'],version)

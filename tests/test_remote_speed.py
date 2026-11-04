@@ -686,7 +686,9 @@ class SiteAndInstallTests(unittest.TestCase):
             text = page.read_text()
             self.assertIn((ROOT/'VERSION').read_text().strip(), text)
             self.assertIn('id="quick-start"', text); self.assertIn('./install.sh --decky', text)
-            self.assertIn('Notifications, remote tasks and files', text)
+            self.assertIn('<table>', text)
+            self.assertIn('Get the installer', text)
+            self.assertTrue((Path(out)/'docs/brand/hero.svg').is_file())
             self.assertTrue((Path(out)/'deck-ai.png').is_file() and (Path(out)/'.nojekyll').exists())
             class Check(HTMLParser):
                 def __init__(self):
@@ -702,6 +704,15 @@ class SiteAndInstallTests(unittest.TestCase):
         self.assertIn('<code>a&lt;b&gt;</code>', out); self.assertIn('&lt;script&gt;', out)
         self.assertIn('blob/main/decky/README.md', out); self.assertIn('<ul><li>one</li><li>two</li></ul>', out)
         self.assertIn('x &amp;&amp; y', out)
+
+    def test_site_renders_linked_images_and_tables_without_raw_html(self):
+        out = build_site.markdown('[![A "quoted" label](docs/brand/hero.svg)](https://example.com)\n\n| Name | Preview |\n| --- | --- |\n| **UI** | ![Screen](docs/images/compact-panel.png) |\n\n<script>alert(1)</script>')
+        self.assertIn('<a href="https://example.com"><img ', out)
+        self.assertIn('alt="A &quot;quoted&quot; label"', out)
+        self.assertIn('<th>Name</th>', out)
+        self.assertIn('<td><strong>UI</strong></td>', out)
+        self.assertNotIn('<td>---</td>', out)
+        self.assertIn('&lt;script&gt;', out)
 
     def test_setup_creates_key_config_and_is_idempotent(self):
         with tempfile.TemporaryDirectory() as home:

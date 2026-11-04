@@ -1,58 +1,114 @@
-# Deck AI for Steam Deck
+![Deck AI — Your AI. Right on Deck. Chat, fix and control your Steam Deck from Gaming Mode or your computer.](docs/brand/hero.svg)
 
-AI chat in Steam Deck's Quick Access menu, with an optional desktop app, local dictation and remote control over SSH. **Community project, release candidate 1.0.0-rc.13.** Not affiliated with Valve or OpenAI.
+[English](README.md) · **[Русский](docs/README.ru.md)**
 
-**[Download / Скачать](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13)** · **[Установка по шагам / Quick start](docs/QUICKSTART.md)** · **[Steam Deck ↔ Mac / PC](docs/REMOTE-CONTROL.md)** · **[Report an issue](https://github.com/ivshalenko/codex-steamdeck/issues)**
+[![Build](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Release candidate](https://img.shields.io/badge/release-1.0.0--rc.13-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13) [![Steam Deck](https://img.shields.io/badge/made_for-Steam_Deck-c5d5e2?style=flat-square&labelColor=17212d)](docs/QUICKSTART.md) [![License](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](LICENSE)
 
-## Quick start
+**Ask for help, investigate a launch error, or send a task from your Mac.** Deck AI puts Codex in your Steam Deck's Quick Access menu, with full-screen chat, action confirmations, attachments and completion notifications. A desktop companion and SSH remote control are included.
 
-On Steam Deck, switch to **Desktop Mode**, download **Install-Deck-AI.desktop** from Releases, and open it. In Dolphin, allow execution/trust if prompted. The wizard installs the app, offers the official Codex CLI if missing, and optionally adds the plugin to an existing Decky Loader installation. Open Deck AI, sign into your own ChatGPT account, then return to Gaming Mode: **(…) → Decky → Deck AI → New chat**.
+[![Download Deck AI — open the rc.13 release and choose Install-Deck-AI.desktop.](docs/brand/install.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13)
 
-На Steam Deck перейдите в **Desktop Mode**, скачайте **Install-Deck-AI.desktop** и запустите его. При необходимости разрешите выполнение файла в Dolphin. Мастер покажет ход установки; пароль sudo вводится в отдельном терминале SteamOS. Затем откройте Deck AI и войдите в свой ChatGPT. В Gaming Mode: **(…) → Decky → Deck AI → Новый чат**.
+**[Installation](#install-on-your-steam-deck)** · **[See it in action](#see-it-in-action)** · **[Mac / PC connection](#your-computer-your-deck-one-conversation)** · **[Questions](#questions)** · **[All documentation](#find-your-next-step)**
 
-Users do **not** need Node.js, npm or a source build. The **decky.zip** asset includes the plugin's core Python runtime and a pinned WebSocket library. Codex CLI and sign-in are still required. The desktop companion and speech models are optional for text chat. See the [full guide](docs/QUICKSTART.md) for manual ZIP installation, voice setup, updates and troubleshooting.
+Free, open source, and independently distributed. **Release candidate · manual installation.** You use your own provider account; its plan, usage limits and charges still apply. [Decky store status](docs/DECKY-SUBMISSION.md).
 
-For an unpacked desktop release, the terminal alternative is `python3 scripts/setup.py`. Advanced unattended app/plugin installation: `./install.sh --decky` (install/sign into Codex separately first).
+## One companion, three ways to use it
 
-## Screenshots and videos / Скриншоты и видео
+| In Gaming Mode | On the desktop | From your computer |
+| --- | --- | --- |
+| Open **(…) → Decky → Deck AI**. Ask a question, attach a screenshot, review an action, then return to your game. | Use the GTK app for longer conversations, local dictation, languages and account setup. | Pair Mac, Windows or Linux over SSH. Create a task on Deck and continue the same conversation. |
 
-**[21 screenshot and 7 video examples / Каталог материалов](docs/MEDIA.md)** · **[Download the public gallery / Скачать галерею](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.8/deck-ai-1.0.0-rc.8-public-media.zip)**
+## See it in action
 
-![Deck AI full-screen: result of a real demonstration command](docs/media/screenshots/27-rc8-confirmed-result.png)
+![Full-screen Deck AI chat with a real approved command and its result on Steam Deck. Recorded in rc.8.](docs/media/screenshots/27-rc8-confirmed-result.png)
 
-Real Steam Deck capture: installation, interface, notifications, Mac → Deck control and a demonstration fix. Game-request screenshots are conversation history, not proof of a successful game installation. The catalog identifies the recorded versions and remaining physical-input checks.
+**A real command, a visible confirmation, a result you can inspect.** This capture is from rc.8; the current release is rc.13. [Watch the 35-second confirmation demo →](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.8/08-rc8-live-confirmation.mp4)
 
-## What you can do
+| Make it yours | Keep playing |
+| --- | --- |
+| ![Deck AI appearance settings: theme, density and message layout.](docs/media/screenshots/07-appearance-settings.png) | ![A real Deck AI completion notification over the Steam library.](docs/images/completion-notification.png) |
+| Themes, layout and text density. | A completion toast brings you back to the conversation. |
 
-[Comparison with Quest Compendium, Happy and HAPI / Сравнение похожих проектов](docs/COMPARISON.md).
+**[Browse 21 screenshots and 7 videos](docs/MEDIA.md)** · [Download the gallery](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.8/deck-ai-1.0.0-rc.8-public-media.zip)
 
-- Continue local Codex chats and choose a model, reasoning effort and service tier available to your account.
-- Check a game's Steam launch settings, test a reversible launch-option reset, and review or approve the repair from a paired browser. [Диагностика запуска и пульт](docs/LAUNCH-REPAIR.md).
-- Send tasks, inspect requested confirmations, view the queue, and receive a notification when a task completes while the panel is closed.
-- Attach Steam screenshots or up to four frames extracted from a recording. Video attachments are sampled frames, not full video analysis.
-- Use full-screen chat, history, themes, local dictation, an on-screen keyboard and language settings in the desktop companion.
-- Control Codex **on Deck from Mac/Windows/Linux**, or control a **Mac/Linux/WSL host from Deck** over SSH. [The guide separates both directions.](docs/REMOTE-CONTROL.md)
-- Optional providers: [Claude Code](docs/CLAUDE-AUTH.md) (official CLI 2.1.259+, your own account/API/cloud access), DeepSeek/OpenRouter and custom compatible API endpoints (require their own credentials). Provider availability, limits and charges depend on those services. Codex has interactive tool confirmations in Deck AI. Claude Code uses its native permissions; actions requiring a prompt must be handled in its own terminal. API chat providers produce chat replies.
+The gallery labels the recorded versions and demonstration projects. Game-related conversations show requests, not proof of a successful game installation. Video attachments use sampled frames rather than full video analysis.
 
-## Notifications, remote tasks and files
+## Install on your Steam Deck
 
-Enable notifications in Settings. Keep Steam and Decky running. A completion toast opens the corresponding conversation/device. Use the Files view to inspect files on the selected device. Review changes before allowing an agent action. Start with automatic approval **off**. Device selection determines where commands and file actions execute.
+You need a Steam Deck running SteamOS, internet access and your own ChatGPT account for Codex. For the Quick Access plugin, install [Decky Loader](https://decky.xyz) first. Text chat does not need voice models, Node.js or a source build.
 
-For remote control, both devices must stay awake and be on the same reachable network. The pairing wizard creates a dedicated public/private key pair, keeps the private key on your computer and asks you to verify Deck's SSH host fingerprint. Internet access requires your own VPN; Deck AI does not configure one. Native Windows **clients** are supported by the helper but need testing on a real Windows machine; Windows **hosts** require WSL and are not claimed as native-host support.
+| Step | What to do |
+| --- | --- |
+| **01 · Download** | Switch to **Desktop Mode**. Open the [rc.13 release](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13) and download **Install-Deck-AI.desktop** onto the Deck. |
+| **02 · Install & sign in** | Open the file in Dolphin; allow execution/trust if asked. Follow the wizard, keep the Codex option selected if needed, and choose the Decky plugin if Decky is installed. Open Deck AI and sign into ChatGPT. Enter any sudo password only in the SteamOS terminal prompt. |
+| **03 · Open & ask** | Return to **Gaming Mode → (…) → Decky → Deck AI → New chat**. Try: “Show the free space on my Steam Deck.” Review any requested action before approving it. |
 
-## Privacy and requirements
+**[Full illustrated setup →](docs/QUICKSTART.md)** · [Already have Decky? Manual ZIP instructions](docs/QUICKSTART.md#если-установлен-только-zip-decky)
 
-SteamOS x86-64, Python 3.9+, and Codex CLI signed into your own account are required. GTK 3/PyGObject is needed for the desktop app and graphical installer. Decky Loader is needed for the Quick Access plugin. FFmpeg and a working microphone are needed only for relevant media/voice features. No SteamOS root filesystem unlock is required.
+![The actual Deck AI installation wizard running on Steam Deck.](docs/images/installation-wizard.png)
 
-Dictation is local; prompts and attached content are sent to the selected cloud provider. The app stores local history/settings; Codex manages its own credentials. Optional API keys use Secret Service/KWallet. A locked wallet can prevent optional API providers from working. Never include tokens, private keys or account files in bug reports. See [SECURITY.md](SECURITY.md).
+## Your computer. Your Deck. One conversation.
 
-## Release status and Decky store
+![Mac, Windows or Linux sends a task over SSH; Codex runs on Steam Deck and returns the reply. Both devices stay awake.](docs/brand/remote.svg)
 
-This release is distributed independently from GitHub. **The official Decky store submission was declined on 3 November 2026.** The maintainer cited both the rule against plugins that are shells for LLM access and the rule against plugins developed mostly by LLMs. [Read the decision](https://github.com/SteamDeckHomebrew/decky-plugin-database/issues/1178#issuecomment-6607400046). This project used substantial Claude/Codex assistance. Install manually from this repository; no official-store approval or pending review is claimed. [Submission status](docs/DECKY-SUBMISSION.md).
+**Computer → Deck:** download the release's **remote-control.zip** on your computer and run the pairing wizard. Authorize its public key on Deck and compare the SSH fingerprint. The wizard creates a `deck-remote` launcher for your computer.
 
-Automated tests and checks on the developer's Deck do not replace an independent clean-device test. Physical controller behavior, SteamOS Stable/Beta coverage, suspend/resume during a running task and all optional providers still need the checks listed in the [release report](docs/RELEASE-CHECKLIST.md). Game installation or performance is not guaranteed; users must supply their own legally obtained games and files.
+After pairing, on Mac or Linux:
 
-## Development
+```sh
+~/.local/bin/deck-remote new "Show the free space on my Steam Deck" --wait
+~/.local/bin/deck-remote list
+~/.local/bin/deck-remote send THREAD_ID "Continue the check" --wait
+```
+
+**Deck → computer** is a separate setup: enable SSH and sign into Codex on your Mac/Linux host, then select that host in Deck AI. Windows hosts need WSL. The Windows client helper is available; a real Windows-device check remains outstanding.
+
+Both devices must stay awake and reachable. Start on the same network; access away from home needs your own VPN. **[Pairing, Windows commands and troubleshooting →](docs/REMOTE-CONTROL.md)**
+
+## More than a chat window
+
+| You want to… | Deck AI helps you… |
+| --- | --- |
+| Understand why a game won't start | Inspect Steam launch settings and test a reversible launch-option reset. A paired browser can review or approve the repair. [Launch repair](docs/LAUNCH-REPAIR.md). |
+| Show the problem | Attach Steam screenshots or up to four frames from a recording, within a five-image message limit. |
+| Keep track of work | See pending tasks, review Codex confirmations and open the correct conversation from a completion notification. Keep Steam and Decky running. |
+| Check or edit a file | Browse the selected device. The editor preserves unsaved changes across a device switch and checks the file version before saving. |
+| Speak instead of type | Download an optional language pack in the desktop app. Dictation runs locally; the resulting prompt goes to your chosen provider. |
+| Use another provider | Connect [Claude Code through its official CLI](docs/CLAUDE-AUTH.md), DeepSeek, OpenRouter or a compatible API. Use your own credentials. |
+
+Codex actions have confirmations in Deck AI. Claude Code uses native CLI permissions; actions needing an interactive prompt must be handled in its terminal. API chat providers return chat replies. Features and account limits depend on the provider.
+
+## Questions
+
+### Is it free?
+
+Deck AI is free under Apache-2.0. It does not include a cloud subscription, API credit, games or game files. Provider fees depend on your account.
+
+### Where do my prompts and keys go?
+
+Prompts and attachments go to the selected cloud provider. Dictation is local. Settings/history stay on your device, Codex manages its own credentials, and optional API keys use Secret Service/KWallet. A locked wallet can block an API provider. [Security and privacy](SECURITY.md).
+
+### A chat is slow to reconnect. Should I send the task again?
+
+Check the queue and the existing conversation first. After sleep or a network change, let the connection recover or choose **Reconnect**. Your draft and saved history remain available. [Troubleshooting](docs/QUICKSTART.md#что-делать-при-ошибке).
+
+### Is it in the official Decky store?
+
+No. The store submission was declined on 3 November 2026 under its rules on LLM-access plugins and code written mostly by LLMs. This project used substantial Claude/Codex assistance and is distributed independently through GitHub. [Decision and status](docs/DECKY-SUBMISSION.md).
+
+### How thoroughly has rc.13 been checked?
+
+206 Python tests, 33 frontend logic tests and 14 Gaming Mode checks passed. The installed build also completed 70 cycles over 35 minutes, a separate 20-minute attachment-picker run and a 15-minute HTTP run. Real Mac ↔ Deck file operations, a two-turn Codex chat and the public installer were checked. These results cover one developer's Deck; physical controls, another clean device, Stable/Beta coverage, suspend during a task, Windows and all optional providers still need separate checks. [Release notes](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13) · [Release checklist](docs/RELEASE-CHECKLIST.md).
+
+## Find your next step
+
+| Start using | Explore | Help improve |
+| --- | --- | --- |
+| [Installation](docs/QUICKSTART.md) | [Screenshots & video](docs/MEDIA.md) | [Report a bug](https://github.com/ivshalenko/codex-steamdeck/issues/new?template=bug.yml) |
+| [Mac / PC pairing](docs/REMOTE-CONTROL.md) | [Launch repair](docs/LAUNCH-REPAIR.md) | [Suggest a feature](https://github.com/ivshalenko/codex-steamdeck/issues/new?template=feature.yml) |
+| [Claude Code sign-in](docs/CLAUDE-AUTH.md) | [Similar projects](docs/COMPARISON.md) | [Contributing](docs/CONTRIBUTING.md) |
+
+## Build and attribution
 
 ```sh
 python3 -m venv --system-site-packages venv
@@ -61,10 +117,6 @@ npm --prefix decky ci --ignore-scripts
 venv/bin/python scripts/build-release.py
 ```
 
-The build runs Python regression tests, TypeScript/Rollup, frontend logic checks, shell syntax and an explicit package allowlist. Release assets include desktop/source TAR, standalone Decky ZIP, remote-control ZIP, the desktop installer and SHA-256 checksums. Personal chats, keys, models, local state and development environments are excluded. `scripts/install-decky.sh` stages a complete installation and retains the prior plugin for rollback; it does not delete user data. `~/.local/bin/deck-ai-uninstall` removes managed app files and retains user data.
+Requirements: SteamOS x86-64 and Python 3.9+. The graphical app/installer needs GTK 3/PyGObject; media extraction needs FFmpeg. No SteamOS root-filesystem unlock is required. Updates retain user data; `~/.local/bin/deck-ai-uninstall` removes managed desktop files and retains user data. See the [setup guide](docs/QUICKSTART.md) for updates and plugin removal.
 
-GitHub Pages is optional: the workflow runs only when repository variable `ENABLE_GITHUB_PAGES=true` is configured and Pages is enabled. It is not required for installation.
-
-## License and attribution
-
-Apache-2.0. Preserve [LICENSE](LICENSE), [NOTICE](NOTICE), author credit to **ivshalenko**, and third-party notices when redistributing. The plugin bundles Decky API components and a pure-Python websockets 15.0.1 wheel; their licenses are included. Each release supplies an LGPL source ZIP with the pinned Decky API, application source and instructions for rebuilding against a modified library. Codex, Decky Loader and optional voice models have their own upstream licenses and are downloaded separately where needed.
+Created by **[ivshalenko](https://github.com/ivshalenko)**. [Apache-2.0](LICENSE) · [NOTICE](NOTICE) · [Third-party licenses](decky/THIRD_PARTY_NOTICES.txt). Releases include the corresponding LGPL source package. Preserve attribution and notices when redistributing. Community project; not affiliated with Valve, OpenAI or Anthropic.
