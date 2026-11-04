@@ -383,7 +383,8 @@ class DeviceFilesTests(unittest.TestCase):
     def test_remote_save_rechecks_after_upload_before_replacing_the_file(self):
         import hashlib,time
         path=self.home/'proj/a.txt';good=hashlib.sha256(path.read_bytes()).hexdigest()
-        process=subprocess.Popen(['/bin/sh','-c',backend._SH_WRITE,'sh',str(path),good],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        uploaded=hashlib.sha256(b'new').hexdigest()
+        process=subprocess.Popen(['/bin/sh','-c',backend._SH_WRITE,'sh',str(path),good,uploaded],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         try:
             process.stdin.write(b'new');process.stdin.flush()
             deadline=time.monotonic()+3
@@ -400,6 +401,17 @@ class DeviceFilesTests(unittest.TestCase):
             self.assertEqual(list(path.parent.glob('.deckai-*')),[])
         finally:
             if process.poll() is None:process.kill();process.communicate()
+
+    def test_incomplete_remote_upload_keeps_the_original_and_backup(self):
+        import hashlib
+        path=self.home/'proj/a.txt';original=path.read_bytes()
+        expected=hashlib.sha256(original).hexdigest()
+        uploaded=hashlib.sha256(b'complete payload').hexdigest()
+        result=subprocess.run(['/bin/sh','-c',backend._SH_WRITE,'sh',str(path),expected,uploaded],input=b'incomplete',capture_output=True,timeout=5)
+        self.assertEqual(result.returncode,9)
+        self.assertEqual(path.read_bytes(),original)
+        self.assertFalse(Path(str(path)+'.deckai.bak').exists())
+        self.assertEqual(list(path.parent.glob('.deckai-*')),[])
 
 
 class WatchAndModeTests(unittest.TestCase):

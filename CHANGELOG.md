@@ -3,7 +3,7 @@
 ## 1.0.0-rc.13
 
 - Keep file browsing and saving tied to the device that opened the file. Preserve unsaved edits after changing devices.
-- Serialize file saves, check the version again on the destination, preserve executable permissions and replace backups atomically.
+- Serialize file saves, verify the complete upload and the destination version, preserve executable permissions and replace backups atomically.
 - Write unique state backups atomically, retain the last five and skip media directories before traversal.
 - Keep queue counts and labels scoped to the selected device. Prevent retrying a request still being recovered.
 - Open screenshots and videos from the chat toolbar. Enforce five-image attachment limits visibly, validate every image before copying and explain missing attachments.

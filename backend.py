@@ -352,13 +352,13 @@ set -e
 [ ! -L "$f.deckai.bak" ] || exit 4
 [ "$(wc -c < "$f")" -le 65536 ] || exit 6
 if command -v sha256sum >/dev/null 2>&1; then
-    checksum() { sha256sum < "$f"; }
+    checksum() { sha256sum < "$1"; }
 elif command -v shasum >/dev/null 2>&1; then
-    checksum() { shasum -a 256 < "$f"; }
+    checksum() { shasum -a 256 < "$1"; }
 else
     exit 10
 fi
-sum=$(checksum)
+sum=$(checksum "$f")
 [ "${sum%% *}" = "$2" ] || exit 8
 new=$(mktemp "$p/.deckai-write.XXXXXX")
 saved=""
@@ -367,7 +367,9 @@ trap 'exit 1' 1 2 15
 saved=$(mktemp "$p/.deckai-backup.XXXXXX")
 cp -p -- "$f" "$new"
 cat > "$new"
-sum=$(checksum)
+sum=$(checksum "$new")
+[ "${sum%% *}" = "$3" ] || exit 9
+sum=$(checksum "$f")
 [ "${sum%% *}" = "$2" ] || exit 8
 cp -p -- "$f" "$saved"
 mv -f -- "$saved" "$f.deckai.bak"
@@ -379,9 +381,9 @@ lock="$p/.$b.deckai.lock"
 [ ! -L "$lock" ] || exit 4
 [ ! -e "$lock" ] || [ -f "$lock" ] || exit 4
 if command -v flock >/dev/null 2>&1; then
-    exec flock -n -E 7 "$lock" sh -c ''' + shlex.quote(_SH_WRITE_BODY) + r''' sh "$f" "$2"
+    exec flock -n -E 7 "$lock" sh -c ''' + shlex.quote(_SH_WRITE_BODY) + r''' sh "$f" "$2" "$3"
 elif command -v lockf >/dev/null 2>&1; then
-    exec lockf -k -s -t 0 "$lock" sh -c ''' + shlex.quote(_SH_WRITE_BODY) + r''' sh "$f" "$2"
+    exec lockf -k -s -t 0 "$lock" sh -c ''' + shlex.quote(_SH_WRITE_BODY) + r''' sh "$f" "$2" "$3"
 else
     exit 10
 fi
@@ -392,6 +394,7 @@ _FILE_ERRORS = {3: 'Папка или файл не найдены.', 4: 'Дос
                 7: 'Файл сейчас сохраняется. Дождитесь завершения и откройте его заново.',
                 75: 'Файл сейчас сохраняется. Дождитесь завершения и откройте его заново.',
                 8: 'Файл изменился на устройстве. Откройте его заново, чтобы не потерять чужие правки.',
+                9: 'Передача файла не завершилась. Повторите сохранение.',
                 10: 'Для сохранения на этом устройстве нужны flock или lockf и SHA-256.'}
 
 
@@ -407,7 +410,8 @@ def _check_name(path):
 def _remote_sh(host, script, path, data=None, timeout=30, expected_sha256=None):
     command = 'sh -c ' + shlex.quote(script) + ' sh ' + shlex.quote(path)
     if expected_sha256 is not None:
-        command += ' ' + shlex.quote(expected_sha256)
+        import hashlib
+        command += ' ' + shlex.quote(expected_sha256) + ' ' + shlex.quote(hashlib.sha256(data).hexdigest())
     result = subprocess.run(ssh_command(host, command), input=data, capture_output=True, timeout=timeout)
     if result.returncode:
         raise RpcError(_FILE_ERRORS.get(result.returncode) or (result.stderr.decode(errors='replace')[-300:] or 'Не удалось выполнить операцию на устройстве.'))
