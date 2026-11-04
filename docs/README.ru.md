@@ -2,11 +2,11 @@
 
 **Русский** · [English](../README.md)
 
-[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.17-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.17) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
+[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.18-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.18) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
 
 **Попросите о помощи, разберитесь с ошибкой запуска или отправьте задачу с Mac.** Deck AI добавляет Codex в меню быстрого доступа Steam Deck: полноэкранный чат, подтверждение действий, вложения и уведомления. В комплекте — настольное приложение и удалённое управление по SSH.
 
-[![Скачать Deck AI — скачайте графический установщик.](brand/install-ru.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.17/Install-Deck-AI.desktop)
+[![Скачать Deck AI — скачайте графический установщик.](brand/install-ru.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.18/Install-Deck-AI.desktop)
 
 **[Установка](#установка-на-steam-deck)** · **[Демонстрация](#как-это-выглядит)** · **[Связь с Mac / ПК](#компьютер-как-пульт-steam-deck-как-исполнитель)** · **[Ответы на вопросы](#ответы-на-вопросы)** · **[Все инструкции](#куда-дальше)**
 
@@ -22,7 +22,7 @@
 
 ![Полноэкранный чат на настоящем Steam Deck: результат разрешённой команды. Снято в rc.8.](media/screenshots/27-rc8-confirmed-result.png)
 
-**Настоящая команда, явное подтверждение, результат для проверки.** Кадр снят в rc.8; текущая версия — rc.17. [Смотреть 35-секундную демонстрацию →](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.8/08-rc8-live-confirmation.mp4)
+**Настоящая команда, явное подтверждение, результат для проверки.** Кадр снят в rc.8; текущая версия — rc.18. [Смотреть 35-секундную демонстрацию →](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.8/08-rc8-live-confirmation.mp4)
 
 | Настройте под себя | Возвращайтесь к игре |
 | --- | --- |
@@ -39,7 +39,7 @@
 
 | Шаг | Что сделать |
 | --- | --- |
-| **01 · Скачать** | Перейдите в **Desktop Mode**. Откройте [релиз rc.17](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.17) и скачайте **Install-Deck-AI.desktop** на сам Deck. |
+| **01 · Скачать** | Перейдите в **Desktop Mode**. Откройте [релиз rc.18](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.18) и скачайте **Install-Deck-AI.desktop** на сам Deck. |
 | **02 · Установить и войти** | Откройте файл в Dolphin, разрешите выполнение, если потребуется. Выберите язык и автоматический либо ручной режим. Автоматический установит приложение, Codex и плагин, включая отсутствующий Decky Loader. Откройте Deck AI и войдите в ChatGPT. Пароль sudo вводится только в запросе терминала SteamOS. |
 | **03 · Начать** | Вернитесь в **Gaming Mode → (…) → Decky → Deck AI → Новый чат**. Попробуйте: «Покажи свободное место на Steam Deck». Перед разрешением действия прочитайте запрос. |
 
@@ -128,3 +128,5 @@ venv/bin/python scripts/build-release.py
 ## Обновления одной кнопкой
 
 Deck AI проверяет опубликованные релизы GitHub **раз в неделю**. Нажмите на уведомление Steam, затем «Обновить одной кнопкой» в настройках. Обновятся плагин и установленная настольная часть. Чаты, черновики, настройки и модели сохраняются. Активные задачи, диктовку и несохранённые правки нужно сначала завершить. Есть ручная проверка и выбор стабильного или предварительного канала. [Как устроено обновление](UPDATES.md).
+
+Оформление Gaming Mode и библиотеки: **Настройки → Deck AI в библиотеке Steam → Добавить или обновить Deck AI в Steam**. Можно вернуть прежние изображения. [Обложки и инструкция](GAMING-ART.md).

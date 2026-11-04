@@ -42,7 +42,7 @@ test('storage failure does not prevent changing the current interface language',
 test('every static UI translation exists and keeps its interpolation fields',()=>{
  const fields=value=>[...value.matchAll(/\{\d+\}/g)].map(m=>m[0]).sort();
  for(const [source,value] of Object.entries(english))assert.deepEqual(fields(value),fields(source),source);
- for(const name of ['index.tsx','repair-panel.tsx','launch-repair.ts','game-context.ts','updates-panel.tsx']){
+ for(const name of ['index.tsx','repair-panel.tsx','launch-repair.ts','game-context.ts','updates-panel.tsx','library-panel.tsx']){
   const source=fs.readFileSync(new URL('../src/'+name,import.meta.url),'utf8');
   const tree=ts.createSourceFile(name,source,ts.ScriptTarget.Latest,true,name.endsWith('.tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS);
   function visit(node){

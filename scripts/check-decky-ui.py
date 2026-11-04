@@ -151,6 +151,14 @@ try:
   select_tab(FULL,"Чат")
   wait(FULL,"document.querySelector('.dai-composer input')?.value==="+json.dumps(two_view_draft))
   print('PASS compact edits survive reopening an already mounted full-screen workspace',flush=True)
+  evaluate(SHARED,"DFL.Navigation.CloseSideMenus();DFL.Navigation.Navigate('/deck-ai')")
+  select_tab(FULL,"Чат");open_panel();select_tab(QAM,"Настройки")
+  wait(FULL,"!!document.querySelector('.dai-settings-grid')")
+  assert evaluate(FULL,"document.querySelector('.dai-tab[aria-selected=true]').innerText")==label('Настройки')
+  print('PASS directly opened workspace receives a tab requested from the compact panel',flush=True)
+  select_tab(FULL,"Чат")
+  wait(FULL,"!!document.querySelector('.dai-composer input')")
+
  finally:
   if evaluate(FULL,"!!document.querySelector('.dai-composer input')"):fill(FULL,test_draft)
 

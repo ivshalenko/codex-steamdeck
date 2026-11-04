@@ -1,5 +1,16 @@
 // Static interface text only. Never translate conversation bodies or file content.
 export const english:Readonly<Record<string,string>> = {
+ "Deck AI в библиотеке Steam": "Deck AI in your Steam library",
+ "Обложка, широкий баннер, прозрачный логотип и значок в одном стиле. Изменяется только ярлык Deck AI; прежние изображения сохраняются для восстановления.": "One style for the cover, wide banner, transparent logo and icon. Only the Deck AI shortcut changes; previous artwork is backed up for restore.",
+ "Для ярлыка установите настольное приложение Deck AI полным установщиком.": "Install the Deck AI desktop companion with the full installer to use the library shortcut.",
+ "Применяю оформление…": "Applying artwork\u2026",
+ "Добавить или обновить Deck AI в Steam": "Add or refresh Deck AI in Steam",
+ "Открыть в библиотеке": "Open in library",
+ "Вернуть прежние изображения": "Restore previous artwork",
+ "Не удалось изменить оформление": "Could not change library artwork",
+ "Прежние изображения восстановлены.": "Previous artwork restored.",
+ "Оформление Deck AI в библиотеке Steam готово.": "Deck AI library artwork is ready.",
+
  "Без рассуждений": "No reasoning",
  "Минимальная": "Minimal",
  "Низкая · быстрее": "Low · faster",

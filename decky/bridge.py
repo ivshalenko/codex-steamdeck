@@ -26,7 +26,7 @@ ROOT=Path.home(); STATE=resolve_state_dir()
 STEAM=ROOT/'.local/share/Steam/userdata'
 repair_services_lock = threading.Lock()
 repair_services = None
-READ_ONLY_BLOCKED={'send','retry','stop','new_thread','approve','file_write','share_add_key','custom_save','custom_remove','queue_front','queue_remove','account_login','account_logout','video_frames','settings'}
+READ_ONLY_BLOCKED={'send','retry','stop','new_thread','approve','file_write','share_add_key','custom_save','custom_remove','queue_front','queue_remove','account_login','account_logout','video_frames','settings','library_apply','library_restore'}
 WATCH_INTERVAL=12
 THREAD_LIST_TTL=6;HISTORY_TTL_ACTIVE=4;HISTORY_TTL_IDLE=12;VOSK_IDLE_SECONDS=180
 notify_lock=threading.Lock();notifications=[];notify_seq=0;approvals={};retry_at=0.0
@@ -934,6 +934,10 @@ def _call(method,params):
     if read_only and method in READ_ONLY_BLOCKED:raise ValueError('Включён режим только чтения: действия запрещены. Отключите его в настройках.')
     if method in ("repair_status", "repair_screenshots", "repair_inspect", "repair_command"):
         return launch_repair_call(method, params)
+    if method in ('library_status','library_apply','library_restore'):
+        import library_art
+        if method=='library_status':return library_art.status(PLUGIN_DIR,ROOT,STATE)
+        return library_art.apply(PLUGIN_DIR,ROOT,STATE,restore=method=='library_restore')
     if method=='snapshot':return get_snapshot()
     if method=='interface_language':return set_interface_language(params.get('language'))
     if method=='older_messages':

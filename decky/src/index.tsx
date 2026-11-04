@@ -4,8 +4,10 @@ import { t, systemText, getUILanguage, setUILanguage, subscribeUILanguage, speec
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode, type ComponentType, type HTMLAttributes, type RefAttributes } from "react";
 import { callable, definePlugin, routerHook, toaster } from "@decky/api";
 import { DialogButton, Dropdown, Focusable, TextField, ConfirmModal, showModal, ScrollPanel, Navigation, Router } from "@decky/ui";
-import { FaMicrophone, FaComment, FaHistory, FaCog, FaExpand, FaCompress, FaArrowLeft, FaGamepad, FaCopy, FaPlus, FaFolderOpen, FaPaperclip, FaListUl, FaSyncAlt } from "react-icons/fa";
-import logo from "../deck-ai.png";
+import {workspaceNavigation} from './navigation';
+import {LibraryPanel} from './library-panel';
+import {Icon} from './icons';
+import {BrandLogo,Handheld} from './brand';
 import css from "./style.css";
 import { appendAttachments, createDraftStore, createSnapshotReader, createViewGate, draftOwner } from "./drafts";
 import { chatFailures, queueCounts, queueStatus, sameChat, type QueueJob } from "./queue";
@@ -143,17 +145,17 @@ function useGameContextEnabled(){
 const FULLSCREEN_PATH="/deck-ai";
 let panelMounted=0;
 const flag=(key:string,fallback:boolean)=>{const value=localStorage.getItem(key);return value===null?fallback:value==="on";};
-let requestedTab:Tab="chat";
+const workspace=workspaceNavigation(localStorage,window);
 let fullscreenOrigin=Router.MainRunningAppID?"/apprunning":"/";
-const fullscreenViews=new Set<(tab:Tab)=>void>();
 let returnToPanel:ReturnType<typeof setTimeout>|undefined;
 function openFullscreen(tab:Tab){
- requestedTab=tab;
+ workspace.request(tab);
  const current=window.location.pathname.replace(/^\/routes/,"")||"/";
  if(current!==FULLSCREEN_PATH)fullscreenOrigin=current;
  if(returnToPanel)clearTimeout(returnToPanel);
- if(current===FULLSCREEN_PATH&&fullscreenViews.size)fullscreenViews.forEach(change=>change(tab));
- else Navigation.Navigate(FULLSCREEN_PATH);
+ // Steam can retain a mounted workspace in another browser context.
+ // Deliver the requested tab even when that context reports another pathname.
+ if(current!==FULLSCREEN_PATH)Navigation.Navigate(FULLSCREEN_PATH);
  Navigation.CloseSideMenus();
 }
 function closeFullscreen(panel=true){
@@ -163,7 +165,7 @@ function closeFullscreen(panel=true){
  Router.Navigate(fullscreenOrigin,true);
  if(panel)returnToPanel=setTimeout(()=>Navigation.OpenQuickAccessMenu(999),150);
 }
-function FullscreenPage(){return <Panel fullscreen initialTab={requestedTab}/>;}
+function FullscreenPage(){return <Panel fullscreen initialTab={workspace.current()}/>;}
 function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initialTab?:Tab}) {
  const [uiLanguage,updateUILanguage]=useState(getUILanguage);
  useEffect(()=>subscribeUILanguage(updateUILanguage),[]);
@@ -176,8 +178,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  useEffect(()=>{
   if(!fullscreen)return;
   const change=(next:Tab)=>{setTab(next);setMediaOpen(false);setQueueOpen(false);};
-  fullscreenViews.add(change);
-  return()=>{fullscreenViews.delete(change);};
+  return workspace.subscribe(change);
  },[fullscreen]);
  const [draft,setDraft]=useState(()=>drafts.read(draftOwner(session.snapshot)));
  const draftId=useRef(draftOwner(session.snapshot));
@@ -383,7 +384,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const openFiles=()=>{setTab("history");setFilesOpen(true);openFolder("~");};
  const sortedThreads=[...(data?.threads||[])].sort((a,b)=>Number(!!b.running)-Number(!!a.running));
  const sidebar=fullscreen&&layout==="split"?<GameScroll className="dai-split-side"><div className="dai-stack-content">
-  <Action primary disabled={busy||!data?.ready||ro||data?.active} onClick={startChat}><FaPlus/>{t("Новый чат")}</Action>
+  <Action primary disabled={busy||!data?.ready||ro||data?.active} onClick={startChat}><Icon name="plus"/>{t("Новый чат")}</Action>
   {sortedThreads.map(thread=><div className={"dai-history-item "+(thread.id===data?.threadId?"selected":"")+(thread.running?" running":"")} key={thread.id}><Action disabled={busy||(data?.active&&thread.id!==data.threadId&&!data.remoteHost)} onClick={()=>chooseThread(thread.id)}><span>{thread.running&&<span className="dai-dot working" aria-label={t("Выполняется")}/>}{thread.name||t("Новый чат")}</span></Action></div>)}
  </div></GameScroll>:null;
  const speak=(id:string,text:string)=>{
@@ -419,21 +420,21 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const attach=(media?:Media)=>{if(media)attachMedia([media]);};
  const signIn=()=>void run(async()=>{const result=await accountLogin();setLoginUrl(result.url+(result.userCode?t(" · Код: ")+result.userCode:""));setNotice(result.opened?t("Откройте страницу входа и завершите авторизацию."):t("Ссылка для входа показана ниже."));accept(await snapshot());});
  const disconnect=!data?.ready;
- return <Focusable style={{"--dai-text-scale":textScale} as CSSProperties} data-text-scale={textScale} data-language={uiLanguage} data-theme={appearance.theme} data-density={appearance.density} data-bubbles={appearance.bubbles} data-layout={layout} className={"dai-root"+(fullscreen?" dai-fullscreen":"")} onSecondaryButton={()=>{if(tab==="chat"&&!busy)void toggleVoice();}} onSecondaryActionDescription={tab==="chat"?(recording?t("Стоп"):t("Голос")):undefined} onCancel={event=>{
+ return <Focusable style={{"--dai-text-scale":textScale} as CSSProperties} data-text-scale={textScale} data-language={uiLanguage} data-theme={appearance.theme} data-density={appearance.density} data-bubbles={appearance.bubbles} data-layout={layout} data-brand="midnight" className={"dai-root"+(fullscreen?" dai-fullscreen":"")} onSecondaryButton={()=>{if(tab==="chat"&&!busy)void toggleVoice();}} onSecondaryActionDescription={tab==="chat"?(recording?t("Стоп"):t("Голос")):undefined} onCancel={event=>{
   if(queueOpen){event.stopPropagation();setQueueOpen(false);}
   else if(mediaOpen){event.stopPropagation();setMediaOpen(false);}
   else if(fullscreen){event.stopPropagation();closeFullscreen();}
  }}><style>{css}</style><span ref={touchAnchor} hidden/>
   {fullscreen&&<Focusable className="dai-full-header" flow-children="horizontal">
-   <div className="dai-full-brand"><h1>Deck AI</h1><span>{tab==="repair"?t("Локальная диагностика"):disconnect?t("Нет соединения"):data?.active?t("Deck AI работает…"):gameStatus}</span></div>
+   <div className="dai-full-brand"><BrandLogo size={28}/><h1>Deck AI</h1><span>{tab==="repair"?t("Локальная диагностика"):disconnect?t("Нет соединения"):data?.active?t("Deck AI работает…"):gameStatus}</span></div>
    <GameCheckbox checked={gameContextEnabled} onChange={toggleGameContext}/>
-   <Action onClick={()=>closeFullscreen()}><FaCompress/>{t("В панель")}</Action>
-   <Action onClick={()=>closeFullscreen(false)}><FaArrowLeft/>{t("К игре")}</Action>
+   <Action onClick={()=>closeFullscreen()}><Icon name="collapse"/>{t("В панель")}</Action>
+   <Action onClick={()=>closeFullscreen(false)}><Icon name="back"/>{t("К игре")}</Action>
   </Focusable>}
   <Focusable className="dai-tabs" flow-children="horizontal" role="tablist" aria-label="Deck AI">
-   {([["chat",t("Чат"),<FaComment/>],["history",t("История"),<FaHistory/>],["repair",t("Ремонт"),<FaGamepad/>],["settings",t("Настройки"),<FaCog/>]] as const).map(([id,label,icon])=><div key={id} role="tab" aria-selected={tab===id} className={"dai-tab "+(tab===id?"selected":"")}><Action disabled={busy} onClick={()=>{if((id==="settings"||id==="repair")&&!fullscreen)openFullscreen(id);else{setTab(id);setMediaOpen(false);setQueueOpen(false);}}}>{icon}<span>{label}</span></Action></div>)}
+   {([["chat",t("Чат"),<Icon name="chat"/>],["history",t("История"),<Icon name="history"/>],["repair",t("Ремонт"),<Icon name="game"/>],["settings",t("Настройки"),<Icon name="settings"/>]] as const).map(([id,label,icon])=><div key={id} role="tab" aria-selected={tab===id} className={"dai-tab "+(tab===id?"selected":"")}><Action disabled={busy} onClick={()=>{if((id==="settings"||id==="repair")&&!fullscreen)openFullscreen(id);else{setTab(id);setMediaOpen(false);setQueueOpen(false);}}}>{icon}<span>{label}</span></Action></div>)}
   </Focusable>
-  <div className="dai-viewbar"><div className="dai-status"><span className={"dai-dot "+(disconnect?"offline":data?.active?"working":"")}/><span>{!data?t("Подключение…"):data.ready?(data.active?t("Deck AI работает…"):gameStatus):(data.retryIn?t("Нет связи · повтор через {0} с",data.retryIn):t("Нет соединения"))}</span>{data?.remoteHost&&<small>{data.remoteHost}</small>}{!!data?.runningCount&&<small className="dai-running-count">{data.runningCount}{t(" в работе")}</small>}</div>{!fullscreen&&<GameCheckbox checked={gameContextEnabled} onChange={toggleGameContext}/>}{!fullscreen&&<Action disabled={busy} onClick={()=>openFullscreen(tab)}><FaExpand/>{t("На весь экран")}</Action>}</div>
+  <div className="dai-viewbar"><div className="dai-status"><span className={"dai-dot "+(disconnect?"offline":data?.active?"working":"")}/><span>{!data?t("Подключение…"):data.ready?(data.active?t("Deck AI работает…"):gameStatus):(data.retryIn?t("Нет связи · повтор через {0} с",data.retryIn):t("Нет соединения"))}</span>{data?.remoteHost&&<small>{data.remoteHost}</small>}{!!data?.runningCount&&<small className="dai-running-count">{data.runningCount}{t(" в работе")}</small>}</div>{!fullscreen&&<GameCheckbox checked={gameContextEnabled} onChange={toggleGameContext}/>}{!fullscreen&&<Action disabled={busy} onClick={()=>openFullscreen(tab)}><Icon name="expand"/>{t("На весь экран")}</Action>}</div>
   {tab!=="repair"&&(error||connectionError)&&<div className="dai-banner" role="alert"><span>{systemText(error||connectionError)}</span><Action onClick={()=>{setError("");setConnectionError("");}}>{t("Закрыть")}</Action></div>}
   {tab!=="repair"&&!error&&!connectionError&&(data?.historyWarning||data?.ready===false)&&<div className="dai-banner" role="status"><span>{systemText(data.historyWarning||data.status)}</span><Action disabled={busy} onClick={()=>void run(async()=>{accept(await refresh());})}>{t("Повторить подключение")}</Action></div>}
   {notice&&<div className="dai-notice" role="status">{systemText(notice)}</div>}
@@ -459,7 +460,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     </section>)}
    </div></GameScroll>:mediaOpen?<GameScroll className="dai-scroll dai-stack"><div className="dai-stack-content">
     <Action onClick={()=>setMediaOpen(false)}>{t("← К сообщению")}</Action>
-    <section className="dai-section dai-game-context"><h3><FaGamepad/>{t(" Контекст игры")}</h3>
+    <section className="dai-section dai-game-context"><h3><Icon name="game"/>{t(" Контекст игры")}</h3>
      <p className="dai-muted">{game?game.name:t("Сейчас Steam не сообщает о запущенной игре.")}</p>
      {game&&<p className="dai-muted">{game.status||t("Игра не передаёт описание текущего места или задания.")}</p>}
      {game?.details.map(([key,value])=><p className="dai-muted" key={key}>{key}: {value}</p>)}
@@ -476,16 +477,16 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     {!data?.screenshots.length&&!data?.videos.length&&<p className="dai-muted">{t("Сделайте скриншот в игре: Steam + R1. Он появится здесь.")}</p>}
    </div></GameScroll>:<>
     <Focusable className="dai-toolbar" flow-children="horizontal">
-     <Action disabled={busy||disconnect||ro||data?.active} onClick={startChat}><FaPlus/><span>{t("Новый")}</span></Action>
-     <Action disabled={busy||disconnect} onClick={openFiles}><FaFolderOpen/><span>{t("Файлы")}</span></Action>
-     <Action disabled={busy} onClick={()=>{setMediaOpen(true);setQuickOpen(false);}}><FaPaperclip/><span>{t("Вложения")}</span></Action>
-     <Action onClick={()=>setQueueOpen(true)}><FaListUl/><span>{t("Очередь")}{(data?.queueTotal||data?.outbox.length)?" · "+(data?.queueTotal??data?.outbox.length):""}</span></Action>
-     <Action disabled={busy} onClick={()=>void run(async()=>{accept(await refresh());setNotice(t("Обновлено"));})}><FaSyncAlt/><span>{t("Обновить")}</span></Action>
+     <Action disabled={busy||disconnect||ro||data?.active} onClick={startChat}><Icon name="plus"/><span>{t("Новый")}</span></Action>
+     <Action disabled={busy||disconnect} onClick={openFiles}><Icon name="folder"/><span>{t("Файлы")}</span></Action>
+     <Action disabled={busy} onClick={()=>{setMediaOpen(true);setQuickOpen(false);}}><Icon name="attachment"/><span>{t("Вложения")}</span></Action>
+     <Action onClick={()=>setQueueOpen(true)}><Icon name="queue"/><span>{t("Очередь")}{(data?.queueTotal||data?.outbox.length)?" · "+(data?.queueTotal??data?.outbox.length):""}</span></Action>
+     <Action disabled={busy} onClick={()=>void run(async()=>{accept(await refresh());setNotice(t("Обновлено"));})}><Icon name="refresh"/><span>{t("Обновить")}</span></Action>
     </Focusable>
     <GameScroll className="dai-messages" ref={chatRef} onScroll={()=>{const el=chatRef.current;if(el){followTail.current=el.scrollHeight-el.scrollTop-el.clientHeight<60;setShowLatest(!followTail.current);}}}>
-     <div className="dai-message-list">{!data?.messages.length&&<div className="dai-empty"><FaComment/><h3>{t("Помощь прямо в игре")}</h3><p>{t("Задайте вопрос текстом или голосом.")}<br/>{t("Можно добавить скриншот.")}</p>{disconnect&&<Action onClick={()=>void run(async()=>accept(await refresh()))} disabled={busy}>{busy?t("Подключение…"):t("Подключиться")}</Action>}</div>}
+     <div className="dai-message-list">{!data?.messages.length&&<div className="dai-empty"><Handheld/><h3>{t("Помощь прямо в игре")}</h3><p>{t("Задайте вопрос текстом или голосом.")}<br/>{t("Можно добавить скриншот.")}</p>{disconnect&&<Action onClick={()=>void run(async()=>accept(await refresh()))} disabled={busy}>{busy?t("Подключение…"):t("Подключиться")}</Action>}</div>}
      {data?.hasOlderMessages&&<Action disabled={busy} onClick={()=>void run(async()=>{followTail.current=false;accept(await olderMessages());requestAnimationFrame(()=>{if(chatRef.current)chatRef.current.scrollTop=0;});})}>{t("Показать предыдущие сообщения")}</Action>}
-     {data?.messages.map((message,i)=>message.role==="tool"?<Focusable key={message.id||i} className="dai-message tool" focusClassName="dai-focused" onActivate={()=>setOpenTool(openTool===(message.id||String(i))?"":(message.id||String(i)))}><pre>{(()=>{const text=uiLanguage==="en"?(message.textEn??message.text):message.text;return openTool===(message.id||String(i))?text:text.split("\n").slice(0,3).join("\n")+(text.split("\n").length>3?"\n…":"");})()}</pre></Focusable>:<Focusable key={message.id||i} className={"dai-message "+message.role} focusClassName="dai-focused"><small>{message.role==="user"?t("Вы"):names[data.provider]?.split(" · ")[0]||"AI"}</small><div>{message.text}</div>{!!message.attachments?.length&&<MessageAttachments items={message.attachments}/>}<div className="dai-message-tools"><Action onClick={()=>copyMessage(message.text)}><FaCopy/>{t("Копировать")}</Action>{message.role==="assistant"&&!!(window as unknown as {speechSynthesis?:unknown}).speechSynthesis&&<Action onClick={()=>speak(message.id||String(i),message.text)}>{speaking===(message.id||String(i))?t("■ Стоп"):t("🔊 Озвучить")}</Action>}</div></Focusable>)}
+     {data?.messages.map((message,i)=>message.role==="tool"?<Focusable key={message.id||i} className="dai-message tool" focusClassName="dai-focused" onActivate={()=>setOpenTool(openTool===(message.id||String(i))?"":(message.id||String(i)))}><pre>{(()=>{const text=uiLanguage==="en"?(message.textEn??message.text):message.text;return openTool===(message.id||String(i))?text:text.split("\n").slice(0,3).join("\n")+(text.split("\n").length>3?"\n…":"");})()}</pre></Focusable>:<Focusable key={message.id||i} className={"dai-message "+message.role} focusClassName="dai-focused"><small>{message.role==="user"?t("Вы"):names[data.provider]?.split(" · ")[0]||"AI"}</small><div>{message.text}</div>{!!message.attachments?.length&&<MessageAttachments items={message.attachments}/>}<div className="dai-message-tools"><Action onClick={()=>copyMessage(message.text)}><Icon name="copy"/>{t("Копировать")}</Action>{message.role==="assistant"&&!!(window as unknown as {speechSynthesis?:unknown}).speechSynthesis&&<Action onClick={()=>speak(message.id||String(i),message.text)}>{speaking===(message.id||String(i))?t("■ Стоп"):t("🔊 Озвучить")}</Action>}</div></Focusable>)}
      {(data?chatFailures(data.outbox,data.threadId,data.remoteHost||""):[]).map(x=><div className="dai-failed" key={x.id}><p>{systemText(x.error||t("Не удалось отправить"))}</p><Action disabled={busy} onClick={()=>void run(async()=>{await retry(x.id);accept(await snapshot());})}>{t("Повторить отправку")}</Action></div>)}
     </div></GameScroll>
     {showLatest&&<div className="dai-latest"><Action onClick={jumpToLatest}>{t("↓ К последнему сообщению")}</Action></div>}
@@ -502,7 +503,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
       <Action disabled={busy||recording||voiceProcessing} onClick={()=>editDraft(drafts.read(data.threadId))}>{t("Восстановить старый черновик")}</Action>}
      <form style={{display:"contents"}} onSubmit={e=>{e.preventDefault();submit();}}><div className="dai-draft-field" key={draftOwner(data)||"new"} data-draft-owner={draftOwner(data)} onInputCapture={e=>{const target=e.target as HTMLInputElement;if(target.tagName==="INPUT")editDraft(target.value,e.currentTarget.dataset.draftOwner||"");}}><TextField disabled={recording||voiceProcessing} value={draft} placeholder={t("Спросить об игре…")} onChange={e=>editDraft(e.target.value,e.target.closest<HTMLElement>(".dai-draft-field")?.dataset.draftOwner??draftId.current)} onKeyDown={e=>{if((e.key==="Enter"||e.keyCode===13)&&!e.shiftKey&&!(e.nativeEvent as KeyboardEvent).isComposing){e.preventDefault();submit();}}}/></div></form>
      <Focusable className="dai-compose-actions" flow-children="horizontal">
-      <Action recording={recording||voiceProcessing} disabled={!data||voiceProcessing||busy} onClick={()=>void toggleVoice()}><FaMicrophone/>{recording?t("Стоп"):t("Голос")}</Action>
+      <Action recording={recording||voiceProcessing} disabled={!data||voiceProcessing||busy} onClick={()=>void toggleVoice()}><Icon name="microphone"/>{recording?t("Стоп"):t("Голос")}</Action>
       {!!data?.threadId&&<Action disabled={recording||voiceProcessing} onClick={()=>setQuickOpen(!quickOpen)}>⚡</Action>}
       <Action disabled={voiceStarting||(!draft.trim()&&!recording&&!voiceProcessing)} onClick={clearDraft}>{t("Очистить")}</Action>
       {fullscreen&&data?.active&&data.provider==="codex"&&<Action disabled={busy} onClick={()=>void run(async()=>{await stop();accept(await snapshot());})}>{t("Стоп")}</Action>}
@@ -536,7 +537,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
    {!data?.threads.length&&<p className="dai-muted">{t("Ваши разговоры появятся здесь.")}</p>}
    {data?.threads.filter(x=>x.name.toLocaleLowerCase().includes(historyQuery.toLocaleLowerCase())).sort((a,b)=>Number(!!b.running)-Number(!!a.running)).map(thread=><div className={"dai-history-item "+(thread.id===data.threadId?"selected":"")+(thread.running?" running":"")} key={thread.id}><Action disabled={busy||(data.active&&thread.id!==data.threadId&&!data.remoteHost)} onClick={()=>chooseThread(thread.id)}><span>{thread.running&&<span className="dai-dot working" aria-label={t("Выполняется")}/>}{thread.name||t("Новый чат")}</span>{thread.id===data.threadId&&<small>{t("Текущий")}</small>}</Action></div>)}
   </div></GameScroll>}
-  {tab==="settings"&&<GameScroll className="dai-scroll dai-stack dai-settings"><div className="dai-settings-grid"><div className="dai-settings-column"><UpdatesPanel client={updateClient} busy={busy}/>
+  {tab==="settings"&&<GameScroll className="dai-scroll dai-stack dai-settings"><div className="dai-settings-grid"><div className="dai-settings-column"><UpdatesPanel client={updateClient} busy={busy}/><LibraryPanel disabled={busy||!!data?.readOnly}/>
    <section className="dai-section dai-model-settings"><h3>{t("Модель и ответ")}</h3><div className="dai-model-fields">
     <Choice label={t("Сервис")} value={data?.provider||"codex"} options={Object.entries(names).map(([data,label])=>({data,label:data.startsWith("custom:")?label:t(label)}))} disabled={busy||data?.active} onChange={value=>void run(async()=>{accept(await setProvider(value));setKey("");})}/>
     <Choice label={t("Модель")} value={model?.id||""} options={(data?.models||[]).map(x=>({data:x.id,label:x.name}))} disabled={busy} onChange={id=>{const next=data?.models.find(x=>x.id===id);settings(id,next?.defaultEffort||next?.efforts[0]?.id||"","default");}}/>
@@ -622,6 +623,7 @@ async function showNotifications(){
   for(const item of result.notifications.slice(-3)){
    const where=item.host?" · "+item.host:"";
    toaster.toast({
+    logo:<BrandLogo size={32}/>,icon:<Icon name={item.kind==="failed"?"warning":item.kind==="approval"?"warning":item.kind==="cancelled"?"stop":"check"}/>,
     title:item.kind==="approval"?t("Deck AI · нужно подтверждение"):item.kind==="failed"?t("Deck AI · ошибка"):item.kind==="cancelled"?t("Deck AI · задача остановлена"):t("Deck AI · задача готова"),
     body:(item.kind==="approval"&&item.summary?systemText(item.summary):item.title)+where,
     critical:item.kind==="approval",duration:item.kind==="approval"?15000:6000,
@@ -644,19 +646,19 @@ export default definePlugin(()=>{
   if(offer&&state.notificationPending&&state.preferences.automatic){
    const key='deck-ai-update-notified',token=offer.version+':'+(state.notificationId||'');
    if(localStorage.getItem(key)!==token){
-    toaster.toast({title:t('Доступно обновление Deck AI'),body:t('Версия {0}. Нажмите, чтобы открыть обновление.',offer.version),duration:10000,onClick:()=>openFullscreen('settings')});
+    toaster.toast({logo:<BrandLogo size={32}/>,icon:<Icon name="download"/>,title:t('Доступно обновление Deck AI'),body:t('Версия {0}. Нажмите, чтобы открыть обновление.',offer.version),duration:10000,onClick:()=>openFullscreen('settings')});
     localStorage.setItem(key,token);
    }
    await updateClient.acknowledge(offer.version);
   }
   const job=state.job;
   if(job&&['completed','failed'].includes(job.phase)&&localStorage.getItem('deck-ai-update-result')!==job.id){
-   toaster.toast({title:job.phase==='completed'?t('Deck AI обновлён'):t('Обновление Deck AI не завершено'),body:job.phase==='completed'?job.version:t('Откройте настройки обновлений, чтобы посмотреть подробности.'),duration:10000,onClick:()=>openFullscreen('settings')});
+   toaster.toast({logo:<BrandLogo size={32}/>,icon:<Icon name={job.phase==='completed'?'check':'warning'}/>,title:job.phase==='completed'?t('Deck AI обновлён'):t('Обновление Deck AI не завершено'),body:job.phase==='completed'?job.version:t('Откройте настройки обновлений, чтобы посмотреть подробности.'),duration:10000,onClick:()=>openFullscreen('settings')});
    localStorage.setItem('deck-ai-update-result',job.id);
   }
  });
  const stopRepairPolling=startRepairPolling();
- return {name:"Deck AI",titleView:<span>Deck AI</span>,content:<Panel/>,icon:<img src={logo} alt="Deck AI" style={{width:20,height:20,objectFit:"contain"}}/>,onDismount(){
+ return {name:"Deck AI",titleView:<span style={{display:"inline-flex",alignItems:"center",gap:8}}><BrandLogo size={22}/>Deck AI</span>,content:<Panel/>,icon:<BrandLogo size={20}/>,onDismount(){
   if(returnToPanel)clearTimeout(returnToPanel);
   clearInterval(notifier);
   stopRepairPolling();

@@ -1,7 +1,7 @@
 // Look and layout choices for the Deck AI panel. Stored per Deck in localStorage.
 export type Theme={id:string;name:string;swatch:string};
 export const themes:Theme[]=[
- {id:"ocean",name:"Океан",swatch:"#1a77b9"},
+ {id:"ocean",name:"Океан",swatch:"#a8e1fa"},
  {id:"graphite",name:"Графит",swatch:"#9aa7b4"},
  {id:"violet",name:"Фиалка",swatch:"#8b6cf0"},
  {id:"forest",name:"Лес",swatch:"#2fa66a"},

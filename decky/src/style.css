@@ -114,7 +114,7 @@
 
 /* Settings use four aligned cards: service and connection, then personal
    preferences and account. Card rows share their height rather than drifting. */
-.dai-fullscreen .dai-settings-grid{grid-template-areas:"updates updates" "model connection" "personal account";gap:12px;align-items:stretch;width:100%}
+.dai-fullscreen .dai-settings-grid{grid-template-areas:"updates updates" "library library" "model connection" "personal account";gap:12px;align-items:stretch;width:100%}
 .dai-fullscreen .dai-settings-column{display:contents}
 .dai-fullscreen .dai-model-settings{grid-area:model}
 .dai-fullscreen .dai-connection-settings{grid-area:connection}
@@ -134,7 +134,7 @@
 .dai-fullscreen .dai-account-actions{margin-top:auto}
 .dai-fullscreen .dai-field>button[role=combobox]{background:#223243!important;border-radius:4px!important}
 .dai-fullscreen .dai-settings input.DialogInput{background:#223243!important;border-radius:4px!important}
-@media(max-width:650px){.dai-fullscreen .dai-settings-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"updates" "model" "connection" "personal" "account"}.dai-fullscreen .dai-personal-fields{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:650px){.dai-fullscreen .dai-settings-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"updates" "library" "model" "connection" "personal" "account"}.dai-fullscreen .dai-personal-fields{grid-template-columns:minmax(0,1fr)}}
 
 /* Fill Decky's actual content slot, including after reopening or resizing.
    Its generated wrappers otherwise add 16px padding and a viewport clamp. */
@@ -202,7 +202,7 @@ div:has(> .dai-root:not(.dai-fullscreen)){display:flex!important;flex-direction:
    Tokens (--t-*) are set per data-theme on .dai-root. Rules below are scoped
    with [data-theme] so they win over the structural rules above without
    changing them. */
-.dai-root,.dai-root[data-theme=ocean]{--t-bg:#101923;--t-card:#16212d;--t-input:#223243;--t-btn:rgba(255,255,255,.07);--t-accent:#1a77b9;--t-accent-text:#fff;--t-tab-on:#34495d;--t-tab-on-text:#fff;--t-user:#1d3347;--t-assistant:#17222e;--t-text:#f0f4f8;--t-muted:#aab6c3;--t-line:rgba(255,255,255,.12);--t-focus-bg:#dce8f1;--t-focus-text:#152638;--t-focus-ring:#fff;--t-warn:#4a3d1f;--t-warn-line:#e4c56e;--t-bad:#502f36;--t-ok:#69c49a;--t-working:#e4c56e;--t-offline:#e59980;--t-notice:#a9cddb;--t-thumb:#3b4d5f;--dai-radius:10px;--dai-radius-sm:7px}
+.dai-root,.dai-root[data-theme=ocean]{--t-bg:#0b1119;--t-card:#162330;--t-input:#243c50;--t-btn:rgba(255,255,255,.07);--t-accent:#a8e1fa;--t-accent-text:#0b1119;--t-tab-on:#304b60;--t-tab-on-text:#fff;--t-user:#1d3347;--t-assistant:#17222e;--t-text:#f1f7fb;--t-muted:#a8bdce;--t-line:#304252;--t-focus-bg:#dce8f1;--t-focus-text:#152638;--t-focus-ring:#fff;--t-warn:#4a3d1f;--t-warn-line:#e4c56e;--t-bad:#502f36;--t-ok:#69c49a;--t-working:#e4c56e;--t-offline:#e59980;--t-notice:#a9cddb;--t-thumb:#3b4d5f;--dai-radius:10px;--dai-radius-sm:7px}
 .dai-root[data-theme=graphite]{--t-bg:#15171a;--t-card:#1e2125;--t-input:#2a2e33;--t-btn:rgba(255,255,255,.07);--t-accent:#8aa0b8;--t-accent-text:#10151a;--t-tab-on:#363c43;--t-tab-on-text:#fff;--t-user:#2b3138;--t-assistant:#1b1e22;--t-text:#ececec;--t-muted:#a2a9b0;--t-line:rgba(255,255,255,.11);--t-focus-bg:#ececec;--t-focus-text:#15171a;--t-focus-ring:#8aa0b8;--t-warn:#3d3a2c;--t-bad:#46302f;--t-notice:#b7c4d1;--t-thumb:#444a51}
 .dai-root[data-theme=violet]{--t-bg:#14111f;--t-card:#1d1830;--t-input:#2a2344;--t-btn:rgba(200,180,255,.09);--t-accent:#8b6cf0;--t-accent-text:#fff;--t-tab-on:#3a3060;--t-tab-on-text:#fff;--t-user:#2c2350;--t-assistant:#1a1629;--t-text:#efeaff;--t-muted:#b2a8d0;--t-line:rgba(190,170,255,.16);--t-focus-bg:#e7deff;--t-focus-text:#241a4a;--t-focus-ring:#fff;--t-warn:#44381f;--t-bad:#4d2a3a;--t-notice:#c9bcf5;--t-thumb:#463b72}
 .dai-root[data-theme=forest]{--t-bg:#0f1a15;--t-card:#15241c;--t-input:#1f3328;--t-btn:rgba(160,255,200,.07);--t-accent:#2fa66a;--t-accent-text:#06150d;--t-tab-on:#25433a;--t-tab-on-text:#fff;--t-user:#1c3a2c;--t-assistant:#14231b;--t-text:#e9f4ee;--t-muted:#9fb8aa;--t-line:rgba(160,230,190,.15);--t-focus-bg:#dcf2e5;--t-focus-text:#0d2a1b;--t-focus-ring:#fff;--t-warn:#423c1d;--t-bad:#4a2f2f;--t-notice:#a9dcc0;--t-thumb:#2f4a3b}
@@ -300,3 +300,8 @@ div:has(> .dai-root:not(.dai-fullscreen)){display:flex!important;flex-direction:
 .dai-repair-error{color:#ffb9b3}
 
 .dai-fullscreen .dai-updates{grid-area:updates}
+
+/* Shared cover artwork, with compact controls and legible theme-aware icons. */
+.dai-icon{display:inline-block;flex-shrink:0;vertical-align:-.15em}.dai-root .dai-button .dai-icon{width:14px;height:14px}.dai-full-brand>.dai-brand-logo{margin-right:2px}.dai-handheld{display:block;width:176px;max-width:82%;height:74px;object-fit:contain;margin:0 auto 10px}.dai-fullscreen .dai-handheld{width:220px;height:92px}.dai-fullscreen .dai-full-brand{min-width:0}.dai-root[data-theme=light] .dai-handheld{filter:drop-shadow(0 2px 2px #718ba144)}
+
+.dai-fullscreen .dai-library-art{grid-area:library}
