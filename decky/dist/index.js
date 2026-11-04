@@ -3541,7 +3541,7 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
         const previous = session.attachments.get(draftId.current) || [];
         const result = appendAttachments(previous, incoming);
         if (result.omitted && !result.added) {
-            setError("В сообщении уже пять изображений. Уберите одно, чтобы прикрепить другое.");
+            setError("Достигнут лимит пяти изображений. Уберите лишние вложения, чтобы прикрепить другое.");
             return;
         }
         if (result.omitted)
