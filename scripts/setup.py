@@ -15,7 +15,7 @@ class Setup(Gtk.Window):
   super().__init__(title='Deck AI · Setup');self.set_default_size(760,620);self.set_border_width(24);self.connect('delete-event',self.close)
   box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=12);self.add(box)
   title=Gtk.Label();title.set_markup('<span size="xx-large" weight="bold">Deck AI</span>');box.pack_start(title,False,False,0)
-  self.language=Gtk.Button(label='Русский / English');self.language.connect('clicked',self.change_language);box.pack_start(self.language,False,False,0)
+  self.language=Gtk.Button(label=text('English / Russian','Русский / English'));self.language.connect('clicked',self.change_language);box.pack_start(self.language,False,False,0)
   subtitle=Gtk.Label(label=text('1. Install → 2. Sign in → 3. Ask your first question','1. Установите → 2. Войдите → 3. Задайте первый вопрос'));box.pack_start(subtitle,False,False,0)
   self.decky=Gtk.CheckButton(label=text('Add to Decky Loader (requires Decky; may ask for sudo password)','Добавить в Decky Loader (нужен Decky; возможен запрос пароля sudo)'));self.decky.set_active((Path.home()/'homebrew').is_dir());box.pack_start(self.decky,False,False,0)
   self.codex=Gtk.CheckButton(label=text('Install official Codex CLI if it is missing (OpenAI download)','Установить официальный Codex CLI, если его нет (загрузка OpenAI)'));self.codex.set_active(True);box.pack_start(self.codex,False,False,0)

@@ -1,3 +1,633 @@
+// Static interface text only. Never translate conversation bodies or file content.
+const english = {
+    "Без рассуждений": "No reasoning",
+    "Минимальная": "Minimal",
+    "Низкая · быстрее": "Low · faster",
+    "Средняя · баланс": "Medium · balanced",
+    "Очень высокая": "Very high",
+    "Максимальная": "Maximum",
+    "Модель": "Model",
+    "Чаты": "Chats",
+    "В работе": "Working",
+    "Готов": "Ready",
+    "Не удалось сохранить черновик на диск.": "Could not save your draft.",
+    "Личный помощник": "Personal assistant",
+    "Готов к работе": "Ready",
+    "Светлая": "Light",
+    "Тёмная": "Dark",
+    "Клавиатура": "Keyboard",
+    "Новый чат": "New chat",
+    "Найти чат": "Search chats",
+    "СОХРАНЁННЫЕ ЧАТЫ": "SAVED CHATS",
+    "Ещё чаты": "More chats",
+    "Модель для новых сообщений": "Model for new messages",
+    "Глубина обработки": "Reasoning effort",
+    "Скорость": "Speed",
+    "Текущий разговор": "Current conversation",
+    "Подключаюсь к вашему диалогу…": "Connecting to your conversation…",
+    "Остановить": "Stop",
+    "Подключиться": "Connect",
+    "Что сделаем сегодня? Напишите или продиктуйте…": "What shall we do? Type or dictate…",
+    "Говорить": "Dictate",
+    "Закончить": "Finish",
+    "Отправить": "Send",
+    "Распознавание на устройстве": "On-device speech recognition",
+    "Проверьте текст перед отправкой": "Review your text before sending",
+    "Очистить": "Clear",
+    "Загружаю историю разговора…": "Loading conversation history…",
+    "Открываю чат…": "Opening chat…",
+    "Deck AI работает…": "Deck AI is working…",
+    "Продолжите разговор голосом или текстом": "Continue by voice or text",
+    "Выполняю действие на устройстве…": "Working on your device…",
+    "Сохраняю изменения…": "Saving changes…",
+    "Не удалось подключиться. Нажмите «Подключиться».": "Could not connect. Press Connect.",
+    "Черновик сохранён. Нажмите «Подключиться».": "Draft saved. Press Connect.",
+    "Распознаю…": "Transcribing…",
+    "Подготовка микрофона…": "Preparing microphone…",
+    "● Слушаю · нажмите «Закончить»": "● Listening · press Finish",
+    "Проверьте текст и нажмите «Отправить»": "Review your text and press Send",
+    "Речь не распознана. Попробуйте ещё раз.": "No speech recognized. Try again.",
+    "Сообщение уже отправляется…": "Message is already being sent…",
+    "Сначала закончите запись.": "Finish recording first.",
+    "Сначала подключитесь к Codex. Черновик сохранён.": "Connect to Codex first. Your draft is saved.",
+    "Отправляю…": "Sending…",
+    "Обычная": "Standard",
+    "Низкая": "Low",
+    "Средняя": "Medium",
+    "Высокая": "High",
+    "Повторить": "Retry",
+    "Вставить": "Paste",
+    "Пробел": "Space",
+    "Скрыть": "Hide",
+    "Скрыть окно": "Hide window",
+    "Свернуть": "Minimize",
+    "Завершить приложение": "Quit application",
+    "Аккаунт": "Account",
+    "Аккаунт: проверка…": "Account: checking…",
+    "Вход не выполнен": "Not signed in",
+    "Войти или сменить аккаунт": "Sign in or switch account",
+    "Выйти из аккаунта": "Sign out",
+    "Войти через ChatGPT": "Sign in with ChatGPT",
+    "Страница входа открыта в браузере.": "The sign-in page opened in your browser.",
+    "Вы вышли из аккаунта Codex.": "You signed out of Codex.",
+    "Не удалось открыть браузер.": "Could not open the browser.",
+    "Подключить ИИ-провайдера или устройство": "Connect an AI provider or device",
+    "Подключить Codex на другом компьютере": "Connect Codex on another computer",
+    "Подключить Claude Pro / Max": "Connect Claude Pro / Max",
+    "Подключить DeepSeek через OpenRouter": "Connect DeepSeek via OpenRouter",
+    "Подключить DeepSeek через TokenHarbor": "Connect DeepSeek via TokenHarbor",
+    "DeepSeek · TokenHarbor": "DeepSeek · TokenHarbor",
+    "Настроить TokenHarbor": "Set up TokenHarbor",
+    "Источник моделей": "Model provider",
+    "Выбрать ИИ-провайдера": "Choose AI provider",
+    "Codex · ChatGPT": "Codex · ChatGPT",
+    "Claude · Pro / Max": "Claude · Pro / Max",
+    "DeepSeek · OpenRouter": "DeepSeek · OpenRouter",
+    "Настроить DeepSeek / OpenRouter": "Set up DeepSeek / OpenRouter",
+    "Войти в Claude Code": "Sign in to Claude Code",
+    "Отправляю запрос…": "Sending request…",
+    "Ответ Claude готов": "Claude replied",
+    "Ответ DeepSeek готов": "DeepSeek replied",
+    "УСТРОЙСТВО CODEX": "CODEX DEVICE",
+    "Этот Steam Deck · локальные чаты": "This Steam Deck · local chats",
+    "Подключить компьютер": "Connect a computer",
+    "Список Mac и Windows берётся из SSH-конфигурации Steam Deck.": "Mac and Windows devices are listed from the Steam Deck SSH configuration.",
+    "Выберите компьютер из SSH-конфигурации. На нём нужен Codex с активным входом.": "Choose a computer from SSH configuration. Codex must be installed and signed in there.",
+    "Других устройств пока нет. Добавьте SSH-хост кнопкой «Подключить компьютер».": "No other devices yet. Add an SSH host with “Connect a computer”.",
+    "Подключить удалённый Codex": "Connect remote Codex",
+    "Добавьте устройство или выберите готовый SSH-алиас.": "Add a device or choose an existing SSH alias.",
+    "Имя в Codex": "Codex device name",
+    "например, macbook": "for example, macbook",
+    "Адрес компьютера": "Computer address",
+    "IP или имя в сети": "IP address or network name",
+    "Пользователь SSH": "SSH user",
+    "учётная запись Mac/Windows": "Mac/Windows account",
+    "Путь к SSH-ключу": "SSH key path",
+    "Для нового подключения укажите адрес и пользователя. На втором компьютере включите SSH и разрешите вход по вашему публичному ключу; Codex CLI должен быть установлен и авторизован.": "For a new connection, enter the address and user. Enable SSH on the other computer and authorize your public key; Codex CLI must be installed and signed in.",
+    "Отмена": "Cancel",
+    "Подключить": "Connect",
+    "Проверьте адрес и имя пользователя SSH.": "Check the SSH address and username.",
+    "Укажите короткое имя устройства латиницей.": "Enter a short device name using Latin characters.",
+    "Проверьте путь к SSH-ключу.": "Check the SSH key path.",
+    "Обновить список SSH-устройств из ~/.ssh/config": "Refresh SSH devices from ~/.ssh/config",
+    "Цветовая тема": "Colour theme",
+    "Графит": "Graphite",
+    "Фиалка": "Violet",
+    "Лес": "Forest",
+    "Янтарь": "Amber",
+    "Роза": "Rose",
+    "Свой облачный ИИ": "Your own cloud AI",
+    "Язык и голос": "Language and voice",
+    "Язык программы и диктовки": "Application and dictation language",
+    "Голос для чтения ответов": "Voice for reading replies",
+    "Модель распознавания": "Speech recognition model",
+    "Подготовить и применить": "Prepare and apply",
+    "Закрыть": "Close",
+    "Без озвучки": "No read-aloud",
+    "Обновить каталог нейроголосов": "Refresh neural voice catalog",
+    "Читать новые ответы вслух": "Read new replies aloud",
+    "Проверить голос": "Test voice",
+    "Остановить озвучку": "Stop read-aloud",
+    "Готово к выбору языка": "Ready to choose a language",
+    "Установлена": "Installed",
+    "Требуется загрузка": "Download required",
+    "Язык выбран. Нажмите «Подготовить и применить».": "Language selected. Click Prepare and apply.",
+    "Каталог недоступен. Системные и ранее загруженные голоса остаются доступны.": "Catalog unavailable. System and previously downloaded voices remain available.",
+    "Выберите поддерживаемый язык из списка": "Choose a supported language from the list",
+    "Подготовка отменена": "Preparation cancelled",
+    "Язык и голос готовы": "Language and voice are ready",
+    "Терминал": "Terminal",
+    "Войти через терминал": "Sign in using terminal",
+    "Быстрая пунктуация": "Fast punctuation",
+    "Автоодобрять разрешения": "Approve permission requests automatically",
+    "Точное распознавание речи (медленнее)": "Accurate speech recognition (slower)",
+    "Вниз ↓": "Down ↓",
+    "Разрешить": "Allow",
+    "Отклонить": "Decline",
+    "Ответить": "Answer",
+    "Изменить": "Edit",
+    "Отменить": "Cancel",
+    "Отправить сейчас": "Send now",
+    "Продолжить вход": "Continue sign-in",
+    "Русский и английский встроены. Другие переводы готовятся выбранной моделью один раз и сохраняются на устройстве. Для перевода передаются статические надписи интерфейса.": "Russian and English are built in. Other translations are prepared once by the selected model and saved on this device. Only static interface labels are provided for translation.",
+    "При подготовке загрузится только выбранный голос и недостающая модель распознавания. Общая модель Whisper используется для 99 языков. Нейроголоса доступны не для всех языков.": "Preparation downloads the selected voice and any missing recognition model. A shared Whisper model supports 99 languages. Neural voices are not available for every language.",
+    "Выберите язык или введите его код: ru, en, de, fr, ja…": "Choose a language or enter its code: ru, en, de, fr, ja…",
+    "Копировать": "Copy",
+    "Копировать ответ": "Copy reply",
+    "Текст скопирован": "Text copied",
+    "Не удалось скопировать текст": "Could not copy text",
+    "Код": "Code",
+    "Команда": "Command",
+    "Готовый текст": "Ready-to-copy text",
+    "Текст": "Text",
+    "Язык интерфейса": "Interface language",
+    "Язык распознавания речи": "Speech recognition language",
+    "Поиск по названию или коду": "Search by name or code",
+    "В начало списка": "Start of list",
+    "На страницу вверх": "Page up",
+    "На страницу вниз": "Page down",
+    "В конец списка": "End of list",
+    "Ничего не найдено": "No matches",
+    "Нажмите один раз, затем листайте список или используйте поиск": "Click once, then scroll the list or use search",
+    "Claude Code · свой доступ": "Claude Code · your access",
+    "Настроить Claude Code": "Set up Claude Code",
+    "Подключить Claude Code": "Connect Claude Code",
+    "Войти через Anthropic Console (API)": "Sign in with Anthropic Console (API)",
+    "изображение недоступно": "image unavailable",
+    "файл": "file",
+    "Игра": "Game",
+    "Выберите…": "Choose…",
+    "Связь с Deck AI прервалась. Повторяю подключение…": "Connection to Deck AI was lost. Reconnecting…",
+    "Поле сообщения очищено": "Message cleared",
+    "Не удалось завершить диктовку: ": "Could not finish dictation: ",
+    "Нет текста для отправки. Завершите диктовку или введите сообщение.": "No message to send. Finish dictation or type a message.",
+    "Запрос принят · в очереди": "Request accepted · queued",
+    "Нажмите «Разрешить» ещё раз, чтобы подтвердить": "Press Allow again to confirm",
+    "Отклонено": "Declined",
+    "Разрешено": "Allowed",
+    "Файл сохранён · копия: ": "File saved · backup: ",
+    "Загружаю диалог…": "Loading conversation…",
+    "Выполняется": "Running",
+    "Не удалось скопировать. Выделите текст сообщения для копирования.": "Could not copy. Select the message text to copy it.",
+    "Достигнут лимит пяти изображений. Уберите лишние вложения, чтобы прикрепить другое.": "Five-image limit reached. Remove an attachment before adding another.",
+    "Добавлено изображений: {0}. Для остальных освободите место. Лимит — пять.": "Added {0} images. Make room for the others. The limit is five.",
+    " · Код: ": " · Code: ",
+    "Откройте страницу входа и завершите авторизацию.": "Open the sign-in page and finish signing in.",
+    "Ссылка для входа показана ниже.": "The sign-in link is shown below.",
+    "Стоп": "Stop",
+    "Голос": "Voice",
+    "Локальная диагностика": "Local diagnostics",
+    "Нет соединения": "Disconnected",
+    "В панель": "To panel",
+    "К игре": "Back to game",
+    "Чат": "Chat",
+    "История": "History",
+    "Ремонт": "Repair",
+    "Настройки": "Settings",
+    "Подключение…": "Connecting…",
+    "Нет связи · повтор через {0} с": "Disconnected · retrying in {0}s",
+    "в работе": "running",
+    "На весь экран": "Full screen",
+    "Повторить подключение": "Reconnect",
+    "← К сообщению": "← Back to message",
+    "Очередь запросов ·": "Request queue ·",
+    "Ожидающие запросы ещё не отправлены. Запросы выполняются по очереди; занятый чат ждёт завершения текущего ответа.": "Queued requests have not been sent yet. Requests run in order; a busy chat waits for its current reply to finish.",
+    "В этом чате ожидают:": "Waiting in this chat:",
+    ". В других чатах:": ". In other chats:",
+    "Показаны последние": "Showing the latest",
+    "запросов.": "requests.",
+    "Очередь пуста.": "The queue is empty.",
+    "Этот чат": "This chat",
+    "Другое устройство · ": "Other device · ",
+    "Другой чат": "Other chat",
+    "Свернуть текст": "Collapse text",
+    "Весь текст запроса": "Full request",
+    "↑ Отправить первым": "↑ Send first",
+    "Удалить из очереди": "Remove from queue",
+    "Открыть чат": "Open chat",
+    "Контекст игры": "Game context",
+    "Сейчас Steam не сообщает о запущенной игре.": "Steam is not reporting a running game.",
+    "Игра не передаёт описание текущего места или задания.": "The game does not provide your current location or objective.",
+    "Снимок из этой игры": "Screenshot from this game",
+    "Чтобы показать, где вы сейчас: сделайте снимок в игре — Steam + R1, затем прикрепите его здесь. Галочка «Игра» добавляет к вопросу только название игры.": "To show where you are, take an in-game screenshot with Steam + R1, then attach it here. The Game checkbox adds only the game title to your question.",
+    "Другие вложения": "More attachments",
+    "Последний скриншот": "Latest screenshot",
+    "Другой скриншот": "Another screenshot",
+    "Прикрепить скриншот": "Attach screenshot",
+    "Видеозапись": "Recording",
+    "Добавить кадры из видео": "Add frames from video",
+    "Сделайте скриншот в игре: Steam + R1. Он появится здесь.": "Take an in-game screenshot with Steam + R1. It will appear here.",
+    "Новый": "New",
+    "Файлы": "Files",
+    "Вложения": "Attachments",
+    "Очередь": "Queue",
+    "Обновлено": "Refreshed",
+    "Обновить": "Refresh",
+    "Помощь прямо в игре": "Help while you play",
+    "Задайте вопрос текстом или голосом.": "Ask a question by typing or speaking.",
+    "Можно добавить скриншот.": "You can attach a screenshot.",
+    "Показать предыдущие сообщения": "Show earlier messages",
+    "Вы": "You",
+    "■ Стоп": "■ Stop",
+    "🔊 Озвучить": "🔊 Read aloud",
+    "Не удалось отправить": "Could not send",
+    "Повторить отправку": "Retry sending",
+    "↓ К последнему сообщению": "↓ Latest message",
+    "Режим только чтения: отправка, подтверждения и правки отключены.": "Read-only mode: sending, approvals and editing are disabled.",
+    "Нужно подтверждение ·": "Approval required ·",
+    "Нажмите ещё раз": "Press again",
+    "Отправка через": "Sending in",
+    "с": "s",
+    "Отменить отправку": "Cancel sending",
+    "Проверяю состояние отправленного запроса…": "Checking the submitted request…",
+    "Очередь ·": "Queue ·",
+    "· посмотреть": "· view",
+    "● Запись · распознанный текст": "● Recording · recognized text",
+    "Завершаю распознавание…": "Finishing transcription…",
+    "Распознанная речь": "Recognized speech",
+    "Здесь появится распознанная речь": "Recognized speech will appear here",
+    "Записываю. Текст появится после «Стоп».": "Recording. Text will appear after you press Stop.",
+    "Восстановить старый черновик": "Restore previous draft",
+    "Спросить об игре…": "Ask about your game…",
+    "Остановить ответ": "Stop reply",
+    "К папке": "To folder",
+    "Назад": "Back",
+    "Устройство ·": "Device ·",
+    "Выбрано другое устройство. Вернитесь к исходному устройству, чтобы сохранить правки или продолжить просмотр папки.": "Another device is selected. Return to the original device to save changes or continue browsing this folder.",
+    "⬑ Вверх": "⬑ Up",
+    "Папка пуста. Доступна только домашняя папка; ключи и секреты скрыты.": "The folder is empty. Only the home directory is available; keys and secrets are hidden.",
+    "Без изменений": "No changes",
+    "Есть несохранённые правки": "Unsaved changes",
+    "· до 64 КБ · перед записью создаётся копия .deckai.bak": "· up to 64 KB · a .deckai.bak backup is created before saving",
+    "Сохранить на устройстве": "Save on device",
+    "Отменить правки": "Discard changes",
+    "＋ Новый чат": "＋ New chat",
+    "📁 Файлы на устройстве": "📁 Files on device",
+    "Что произошло": "Recent activity",
+    "Устройство": "Device",
+    "Этот Steam Deck": "This Steam Deck",
+    "Список задач обновлён": "Task list refreshed",
+    "↻ Обновить задачи на": "↻ Refresh tasks on",
+    "Найти разговор…": "Search conversations…",
+    "Задачи на всех устройствах": "Tasks on all devices",
+    "Ваши разговоры появятся здесь.": "Your conversations will appear here.",
+    "Текущий": "Current",
+    "Модель и ответ": "Model and reply",
+    "Сервис": "Provider",
+    "Приоритетная": "Priority",
+    "Ключ API": "API key",
+    "Ключ сохранён": "Key saved",
+    "Сохранить ключ": "Save key",
+    "Ключ хранится в системном хранилище SteamOS.": "The key is stored in the SteamOS credential store.",
+    "Desktop Mode → Deck AI → + → Подключить Claude Code или Anthropic Console (API). Вход выполняется в официальном CLI: свой аккаунт, API-ключ или облачный доступ. Расходы зависят от способа доступа.": "Desktop Mode → Deck AI → + → Connect Claude Code or Anthropic Console (API). Sign in through the official CLI using your own account, API key or cloud access. Costs depend on your access method.",
+    "Для этого облачного сервиса нужен API-ключ. Он хранится в системном хранилище SteamOS.": "This cloud service needs an API key, stored in the SteamOS credential store.",
+    "Удалить «": "Remove “",
+    "Удалить": "Remove",
+    "Удалить это подключение": "Remove this connection",
+    "Оформление": "Appearance",
+    "Сообщения": "Messages",
+    "Плотность": "Density",
+    "Компоновка": "Layout",
+    "Две колонки включатся в режиме «На весь экран».": "The two-column layout is available in full screen.",
+    "Подойдёт любой облачный сервис с OpenAI-совместимым API: OpenAI, Gemini, Groq, Mistral, DeepSeek, xAI, OpenRouter и другие. Выберите готовый адрес или укажите свой (только https). Локальные серверы не поддерживаются.": "Use a cloud service with an OpenAI-compatible API: OpenAI, Gemini, Groq, Mistral, DeepSeek, xAI, OpenRouter and more. Choose a preset or enter an HTTPS address. Local servers are not supported.",
+    "Название (например, Groq)": "Name (for example, Groq)",
+    "Адрес API, например https://api.groq.com/openai/v1": "API URL, e.g. https://api.groq.com/openai/v1",
+    "Модели через запятую (необязательно)": "Models, separated by commas (optional)",
+    "Подключение добавлено": "Connection added",
+    "Добавить и выбрать": "Add and select",
+    "Интерфейс и голос": "Interface and voice",
+    "Масштаб чата и кнопок": "Chat and button scale",
+    "А−": "A−",
+    "А+": "A+",
+    "Сброс": "Reset",
+    "Язык распознавания": "Speech recognition language",
+    "Русский": "Russian",
+    "Определять автоматически": "Detect automatically",
+    "Русский · экономный": "Russian · lightweight",
+    "English · экономный": "English · lightweight",
+    "Для других языков установите многоязычную модель: scripts/download-models.sh --accurate-ru": "For other languages, install the multilingual model: scripts/download-models.sh --accurate-ru",
+    "Добавлять только название игры": "Include only the game title",
+    "Сообщать о готовности задач (уведомления Steam)": "Notify when tasks finish (Steam notifications)",
+    "Отправлять голосовое сообщение через 3 с после «Стоп»": "Send voice message 3s after Stop",
+    "Только чтение (без отправки, подтверждений и правок)": "Read only (no sending, approvals or edits)",
+    "Быстрые фразы ⚡ (строка: название | текст)": "Quick phrases ⚡ (one per line: label | text)",
+    "Модели распознавания выгружены из памяти": "Speech models unloaded from memory",
+    "Освободить память": "Free memory",
+    " · загружено моделей: {0}": " · models loaded: {0}",
+    "Подключение Codex": "Codex connection",
+    "Сервер пока недоступен. Можно повторить подключение.": "The server is unavailable. You can try reconnecting.",
+    "Соединение обновлено": "Connection refreshed",
+    "Переподключиться": "Reconnect",
+    "Другой SSH-алиас": "Another SSH alias",
+    "Следить в фоне": "Monitor in background",
+    "Уведомления и подтверждения с этих машин приходят, даже когда они не выбраны. До 5 машин.": "Receive notifications and approvals from these devices even when they are not selected. Up to 5 devices.",
+    "на связи": "connected",
+    "нет связи": "offline",
+    "подключаюсь": "connecting",
+    "выбрана": "selected",
+    "Доступ с другого компьютера": "Access from another computer",
+    "Управляйте задачами этого Deck с Mac или ПК по SSH: команды из вашего Codex появятся здесь.": "Control tasks on this Deck from your Mac or PC over SSH. Requests from your computer appear here.",
+    "Показать данные подключения": "Show connection details",
+    "✓ SSH-сервер работает": "✓ SSH server is running",
+    "✗ SSH-сервер выключен": "✗ SSH server is off",
+    "· ключей:": "· keys:",
+    " · Codex не найден": " · Codex not found",
+    "Пользователь": "User",
+    "· адреса:": "· addresses:",
+    "не найдены": "not found",
+    "На Mac или ПК запустите мастер connect-deck.py из архива Remote Control. Адрес устройства указан выше.": "On your Mac or PC, run connect-deck.py from the Remote Control archive. The device address is shown above.",
+    "Отпечатки SSH для проверки первого соединения:": "SSH fingerprints to verify the first connection:",
+    "SSH ещё не создал ключи: сначала включите сервер.": "SSH has not created host keys yet. Enable the server first.",
+    "Для ручной настройки ~/.ssh/config:": "For manual ~/.ssh/config setup:",
+    "Вставьте публичный ключ из мастера на Mac или ПК:": "Paste the public key from the wizard on your Mac or PC:",
+    "Ключ добавлен": "Key added",
+    "Такой ключ уже есть": "This key is already authorized",
+    "Разрешить этому компьютеру": "Authorize this computer",
+    "Диагностика": "Diagnostics",
+    "Проверяю…": "Checking…",
+    "Проверить подключение": "Check connection",
+    "Аккаунт ChatGPT": "ChatGPT account",
+    "Сменить аккаунт": "Switch account",
+    "Войти в аккаунт": "Sign in",
+    "Отменить вход": "Cancel sign-in",
+    "Выйти из ChatGPT?": "Sign out of ChatGPT?",
+    "Для работы Codex потребуется снова войти.": "You will need to sign in again to use Codex.",
+    "Выйти": "Sign out",
+    "Deck AI · нужно подтверждение": "Deck AI · approval required",
+    "Deck AI · ошибка": "Deck AI · task failed",
+    "Deck AI · задача остановлена": "Deck AI · task stopped",
+    "Deck AI · задача готова": "Deck AI · task complete",
+    "Диагностика готова.": "Diagnostics ready.",
+    "Параметры сброшены. Повторите запуск из библиотеки Steam.": "Launch options reset. Try launching from the Steam library again.",
+    "Исходные параметры восстановлены.": "Original launch options restored.",
+    "Текущее значение отличается от ожидаемого. Проверьте свойства игры в Steam.": "The current value differs from the expected value. Check the game's Steam properties.",
+    "QR для сопряжения браузера с этой диагностикой": "QR code to pair a browser with this diagnostic session",
+    "Разобрать ошибку запуска": "Investigate a launch error",
+    "Проверка этой Steam Deck. Можно выбрать игру, которая уже закрылась.": "Check this Steam Deck. You can select a game that has already closed.",
+    "Название игры или App ID": "Game title or App ID",
+    "Игра из библиотеки": "Game from your library",
+    "Скриншот Steam": "Steam screenshot",
+    "Без скриншота": "No screenshot",
+    "Читаю свойства Steam…": "Reading Steam properties…",
+    "Проверить запуск": "Check launch",
+    "В библиотеке нет подходящей локальной игры. Проверьте название.": "No matching local game in your library. Check the title.",
+    "Совместимость Steam · ": "Steam compatibility · ",
+    "Steam не указал инструмент совместимости.": "Steam did not specify a compatibility tool.",
+    "Выбранный скриншот Steam": "Selected Steam screenshot",
+    "Ожидаю подтверждение.": "Waiting for approval.",
+    "Сверяю параметры со Steam…": "Checking launch options with Steam…",
+    "Параметры сброшены. Результат запуска отмечен.": "Launch options reset. Launch result recorded.",
+    "Повторить проверку": "Check again",
+    "Совместимость Steam · {0}": "Steam compatibility · {0}",
+    "Скопировать сводку": "Copy summary",
+    "Изменения приостановлены в режиме «Только чтение».": "Changes are paused in read-only mode.",
+    "Уточнение с пульта ·": "Remote clarification ·",
+    "Есть пользовательские параметры запуска. Попробуйте запуск со стандартным значением. Сохраним текущие параметры для отката.": "Custom launch options are set. Try the default options; the current value will be kept for rollback.",
+    "Предложить сброс параметров": "Propose resetting options",
+    "Пользовательские параметры запуска пусты. По этой проверке исправление не требуется.": "Custom launch options are empty. This check does not suggest a change.",
+    "Временно сбросить параметры запуска этой игры?": "Temporarily reset this game's launch options?",
+    "Вернуть исходные параметры запуска этой игры?": "Restore this game's original launch options?",
+    "Подтвердить": "Confirm",
+    "Завершить ожидание Steam": "Stop waiting for Steam",
+    "Скопировать исходные параметры": "Copy original options",
+    "Открыть игру в библиотеке": "Open game in library",
+    "Отмечено: игра запустилась.": "Recorded: game launched.",
+    "Отмечено: игра не запустилась.": "Recorded: game did not launch.",
+    "Игра запустилась после сброса?": "Did the game launch after the reset?",
+    "Запустилась": "It launched",
+    "Не запустилась": "It did not launch",
+    "Предложить откат": "Propose rollback",
+    "Завершить диагностику?": "End diagnostics?",
+    "Deck AI удалит сохранённое значение параметров запуска. Автоматический откат станет недоступен.": "Deck AI will remove the saved launch options. Automatic rollback will no longer be available.",
+    "Завершить": "Finish",
+    "Продолжить": "Continue",
+    "Завершить диагностику": "End diagnostics",
+    "Пульт на телефоне или ПК": "Remote on your phone or PC",
+    "Подключить браузер": "Pair browser",
+    "Введите частный HTTPS-адрес пульта. Настройка Tailscale Serve и HTTPS-прокси описана в инструкции к релизу.": "Enter the private HTTPS address of your remote. The release guide covers Tailscale Serve and HTTPS proxy setup.",
+    "Показать QR": "Show QR code",
+    "Откройте QR на телефоне. Для ПК можно скопировать одноразовую ссылку.": "Scan the QR code with your phone. On a PC, copy the one-time link.",
+    "Скопировать ссылку": "Copy link",
+    "Код браузера": "Browser code",
+    ". Сверьте его с экраном телефона или ПК.": ". Compare it with the code on your phone or PC.",
+    "Код совпадает, подключить": "Codes match — connect",
+    "Браузер подключён к этой диагностике.": "A browser is paired with this diagnostic session.",
+    "Отключить пульт": "Disconnect remote",
+    "Steam не предоставил свойства игры.": "Steam did not provide the game properties.",
+    "Steam не ответил на запрос свойств игры.": "Steam did not respond to the game properties request.",
+    "Откройте библиотеку Steam под своим аккаунтом.": "Open the Steam library while signed into your account.",
+    "Аккаунт Steam изменился.": "The Steam account changed.",
+    "В этой версии Steam сброс параметров недоступен.": "This Steam version does not support resetting launch options.",
+    "Океан": "Ocean",
+    "Компактно": "Compact",
+    "Обычно": "Normal",
+    "Просторно": "Roomy",
+    "Пузыри": "Bubbles",
+    "Строки": "Rows",
+    "Карточки": "Cards",
+    "Вкладки сверху": "Top tabs",
+    "Вкладки снизу": "Bottom tabs",
+    "Две колонки": "Two columns",
+    "Долго выполняется · проверьте чат": "Taking a while · check the chat",
+    "Ожидает отправки": "Waiting to send",
+    "Проверяется на сервере": "Checking on server",
+    "Ошибка": "Error",
+    "Продолжай": "Continue",
+    "Покажи diff": "Show diff",
+    "Покажи diff последних изменений": "Show the diff of the latest changes",
+    "Запусти тесты": "Run tests",
+    "Запусти тесты и покажи результат": "Run the tests and show the result",
+    "Объясни ошибку": "Explain error",
+    "Объясни последнюю ошибку и предложи исправление": "Explain the latest error and suggest a fix",
+    "\n\nИгра: ": "\n\nGame: ",
+    "Язык меню не меняет текст ваших разговоров и язык диктовки.": "Menu language does not change your conversations or dictation language.",
+    "SSH-доступ без пароля": "Passwordless SSH access",
+    "Codex установлен": "Codex installed",
+    "Версия Codex": "Codex version",
+    "Папка для скриншотов доступна": "Screenshot folder available",
+    "Нет ответа за 15 секунд": "No response within 15 seconds",
+    "Соединение с app-server": "App-server connection",
+    "Модель Vosk · русский": "Vosk model · Russian",
+    "Модель Vosk · English": "Vosk model · English",
+    "Многоязычная модель Whisper": "Multilingual Whisper model",
+    "нужна только для других языков": "only needed for other languages",
+    "Утилита ffmpeg": "FFmpeg utility",
+    "Утилита pactl": "pactl utility",
+    "Сообщение в очереди": "Message queued",
+    "Подключено": "Connected",
+    "Ожидание ответа": "Waiting for reply",
+    "Нет соединения с Codex.": "Not connected to Codex.",
+    "Подключаюсь к Codex…": "Connecting to Codex…",
+    "Подключаю Codex…": "Connecting to Codex…",
+    "Создайте чат": "Create a chat",
+    "Локальный Codex": "Local Codex",
+    "Ответ остановлен": "Reply stopped",
+    "Агент просит подтверждение": "The agent is requesting approval",
+    "В журнале есть ошибка нехватки места.": "The log contains an out-of-space error.",
+    "В журнале есть ошибка доступа.": "The log contains a permission error.",
+    "В журнале есть ошибка инициализации Vulkan.": "The log contains a Vulkan initialization error.",
+    "В журнале есть ошибка запуска Wine.": "The log contains a Wine startup error.",
+    "Журнал процессов Steam недоступен.": "The Steam process log is unavailable.",
+    "В недавних событиях Steam процессы этой игры не найдены.": "No processes for this game were found in recent Steam events.",
+    "Цель ярлыка не является обычным файлом. Проверьте свойства ярлыка.": "The shortcut target is not a regular file. Check the shortcut properties.",
+    "Файл, указанный в ярлыке Steam, найден.": "The file specified by the Steam shortcut was found.",
+    "Доступный журнал Proton для игры отсутствует.": "No readable Proton log is available for this game.",
+    "Выберите скриншот этой игры из Steam.": "Choose a Steam screenshot from this game.",
+    "Формат файла не совпадает с расширением скриншота.": "The file format does not match the screenshot extension.",
+    "Ожидался обычный файл текущего пользователя.": "Expected a regular file owned by the current user.",
+    "На домашнем разделе осталось меньше 2 ГБ. Проверьте хранилище Steam.": "Less than 2 GB remains on the home partition. Check Steam storage.",
+    "Размер свободного места недоступен.": "Free-space information is unavailable.",
+    "Steam Deck не смог проверить путь игры. Проверьте доступ к накопителю.": "Steam Deck could not check the game path. Check drive access.",
+    "Свободное место на накопителе игры недоступно.": "Free-space information for the game drive is unavailable.",
+    "Журнал Proton старше часа. Сигналы могут относиться к предыдущему запуску.": "The Proton log is over an hour old. Its entries may refer to an earlier launch.",
+    "Скриншот Steam недоступен.": "The Steam screenshot is unavailable.",
+    "Диагностика устарела. Обновите экран.": "Diagnostics are out of date. Refresh the view.",
+    "Steam не предоставил данные о параметрах запуска игры.": "Steam did not provide the game's launch options.",
+    "Скриншот превышает 4 МБ.": "The screenshot exceeds 4 MB.",
+    "Цель ярлыка не найдена. Проверьте путь и подключение накопителя.": "The shortcut target was not found. Check the path and drive connection.",
+    "Папка библиотеки недоступна. Проверьте подключение накопителя.": "The library folder is unavailable. Check the drive connection.",
+    "На накопителе игры осталось меньше 2 ГБ. Проверьте хранилище Steam.": "Less than 2 GB remains on the game drive. Check Steam storage.",
+    "В конце журнала не найдено известных ошибок из списка проверок.": "No errors from the diagnostic checklist were found at the end of the log.",
+    "Срок предыдущего подтверждения истёк при перезапуске.": "The previous approval expired during restart.",
+    "Подтверждение истекло. Запросите действие снова.": "Approval expired. Request the action again.",
+    "Завершите предыдущую диагностику под тем же аккаунтом Steam.": "Finish the previous diagnostic session using the same Steam account.",
+    "В Deck AI включён режим только чтения.": "Deck AI is in read-only mode.",
+    "Действие сейчас недоступно.": "This action is currently unavailable.",
+    "Запрос подтверждения уже изменился.": "The approval request has changed.",
+    "Действие отклонено.": "Action declined.",
+    "Действие уже обработано или подтверждение истекло.": "The action has already been handled or its approval expired.",
+    "Тип игры в Steam изменился.": "The game's Steam type changed.",
+    "Параметры изменились в Steam. Чужие изменения сохранены.": "Options changed in Steam. Those changes have been preserved.",
+    "Действие уже обработано.": "This action has already been handled.",
+    "Steam не подтвердил текущее значение.": "Steam did not confirm the current value.",
+    "Свойства игры изменились перед записью. Проверьте параметры в Steam.": "The game properties changed before saving. Check the options in Steam.",
+    "Сначала дождитесь проверки сброса параметров.": "Wait for the launch-option reset to be checked first.",
+    "Steam подтвердил значение параметров.": "Steam confirmed the launch options.",
+    "Steam не подтвердил изменение. Проверьте свойства игры.": "Steam did not confirm the change. Check the game properties.",
+    "Подождите, пока Steam проверяет изменение.": "Wait while Steam checks the change.",
+    "Steam не подтвердил результат. Исходные параметры можно скопировать для ручного восстановления.": "Steam did not confirm the result. You can copy the original options for manual restoration.",
+    "Исходные параметры сейчас недоступны.": "The original options are currently unavailable.",
+    "Введите короткое уточнение.": "Enter a short clarification.",
+    "Неизвестное действие диагностики.": "Unknown diagnostic action.",
+    "Дождитесь завершения действия.": "Wait for the action to finish.",
+    "Свободно в домашнем разделе Steam Deck · {0} ГБ.": "Free space on the Steam Deck home partition · {0} GB.",
+    "Свободно на накопителе игры · {0} ГБ.": "Free space on the game drive · {0} GB.",
+    "Найден журнал Proton для игры. Возраст: {0} мин.": "Proton log found for the game. Age: {0} min.",
+    "Steam зарегистрировал процесс игры · {0}.": "Steam recorded a game process · {0}.",
+    "Steam (предыдущий журнал) зарегистрировал процесс игры · {0}.": "Steam (previous log) recorded a game process · {0}.",
+    "Steam зарегистрировал завершение процесса · {0}.": "Steam recorded a process exit · {0}.",
+    "Steam зарегистрировал завершение процесса · {0} · код {1}.": "Steam recorded a process exit · {0} · exit code {1}.",
+    "Steam (предыдущий журнал) зарегистрировал завершение процесса · {0}.": "Steam (previous log) recorded a process exit · {0}.",
+    "Steam (предыдущий журнал) зарегистрировал завершение процесса · {0} · код {1}.": "Steam (previous log) recorded a process exit · {0} · exit code {1}.",
+    "Codex недоступен: ": "Codex unavailable: ",
+    "Не удалось обновить каталог: ": "Could not refresh the catalog: ",
+    "Не удалось обновить диалог. Показана сохранённая история; повторяю подключение. ": "Could not refresh the conversation. Showing saved history while reconnecting. ",
+    "Включён режим только чтения: действия запрещены. Отключите его в настройках.": "Read-only mode is enabled. Disable it in Settings to perform actions.",
+    "Прикрепите не больше пяти изображений к одному сообщению.": "Attach no more than five images to one message.",
+    "Устройство изменилось. Вернитесь к устройству, на котором открыли файл.": "The selected device changed. Return to the device where you opened this file.",
+    "Файл был изменён. Прочитайте его заново перед сохранением.": "The file changed. Read it again before saving."
+};
+const languageKey = "deck-ai-language";
+const listeners$1 = new Set();
+// Keep the existing Russian default. The explicit preference is shared by
+// the compact panel, full-screen workspace and background notifications.
+let language = "ru";
+try {
+    if (localStorage.getItem(languageKey) === "en")
+        language = "en";
+}
+catch { }
+function getUILanguage() { return language; }
+function subscribeUILanguage(listener) {
+    listeners$1.add(listener);
+    return () => { listeners$1.delete(listener); };
+}
+function setUILanguage(next) {
+    if (next !== "ru" && next !== "en")
+        return;
+    language = next;
+    try {
+        localStorage.setItem(languageKey, next);
+    }
+    catch { }
+    listeners$1.forEach(listener => listener(next));
+}
+function t(source, ...values) {
+    const trimmed = source.trim();
+    const translated = language === "en" ? (english[source] ?? (english[trimmed] ? source.replace(trimmed, english[trimmed]) : source)) : source;
+    return translated.replace(/\{(\d+)\}/g, (token, index) => Number(index) < values.length ? String(values[Number(index)]) : token);
+}
+const systemPatterns = Object.entries(english).filter(([source]) => /\{\d+\}/.test(source)).sort((a, b) => b[0].length - a[0].length).map(([source, target]) => {
+    const fields = [];
+    const pattern = source.split(/(\{\d+\})/).map(part => {
+        const field = /^\{(\d+)\}$/.exec(part);
+        if (field) {
+            fields.push(field[1]);
+            return "(.*?)";
+        }
+        return part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }).join("");
+    return { pattern: new RegExp("^" + pattern + "$", "s"), fields, target };
+});
+const systemPrefixes = Object.keys(english).filter(source => source.endsWith(": ") || source.startsWith("Не удалось обновить диалог.")).sort((a, b) => b.length - a.length);
+// Only system labels/errors pass through this boundary. Chat messages, paths,
+// custom names and file contents must be rendered without translation.
+function systemText(source) {
+    if (language !== "en" || !source)
+        return source;
+    if (english[source])
+        return english[source];
+    for (const prefix of ["Error: ", "RuntimeError: ", "ValueError: "]) {
+        if (source.startsWith(prefix))
+            return prefix + systemText(source.slice(prefix.length));
+    }
+    for (const { pattern, fields, target } of systemPatterns) {
+        const match = pattern.exec(source);
+        if (match) {
+            const values = new Map(fields.map((field, index) => [field, match[index + 1]]));
+            return target.replace(/\{(\d+)\}/g, (token, index) => values.get(index) ?? token);
+        }
+    }
+    for (const prefix of systemPrefixes) {
+        if (source.startsWith(prefix))
+            return english[prefix] + source.slice(prefix.length);
+    }
+    return source;
+}
+let languageNames;
+function speechLanguageName(code, fallback) {
+    if (language !== "en")
+        return fallback;
+    try {
+        const Names = Intl.DisplayNames;
+        languageNames ?? (languageNames = new Names(["en"], { type: "language" }));
+        return languageNames.of(code) || fallback;
+    }
+    catch {
+        return fallback;
+    }
+}
+
 const manifest = {"name":"Deck AI"};
 const API_VERSION = 2;
 const internalAPIConnection = window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit;
@@ -482,8 +1112,8 @@ function readGameContext(source) {
         return null;
     }
 }
-function withGameContext(question, game, enabled) {
-    return enabled && game ? question + '\n\nИгра: ' + game.name : question;
+function withGameContext(question, game, enabled, gamePrefix = "\n\nИгра: ") {
+    return enabled && game ? question + gamePrefix + game.name : question;
 }
 function gameScreenshots(screenshots, game) {
     if (!game)
@@ -2968,7 +3598,7 @@ function Qr({ url }) {
         qr.make();
         return qr.createDataURL(6);
     }, [url]);
-    return SP_JSX.jsx("img", { className: "dai-repair-qr", src: src, alt: "QR \u0434\u043B\u044F \u0441\u043E\u043F\u0440\u044F\u0436\u0435\u043D\u0438\u044F \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0430 \u0441 \u044D\u0442\u043E\u0439 \u0434\u0438\u0430\u0433\u043D\u043E\u0441\u0442\u0438\u043A\u043E\u0439" });
+    return SP_JSX.jsx("img", { className: "dai-repair-qr", src: src, alt: t("QR для сопряжения браузера с этой диагностикой") });
 }
 function RepairPanel({ copy }) {
     const [view, setView] = SP_REACT.useState(repairView);
@@ -3024,31 +3654,32 @@ function RepairPanel({ copy }) {
             void run(() => repairCommand(current.id, verb, fields));
     };
     const message = error || view.error;
-    return SP_JSX.jsxs(DFL.Focusable, { className: "dai-stack-content dai-repair", "flow-children": "vertical", children: [SP_JSX.jsxs("section", { className: "dai-section", children: [SP_JSX.jsx("h3", { children: "\u0420\u0430\u0437\u043E\u0431\u0440\u0430\u0442\u044C \u043E\u0448\u0438\u0431\u043A\u0443 \u0437\u0430\u043F\u0443\u0441\u043A\u0430" }), SP_JSX.jsx("p", { className: "dai-muted", children: "\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430 \u044D\u0442\u043E\u0439 Steam Deck. \u041C\u043E\u0436\u043D\u043E \u0432\u044B\u0431\u0440\u0430\u0442\u044C \u0438\u0433\u0440\u0443, \u043A\u043E\u0442\u043E\u0440\u0430\u044F \u0443\u0436\u0435 \u0437\u0430\u043A\u0440\u044B\u043B\u0430\u0441\u044C." }), message && SP_JSX.jsx("p", { className: "dai-repair-error", role: "alert", children: message }), !current && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(DFL.TextField, { value: query, placeholder: "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0438\u0433\u0440\u044B \u0438\u043B\u0438 App ID", onChange: event => setQuery(event.target.value) }), selected ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("span", { className: "dai-label", children: "\u0418\u0433\u0440\u0430 \u0438\u0437 \u0431\u0438\u0431\u043B\u0438\u043E\u0442\u0435\u043A\u0438" }), SP_JSX.jsx(DFL.Dropdown, { selectedOption: selected.appId, disabled: busy, rgOptions: games.map(game => ({ data: game.appId, label: game.name })), onChange: option => setAppId(option.data) }), !!shots.length && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("span", { className: "dai-label", children: "\u0421\u043A\u0440\u0438\u043D\u0448\u043E\u0442 Steam" }), SP_JSX.jsx(DFL.Dropdown, { selectedOption: shot, disabled: busy, rgOptions: [{ data: "", label: "Без скриншота" }, ...shots.map(item => ({ data: item.path, label: item.name }))], onChange: option => setShot(option.data) })] }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button dai-primary", disabled: busy || !account, onClick: () => void run(async () => {
+    return SP_JSX.jsxs(DFL.Focusable, { className: "dai-stack-content dai-repair", "flow-children": "vertical", children: [SP_JSX.jsxs("section", { className: "dai-section", children: [SP_JSX.jsx("h3", { children: t("Разобрать ошибку запуска") }), SP_JSX.jsx("p", { className: "dai-muted", children: t("Проверка этой Steam Deck. Можно выбрать игру, которая уже закрылась.") }), message && SP_JSX.jsx("p", { className: "dai-repair-error", role: "alert", children: systemText(message) }), !current && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(DFL.TextField, { value: query, placeholder: t("Название игры или App ID"), onChange: event => setQuery(event.target.value) }), selected ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("span", { className: "dai-label", children: t("Игра из библиотеки") }), SP_JSX.jsx(DFL.Dropdown, { selectedOption: selected.appId, disabled: busy, rgOptions: games.map(game => ({ data: game.appId, label: game.name })), onChange: option => setAppId(option.data) }), !!shots.length && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("span", { className: "dai-label", children: t("Скриншот Steam") }), SP_JSX.jsx(DFL.Dropdown, { selectedOption: shot, disabled: busy, rgOptions: [{ data: "", label: t("Без скриншота") }, ...shots.map(item => ({ data: item.path, label: item.name }))], onChange: option => setShot(option.data) })] }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button dai-primary", disabled: busy || !account, onClick: () => void run(async () => {
                                             const result = await inspectLaunch(selected.appId, shot);
                                             setPreview(result.preview);
-                                        }), children: busy ? "Читаю свойства Steam…" : "Проверить запуск" })] }) : SP_JSX.jsx("p", { className: "dai-muted", children: "\u0412 \u0431\u0438\u0431\u043B\u0438\u043E\u0442\u0435\u043A\u0435 \u043D\u0435\u0442 \u043F\u043E\u0434\u0445\u043E\u0434\u044F\u0449\u0435\u0439 \u043B\u043E\u043A\u0430\u043B\u044C\u043D\u043E\u0439 \u0438\u0433\u0440\u044B. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435." })] }), current && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h4", { children: current.name }), SP_JSX.jsx("p", { className: "dai-muted", children: current.proton ? "Совместимость Steam · " + current.proton : "Steam не указал инструмент совместимости." }), preview && SP_JSX.jsx("img", { className: "dai-repair-preview", src: preview, alt: "\u0412\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0439 \u0441\u043A\u0440\u0438\u043D\u0448\u043E\u0442 Steam" }), SP_JSX.jsx("ul", { className: "dai-repair-checks", children: current.checks.map(check => SP_JSX.jsx("li", { children: check }, check)) }), SP_JSX.jsx("p", { role: "status", children: action?.state === "pending" ? "Ожидаю подтверждение." : action ? "Сверяю параметры со Steam…" :
-                                    current.state === "applied" && current.launchResult ? "Параметры сброшены. Результат запуска отмечен." : status[current.state] }), current.detail && SP_JSX.jsx("p", { className: "dai-muted", children: current.detail }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-repair-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy || !!action, onClick: () => send("recheck"), children: "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0443" }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", onClick: () => copy([
+                                        }), children: busy ? t("Читаю свойства Steam…") : t("Проверить запуск") })] }) : SP_JSX.jsx("p", { className: "dai-muted", children: t("В библиотеке нет подходящей локальной игры. Проверьте название.") })] }), current && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h4", { children: current.name }), SP_JSX.jsx("p", { className: "dai-muted", children: current.proton ? t("Совместимость Steam · ") + current.proton : t("Steam не указал инструмент совместимости.") }), preview && SP_JSX.jsx("img", { className: "dai-repair-preview", src: preview, alt: t("Выбранный скриншот Steam") }), SP_JSX.jsx("ul", { className: "dai-repair-checks", children: current.checks.map(check => SP_JSX.jsx("li", { children: systemText(check) }, check)) }), SP_JSX.jsx("p", { role: "status", children: action?.state === "pending" ? t("Ожидаю подтверждение.") : action ? t("Сверяю параметры со Steam…") :
+                                    current.state === "applied" && current.launchResult ? t("Параметры сброшены. Результат запуска отмечен.") : systemText(status[current.state]) }), current.detail && SP_JSX.jsx("p", { className: "dai-muted", children: systemText(current.detail) }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-repair-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy || !!action, onClick: () => send("recheck"), children: t("Повторить проверку") }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", onClick: () => copy([
                                             `${current.name} · Steam App ID ${current.appId}`,
-                                            current.proton && `Совместимость Steam · ${current.proton}`,
-                                            ...current.checks,
-                                        ].filter(Boolean).join("\n")), children: "\u0421\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0432\u043E\u0434\u043A\u0443" })] }), current.readOnly && SP_JSX.jsx("p", { className: "dai-muted", children: "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u043F\u0440\u0438\u043E\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u044B \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u00AB\u0422\u043E\u043B\u044C\u043A\u043E \u0447\u0442\u0435\u043D\u0438\u0435\u00BB." }), current.note && SP_JSX.jsxs("p", { className: "dai-muted", children: ["\u0423\u0442\u043E\u0447\u043D\u0435\u043D\u0438\u0435 \u0441 \u043F\u0443\u043B\u044C\u0442\u0430 \u00B7 ", current.note] }), !action && current.canReset && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("p", { children: "\u0415\u0441\u0442\u044C \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u0437\u0430\u043F\u0443\u0441\u043A\u0430. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439\u0442\u0435 \u0437\u0430\u043F\u0443\u0441\u043A \u0441\u043E \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u044B\u043C \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435\u043C. \u0421\u043E\u0445\u0440\u0430\u043D\u0438\u043C \u0442\u0435\u043A\u0443\u0449\u0438\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u0434\u043B\u044F \u043E\u0442\u043A\u0430\u0442\u0430." }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy || current.readOnly, onClick: () => send("request", { kind: "reset" }), children: "\u041F\u0440\u0435\u0434\u043B\u043E\u0436\u0438\u0442\u044C \u0441\u0431\u0440\u043E\u0441 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u0432" })] }), !action && current.state === "inspected" && !current.canReset &&
-                                SP_JSX.jsx("p", { children: "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u0437\u0430\u043F\u0443\u0441\u043A\u0430 \u043F\u0443\u0441\u0442\u044B. \u041F\u043E \u044D\u0442\u043E\u0439 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0435 \u0438\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u043D\u0435 \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F." }), action?.state === "pending" && SP_JSX.jsxs("div", { className: "dai-repair-confirm", children: [SP_JSX.jsx("p", { children: action.kind === "reset" ? "Временно сбросить параметры запуска этой игры?" : "Вернуть исходные параметры запуска этой игры?" }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-repair-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button dai-primary", disabled: busy || current.readOnly, onClick: () => send("decide", { actionId: action.id, decision: true }), children: "\u041F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044C" }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("decide", { actionId: action.id, decision: false }), children: "\u041E\u0442\u043A\u043B\u043E\u043D\u0438\u0442\u044C" })] })] }), current.canEndWait && action && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("end_wait", { actionId: action.id }), children: "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C \u043E\u0436\u0438\u0434\u0430\u043D\u0438\u0435 Steam" }), current.hasBackup && !action && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => void run(async () => copy(await originalLaunchOptions(current.id))), children: "\u0421\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0438\u0441\u0445\u043E\u0434\u043D\u044B\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B" }), !action && current.state === "applied" && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", onClick: () => DFL.Navigation.Navigate("/library/app/" + current.appId), children: "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0438\u0433\u0440\u0443 \u0432 \u0431\u0438\u0431\u043B\u0438\u043E\u0442\u0435\u043A\u0435" }), current.launchResult ? SP_JSX.jsx("p", { children: current.launchResult === "started" ? "Отмечено: игра запустилась." : "Отмечено: игра не запустилась." }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("p", { children: "\u0418\u0433\u0440\u0430 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0430\u0441\u044C \u043F\u043E\u0441\u043B\u0435 \u0441\u0431\u0440\u043E\u0441\u0430?" }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-repair-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("result", { result: "started" }), children: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0430\u0441\u044C" }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("result", { result: "failed" }), children: "\u041D\u0435 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0430\u0441\u044C" })] })] }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy || current.readOnly, onClick: () => send("request", { kind: "restore" }), children: "\u041F\u0440\u0435\u0434\u043B\u043E\u0436\u0438\u0442\u044C \u043E\u0442\u043A\u0430\u0442" })] }), !action && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => {
+                                            current.proton && t("Совместимость Steam · {0}", current.proton),
+                                            ...current.checks.map(systemText),
+                                        ].filter(Boolean).join("\n")), children: t("Скопировать сводку") })] }), current.readOnly && SP_JSX.jsx("p", { className: "dai-muted", children: t("Изменения приостановлены в режиме «Только чтение».") }), current.note && SP_JSX.jsxs("p", { className: "dai-muted", children: [t("Уточнение с пульта · "), current.note] }), !action && current.canReset && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("p", { children: t("Есть пользовательские параметры запуска. Попробуйте запуск со стандартным значением. Сохраним текущие параметры для отката.") }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy || current.readOnly, onClick: () => send("request", { kind: "reset" }), children: t("Предложить сброс параметров") })] }), !action && current.state === "inspected" && !current.canReset &&
+                                SP_JSX.jsx("p", { children: t("Пользовательские параметры запуска пусты. По этой проверке исправление не требуется.") }), action?.state === "pending" && SP_JSX.jsxs("div", { className: "dai-repair-confirm", children: [SP_JSX.jsx("p", { children: action.kind === "reset" ? t("Временно сбросить параметры запуска этой игры?") : t("Вернуть исходные параметры запуска этой игры?") }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-repair-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button dai-primary", disabled: busy || current.readOnly, onClick: () => send("decide", { actionId: action.id, decision: true }), children: t("Подтвердить") }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("decide", { actionId: action.id, decision: false }), children: t("Отклонить") })] })] }), current.canEndWait && action && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("end_wait", { actionId: action.id }), children: t("Завершить ожидание Steam") }), current.hasBackup && !action && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => void run(async () => copy(await originalLaunchOptions(current.id))), children: t("Скопировать исходные параметры") }), !action && current.state === "applied" && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", onClick: () => DFL.Navigation.Navigate("/library/app/" + current.appId), children: t("Открыть игру в библиотеке") }), current.launchResult ? SP_JSX.jsx("p", { children: current.launchResult === "started" ? t("Отмечено: игра запустилась.") : t("Отмечено: игра не запустилась.") }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("p", { children: t("Игра запустилась после сброса?") }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-repair-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("result", { result: "started" }), children: t("Запустилась") }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("result", { result: "failed" }), children: t("Не запустилась") })] })] }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy || current.readOnly, onClick: () => send("request", { kind: "restore" }), children: t("Предложить откат") })] }), !action && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => {
                                     const close = () => void run(async () => { await repairCommand(current.id, "close"); setPreview(""); });
                                     if (current.state !== "applied" && current.state !== "conflict") {
                                         close();
                                         return;
                                     }
-                                    DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C \u0434\u0438\u0430\u0433\u043D\u043E\u0441\u0442\u0438\u043A\u0443?", strDescription: "Deck AI \u0443\u0434\u0430\u043B\u0438\u0442 \u0441\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u043E\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435 \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u0432 \u0437\u0430\u043F\u0443\u0441\u043A\u0430. \u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u043E\u0442\u043A\u0430\u0442 \u0441\u0442\u0430\u043D\u0435\u0442 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D.", strOKButtonText: "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C", strCancelButtonText: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C", onOK: close }));
-                                }, children: "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C \u0434\u0438\u0430\u0433\u043D\u043E\u0441\u0442\u0438\u043A\u0443" })] })] }), current && SP_JSX.jsxs("section", { className: "dai-section", children: [SP_JSX.jsx("h3", { children: "\u041F\u0443\u043B\u044C\u0442 \u043D\u0430 \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u0435 \u0438\u043B\u0438 \u041F\u041A" }), remote.state === "off" && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", onClick: () => setPairOpen(!pairOpen), children: "\u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0431\u0440\u0430\u0443\u0437\u0435\u0440" }), pairOpen && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("p", { className: "dai-muted", children: "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0447\u0430\u0441\u0442\u043D\u044B\u0439 HTTPS-\u0430\u0434\u0440\u0435\u0441 \u043F\u0443\u043B\u044C\u0442\u0430. \u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430 Tailscale Serve \u0438 HTTPS-\u043F\u0440\u043E\u043A\u0441\u0438 \u043E\u043F\u0438\u0441\u0430\u043D\u0430 \u0432 \u0438\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u0438 \u043A \u0440\u0435\u043B\u0438\u0437\u0443." }), SP_JSX.jsx(DFL.TextField, { value: address, placeholder: "https://deck.example.ts.net:8443", onChange: event => setAddress(event.target.value) }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button dai-primary", disabled: busy || !address.trim(), onClick: () => void run(async () => {
+                                    DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: t("Завершить диагностику?"), strDescription: t("Deck AI удалит сохранённое значение параметров запуска. Автоматический откат станет недоступен."), strOKButtonText: t("Завершить"), strCancelButtonText: t("Продолжить"), onOK: close }));
+                                }, children: t("Завершить диагностику") })] })] }), current && SP_JSX.jsxs("section", { className: "dai-section", children: [SP_JSX.jsx("h3", { children: t("Пульт на телефоне или ПК") }), remote.state === "off" && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", onClick: () => setPairOpen(!pairOpen), children: t("Подключить браузер") }), pairOpen && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("p", { className: "dai-muted", children: t("Введите частный HTTPS-адрес пульта. Настройка Tailscale Serve и HTTPS-прокси описана в инструкции к релизу.") }), SP_JSX.jsx(DFL.TextField, { value: address, placeholder: "https://deck.example.ts.net:8443", onChange: event => setAddress(event.target.value) }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button dai-primary", disabled: busy || !address.trim(), onClick: () => void run(async () => {
                                             await repairCommand(current.id, "pair", { address });
                                             localStorage.setItem(originKey, address.trim());
-                                        }), children: "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C QR" })] })] }), remote.state === "pairing" && remote.url && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Qr, { url: remote.url }), SP_JSX.jsx("p", { className: "dai-muted", children: "\u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 QR \u043D\u0430 \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u0435. \u0414\u043B\u044F \u041F\u041A \u043C\u043E\u0436\u043D\u043E \u0441\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043E\u0434\u043D\u043E\u0440\u0430\u0437\u043E\u0432\u0443\u044E \u0441\u0441\u044B\u043B\u043A\u0443." }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", onClick: () => { if (remote.url)
-                                    copy(remote.url); }, children: "\u0421\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0441\u044B\u043B\u043A\u0443" })] }), remote.state === "pending" && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("p", { children: ["\u041A\u043E\u0434 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0430 ", SP_JSX.jsx("strong", { children: remote.code }), ". \u0421\u0432\u0435\u0440\u044C\u0442\u0435 \u0435\u0433\u043E \u0441 \u044D\u043A\u0440\u0430\u043D\u043E\u043C \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u0430 \u0438\u043B\u0438 \u041F\u041A."] }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button dai-primary", disabled: busy, onClick: () => send("pair_confirm", { code: remote.code }), children: "\u041A\u043E\u0434 \u0441\u043E\u0432\u043F\u0430\u0434\u0430\u0435\u0442, \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0438\u0442\u044C" })] }), remote.state === "connected" && SP_JSX.jsx("p", { role: "status", children: "\u0411\u0440\u0430\u0443\u0437\u0435\u0440 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0451\u043D \u043A \u044D\u0442\u043E\u0439 \u0434\u0438\u0430\u0433\u043D\u043E\u0441\u0442\u0438\u043A\u0435." }), remote.state !== "off" && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("pair_stop"), children: "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043F\u0443\u043B\u044C\u0442" })] })] });
+                                        }), children: t("Показать QR") })] })] }), remote.state === "pairing" && remote.url && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Qr, { url: remote.url }), SP_JSX.jsx("p", { className: "dai-muted", children: t("Откройте QR на телефоне. Для ПК можно скопировать одноразовую ссылку.") }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", onClick: () => { if (remote.url)
+                                    copy(remote.url); }, children: t("Скопировать ссылку") })] }), remote.state === "pending" && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("p", { children: [t("Код браузера "), SP_JSX.jsx("strong", { children: remote.code }), t(". Сверьте его с экраном телефона или ПК.")] }), SP_JSX.jsx(DFL.DialogButton, { className: "dai-button dai-primary", disabled: busy, onClick: () => send("pair_confirm", { code: remote.code }), children: t("Код совпадает, подключить") })] }), remote.state === "connected" && SP_JSX.jsx("p", { role: "status", children: t("Браузер подключён к этой диагностике.") }), remote.state !== "off" && SP_JSX.jsx(DFL.DialogButton, { className: "dai-button", disabled: busy, onClick: () => send("pair_stop"), children: t("Отключить пульт") })] })] });
 }
 
 const snapshot = callable("get_snapshot");
 const refresh = callable("refresh");
+const saveInterfaceLanguage = callable("set_interface_language");
 const selectThread = callable("select_thread");
 const newThread = callable("new_thread");
 const saveSettings = callable("save_settings");
@@ -3089,16 +3720,16 @@ function Action({ children, onClick, disabled = false, primary = false, recordin
     return SP_JSX.jsx(DFL.DialogButton, { className: "dai-button" + (primary ? " dai-primary" : "") + (recording ? " dai-recording" : "") + (selected ? " dai-selected" : ""), "aria-pressed": selected, disabled: disabled, onClick: onClick, children: children });
 }
 function Segmented({ label, value, options, onChange }) {
-    return SP_JSX.jsxs("div", { className: "dai-field", children: [SP_JSX.jsx("span", { className: "dai-label", children: label }), SP_JSX.jsx(DFL.Focusable, { className: "dai-segmented", "flow-children": "horizontal", children: options.map(option => SP_JSX.jsx(Action, { selected: value === option.id, onClick: () => onChange(option.id), children: option.name }, option.id)) })] });
+    return SP_JSX.jsxs("div", { className: "dai-field", children: [SP_JSX.jsx("span", { className: "dai-label", children: label }), SP_JSX.jsx(DFL.Focusable, { className: "dai-segmented", "flow-children": "horizontal", children: options.map(option => SP_JSX.jsx(Action, { selected: value === option.id, onClick: () => onChange(option.id), children: t(option.name) }, option.id)) })] });
 }
 function MessageAttachments({ items }) {
-    return SP_JSX.jsx("div", { className: "dai-message-attachments", children: items.map(item => SP_JSX.jsx("div", { className: "dai-message-attachment", children: item.preview ? SP_JSX.jsx(DFL.DialogButton, { className: "dai-image-button", onClick: () => DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: item.name.length > 48 ? item.name.slice(0, 45) + "…" : item.name, strOKButtonText: "\u0417\u0430\u043A\u0440\u044B\u0442\u044C", bAlertDialog: true, children: SP_JSX.jsx("img", { className: "dai-image-expanded", style: { display: "block", maxWidth: "100%", maxHeight: "55vh", width: "auto", height: "auto", objectFit: "contain", margin: "auto" }, src: item.preview, alt: item.name }) })), children: SP_JSX.jsx("img", { src: item.preview, alt: item.name }) }) : SP_JSX.jsxs("span", { className: "dai-muted", children: ["\uD83D\uDCCE ", item.name, " \u00B7 ", item.kind === "image" ? "изображение недоступно" : "файл"] }) }, item.id)) });
+    return SP_JSX.jsx("div", { className: "dai-message-attachments", children: items.map(item => SP_JSX.jsx("div", { className: "dai-message-attachment", children: item.preview ? SP_JSX.jsx(DFL.DialogButton, { className: "dai-image-button", onClick: () => DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: item.name.length > 48 ? item.name.slice(0, 45) + "…" : item.name, strOKButtonText: t("Закрыть"), bAlertDialog: true, children: SP_JSX.jsx("img", { className: "dai-image-expanded", style: { display: "block", maxWidth: "100%", maxHeight: "55vh", width: "auto", height: "auto", objectFit: "contain", margin: "auto" }, src: item.preview, alt: item.name }) })), children: SP_JSX.jsx("img", { src: item.preview, alt: item.name }) }) : SP_JSX.jsxs("span", { className: "dai-muted", children: ["\uD83D\uDCCE ", item.name, " \u00B7 ", item.kind === "image" ? t("изображение недоступно") : t("файл")] }) }, item.id)) });
 }
 function GameCheckbox({ checked, onChange }) {
-    return SP_JSX.jsx("div", { className: "dai-game-check", role: "checkbox", "aria-checked": checked, "aria-label": "\u0418\u0433\u0440\u0430", children: SP_JSX.jsxs(DFL.DialogButton, { className: "dai-button", onClick: onChange, children: [SP_JSX.jsx("span", { className: "dai-check-box", "aria-hidden": "true", children: checked ? "✓" : "" }), "\u0418\u0433\u0440\u0430"] }) });
+    return SP_JSX.jsx("div", { className: "dai-game-check", role: "checkbox", "aria-checked": checked, "aria-label": t("Игра"), children: SP_JSX.jsxs(DFL.DialogButton, { className: "dai-button", onClick: onChange, children: [SP_JSX.jsx("span", { className: "dai-check-box", "aria-hidden": "true", children: checked ? "✓" : "" }), t("Игра")] }) });
 }
 function Choice({ label, value, options, onChange, disabled = false }) {
-    return SP_JSX.jsxs("div", { className: "dai-field", children: [SP_JSX.jsx("span", { className: "dai-label", children: label }), SP_JSX.jsx(DFL.Dropdown, { menuLabel: label, selectedOption: value, rgOptions: options, disabled: disabled || !options.length, strDefaultLabel: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435\u2026", onChange: item => onChange(String(item.data)) })] });
+    return SP_JSX.jsxs("div", { className: "dai-field", children: [SP_JSX.jsx("span", { className: "dai-label", children: label }), SP_JSX.jsx(DFL.Dropdown, { menuLabel: label, selectedOption: value, rgOptions: options, disabled: disabled || !options.length, strDefaultLabel: t("Выберите…"), onChange: item => onChange(String(item.data)) })] });
 }
 // The compact panel and the full-screen route use the same session. Moving
 // between them must preserve the draft, attachments and consumed dictation.
@@ -3182,6 +3813,8 @@ function closeFullscreen(panel = true) {
 }
 function FullscreenPage() { return SP_JSX.jsx(Panel, { fullscreen: true, initialTab: requestedTab }); }
 function Panel({ fullscreen = false, initialTab = "chat" }) {
+    const [uiLanguage, updateUILanguage] = SP_REACT.useState(getUILanguage);
+    SP_REACT.useEffect(() => subscribeUILanguage(updateUILanguage), []);
     const [textScale, setTextScale] = useTextScale();
     const [appearance, setAppearanceChoice] = useAppearance();
     const layout = effectiveLayout(appearance.layout, fullscreen);
@@ -3275,6 +3908,8 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
     const chatRef = SP_REACT.useRef(null);
     const followTail = SP_REACT.useRef(true);
     const accept = SP_REACT.useCallback((incoming) => {
+        if (incoming.uiLanguage && incoming.uiLanguage !== getUILanguage())
+            setUILanguage(incoming.uiLanguage);
         setVoicePolling(["recording", "stopping", "processing"].includes(incoming.voiceState));
         const next = incoming.voiceId === session.finishedVoice && incoming.voiceText ? { ...incoming, voiceState: "done" } : incoming;
         // Change the draft and its storage key together; polling must never copy a
@@ -3341,7 +3976,7 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
         }
         catch {
             if (mounted.current && viewGate.current(revision))
-                setConnectionError("Связь с Deck AI прервалась. Повторяю подключение…");
+                setConnectionError(t("Связь с Deck AI прервалась. Повторяю подключение…"));
         }
         finally {
             inFlight.current = false;
@@ -3383,7 +4018,7 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
             session.voiceText = data.voiceText;
         }
         editDraft("");
-        setNotice("Поле сообщения очищено");
+        setNotice(t("Поле сообщения очищено"));
     };
     const toggleVoice = async () => {
         if (voiceStarting)
@@ -3406,7 +4041,7 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
             void load();
         }
         catch (e) {
-            setError("Не удалось завершить диктовку: " + String(e));
+            setError(t("Не удалось завершить диктовку: ") + String(e));
         }
         finally {
             setVoiceStarting(false);
@@ -3415,15 +4050,15 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
     const currentGame = () => readGameContext({ appId: DFL.Router.MainRunningAppID, overview: id => window.appStore?.GetAppOverviewByAppID(id), player: () => window.friendStore?.GetFriendState(window.friendStore.currentUserSteamID) });
     const game = currentGame();
     const currentScreenshots = gameScreenshots(data?.screenshots || [], game);
-    const gameStatus = gameContextEnabled && game ? game.name : model?.name || "Готов";
+    const gameStatus = gameContextEnabled && game ? game.name : model?.name || t("Готов");
     const submit = () => void run(async () => {
         if (!data || !draft.trim()) {
-            setError("Нет текста для отправки. Завершите диктовку или введите сообщение.");
+            setError(t("Нет текста для отправки. Завершите диктовку или введите сообщение."));
             return;
         }
         const sentThread = draftId.current, sentDraft = draft;
         const sentAttachments = session.attachments.get(sentThread);
-        await sendMessage(withGameContext(sentDraft, currentGame(), localStorage.getItem("deck-ai-game-context") === "on"), images.map(x => x.path), model?.id || "", effort, tier, sendContext(data));
+        await sendMessage(withGameContext(sentDraft, currentGame(), localStorage.getItem("deck-ai-game-context") === "on", t("\n\nИгра: ")), images.map(x => x.path), model?.id || "", effort, tier, sendContext(data));
         if (drafts.read(sentThread) === sentDraft) {
             drafts.write(sentThread, "");
             if (draftId.current === sentThread)
@@ -3431,7 +4066,7 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
         }
         if (session.attachments.get(sentThread) === sentAttachments)
             publishAttachments(sentThread, []);
-        setNotice("Запрос принят · в очереди");
+        setNotice(t("Запрос принят · в очереди"));
         followTail.current = true;
         accept(await snapshot());
     });
@@ -3462,7 +4097,7 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
         return () => clearTimeout(timer);
     }, [countdown]);
     const quick = (text) => void run(async () => { if (!data)
-        return; await sendMessage(text, [], model?.id || "", effort, tier, sendContext(data)); setNotice("Запрос принят · в очереди"); setQuickOpen(false); followTail.current = true; accept(await snapshot()); });
+        return; await sendMessage(text, [], model?.id || "", effort, tier, sendContext(data)); setNotice(t("Запрос принят · в очереди")); setQuickOpen(false); followTail.current = true; accept(await snapshot()); });
     const ro = !!data?.readOnly;
     const filesStale = (file?.host ?? folderHost) !== (data?.remoteHost || "");
     const names = { ...providerNames, ...Object.fromEntries((data?.customProviders || []).map(c => [c.id, c.name])) };
@@ -3472,23 +4107,23 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
         // Allowing runs a command on the machine: require a second, deliberate press.
         if (decision !== "decline" && confirmApproval !== item.key) {
             setConfirmApproval(item.key);
-            setNotice("Нажмите «Разрешить» ещё раз, чтобы подтвердить");
+            setNotice(t("Нажмите «Разрешить» ещё раз, чтобы подтвердить"));
             return;
         }
         setConfirmApproval("");
         await approve(item.key, decision);
-        setNotice(decision === "decline" ? "Отклонено" : "Разрешено");
+        setNotice(decision === "decline" ? t("Отклонено") : t("Разрешено"));
         accept(await snapshot());
     });
     const openFolder = (path) => void run(async () => { const result = await fileList(path, data?.remoteHost || ""); setFolder(result.path); setFolderHost(result.host); setEntries(sortEntries(result.entries)); setFile(null); });
     const openFile = (path) => void run(async () => { const result = await fileRead(path, folderHost); setFile(result); setFileText(result.text); });
     const saveFile = () => void run(async () => { if (!file)
-        return; const result = await fileWrite(file.path, fileText, file.sha256, file.host); setFile({ ...file, text: fileText, sha256: result.sha256 }); setNotice("Файл сохранён · копия: " + file.path.split("/").pop() + ".deckai.bak"); });
+        return; const result = await fileWrite(file.path, fileText, file.sha256, file.host); setFile({ ...file, text: fileText, sha256: result.sha256 }); setNotice(t("Файл сохранён · копия: ") + file.path.split("/").pop() + ".deckai.bak"); });
     const chooseThread = (id) => void run(async () => {
         const current = session.snapshot;
         if (current) {
             const cached = historySnapshots.get(historyKey({ ...current, threadId: id }));
-            accept(cached ? { ...cached, threads: current.threads } : { ...current, threadId: id, messages: [], active: false, status: "Загружаю диалог…" });
+            accept(cached ? { ...cached, threads: current.threads } : { ...current, threadId: id, messages: [], active: false, status: t("Загружаю диалог…") });
         }
         accept(await selectThread(id));
         setTab("chat");
@@ -3496,7 +4131,7 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
     const startChat = () => void run(async () => { accept(await newThread()); setTab("chat"); });
     const openFiles = () => { setTab("history"); setFilesOpen(true); openFolder("~"); };
     const sortedThreads = [...(data?.threads || [])].sort((a, b) => Number(!!b.running) - Number(!!a.running));
-    const sidebar = fullscreen && layout === "split" ? SP_JSX.jsx(GameScroll, { className: "dai-split-side", children: SP_JSX.jsxs("div", { className: "dai-stack-content", children: [SP_JSX.jsxs(Action, { primary: true, disabled: busy || !data?.ready || ro || data?.active, onClick: startChat, children: [SP_JSX.jsx(FaPlus, {}), "\u041D\u043E\u0432\u044B\u0439 \u0447\u0430\u0442"] }), sortedThreads.map(thread => SP_JSX.jsx("div", { className: "dai-history-item " + (thread.id === data?.threadId ? "selected" : "") + (thread.running ? " running" : ""), children: SP_JSX.jsx(Action, { disabled: busy || (data?.active && thread.id !== data.threadId && !data.remoteHost), onClick: () => chooseThread(thread.id), children: SP_JSX.jsxs("span", { children: [thread.running && SP_JSX.jsx("span", { className: "dai-dot working", "aria-label": "\u0412\u044B\u043F\u043E\u043B\u043D\u044F\u0435\u0442\u0441\u044F" }), thread.name || "Новый чат"] }) }) }, thread.id))] }) }) : null;
+    const sidebar = fullscreen && layout === "split" ? SP_JSX.jsx(GameScroll, { className: "dai-split-side", children: SP_JSX.jsxs("div", { className: "dai-stack-content", children: [SP_JSX.jsxs(Action, { primary: true, disabled: busy || !data?.ready || ro || data?.active, onClick: startChat, children: [SP_JSX.jsx(FaPlus, {}), t("Новый чат")] }), sortedThreads.map(thread => SP_JSX.jsx("div", { className: "dai-history-item " + (thread.id === data?.threadId ? "selected" : "") + (thread.running ? " running" : ""), children: SP_JSX.jsx(Action, { disabled: busy || (data?.active && thread.id !== data.threadId && !data.remoteHost), onClick: () => chooseThread(thread.id), children: SP_JSX.jsxs("span", { children: [thread.running && SP_JSX.jsx("span", { className: "dai-dot working", "aria-label": t("Выполняется") }), thread.name || t("Новый чат")] }) }) }, thread.id))] }) }) : null;
     const speak = (id, text) => {
         const synth = window.speechSynthesis;
         if (!synth)
@@ -3527,14 +4162,14 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
             field.select();
             try {
                 if (!doc.execCommand("copy"))
-                    throw new Error("Не удалось скопировать. Выделите текст сообщения для копирования.");
+                    throw new Error(t("Не удалось скопировать. Выделите текст сообщения для копирования."));
             }
             finally {
                 field.remove();
                 focused?.focus();
             }
         }
-        setNotice("Текст скопирован");
+        setNotice(t("Текст скопирован"));
     });
     const jumpToLatest = () => { followTail.current = true; setShowLatest(false); const el = chatRef.current; if (el)
         el.scrollTop = el.scrollHeight; };
@@ -3543,20 +4178,20 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
         const previous = session.attachments.get(draftId.current) || [];
         const result = appendAttachments(previous, incoming);
         if (result.omitted && !result.added) {
-            setError("Достигнут лимит пяти изображений. Уберите лишние вложения, чтобы прикрепить другое.");
+            setError(t("Достигнут лимит пяти изображений. Уберите лишние вложения, чтобы прикрепить другое."));
             return;
         }
         if (result.omitted)
-            setNotice(`Добавлено изображений: ${result.added}. Для остальных освободите место. Лимит — пять.`);
+            setNotice(t("Добавлено изображений: {0}. Для остальных освободите место. Лимит — пять.", result.added));
         setImages(result.images);
         setMediaOpen(false);
     };
     const attach = (media) => { if (media)
         attachMedia([media]); };
-    const signIn = () => void run(async () => { const result = await accountLogin(); setLoginUrl(result.url + (result.userCode ? " · Код: " + result.userCode : "")); setNotice(result.opened ? "Откройте страницу входа и завершите авторизацию." : "Ссылка для входа показана ниже."); accept(await snapshot()); });
+    const signIn = () => void run(async () => { const result = await accountLogin(); setLoginUrl(result.url + (result.userCode ? t(" · Код: ") + result.userCode : "")); setNotice(result.opened ? t("Откройте страницу входа и завершите авторизацию.") : t("Ссылка для входа показана ниже.")); accept(await snapshot()); });
     const disconnect = !data?.ready;
-    return SP_JSX.jsxs(DFL.Focusable, { style: { "--dai-text-scale": textScale }, "data-text-scale": textScale, "data-theme": appearance.theme, "data-density": appearance.density, "data-bubbles": appearance.bubbles, "data-layout": layout, className: "dai-root" + (fullscreen ? " dai-fullscreen" : ""), onSecondaryButton: () => { if (tab === "chat" && !busy)
-            void toggleVoice(); }, onSecondaryActionDescription: tab === "chat" ? (recording ? "Стоп" : "Голос") : undefined, onCancel: event => {
+    return SP_JSX.jsxs(DFL.Focusable, { style: { "--dai-text-scale": textScale }, "data-text-scale": textScale, "data-language": uiLanguage, "data-theme": appearance.theme, "data-density": appearance.density, "data-bubbles": appearance.bubbles, "data-layout": layout, className: "dai-root" + (fullscreen ? " dai-fullscreen" : ""), onSecondaryButton: () => { if (tab === "chat" && !busy)
+            void toggleVoice(); }, onSecondaryActionDescription: tab === "chat" ? (recording ? t("Стоп") : t("Голос")) : undefined, onCancel: event => {
             if (queueOpen) {
                 event.stopPropagation();
                 setQueueOpen(false);
@@ -3569,27 +4204,27 @@ function Panel({ fullscreen = false, initialTab = "chat" }) {
                 event.stopPropagation();
                 closeFullscreen();
             }
-        }, children: [SP_JSX.jsx("style", { children: css }), SP_JSX.jsx("span", { ref: touchAnchor, hidden: true }), fullscreen && SP_JSX.jsxs(DFL.Focusable, { className: "dai-full-header", "flow-children": "horizontal", children: [SP_JSX.jsxs("div", { className: "dai-full-brand", children: [SP_JSX.jsx("h1", { children: "Deck AI" }), SP_JSX.jsx("span", { children: tab === "repair" ? "Локальная диагностика" : disconnect ? "Нет соединения" : data?.active ? "Deck AI работает…" : gameStatus })] }), SP_JSX.jsx(GameCheckbox, { checked: gameContextEnabled, onChange: toggleGameContext }), SP_JSX.jsxs(Action, { onClick: () => closeFullscreen(), children: [SP_JSX.jsx(FaCompress, {}), "\u0412 \u043F\u0430\u043D\u0435\u043B\u044C"] }), SP_JSX.jsxs(Action, { onClick: () => closeFullscreen(false), children: [SP_JSX.jsx(FaArrowLeft, {}), "\u041A \u0438\u0433\u0440\u0435"] })] }), SP_JSX.jsx(DFL.Focusable, { className: "dai-tabs", "flow-children": "horizontal", role: "tablist", "aria-label": "Deck AI", children: [["chat", "Чат", SP_JSX.jsx(FaComment, {})], ["history", "История", SP_JSX.jsx(FaHistory, {})], ["repair", "Ремонт", SP_JSX.jsx(FaGamepad, {})], ["settings", "Настройки", SP_JSX.jsx(FaCog, {})]].map(([id, label, icon]) => SP_JSX.jsx("div", { role: "tab", "aria-selected": tab === id, className: "dai-tab " + (tab === id ? "selected" : ""), children: SP_JSX.jsxs(Action, { disabled: busy, onClick: () => { if ((id === "settings" || id === "repair") && !fullscreen)
+        }, children: [SP_JSX.jsx("style", { children: css }), SP_JSX.jsx("span", { ref: touchAnchor, hidden: true }), fullscreen && SP_JSX.jsxs(DFL.Focusable, { className: "dai-full-header", "flow-children": "horizontal", children: [SP_JSX.jsxs("div", { className: "dai-full-brand", children: [SP_JSX.jsx("h1", { children: "Deck AI" }), SP_JSX.jsx("span", { children: tab === "repair" ? t("Локальная диагностика") : disconnect ? t("Нет соединения") : data?.active ? t("Deck AI работает…") : gameStatus })] }), SP_JSX.jsx(GameCheckbox, { checked: gameContextEnabled, onChange: toggleGameContext }), SP_JSX.jsxs(Action, { onClick: () => closeFullscreen(), children: [SP_JSX.jsx(FaCompress, {}), t("В панель")] }), SP_JSX.jsxs(Action, { onClick: () => closeFullscreen(false), children: [SP_JSX.jsx(FaArrowLeft, {}), t("К игре")] })] }), SP_JSX.jsx(DFL.Focusable, { className: "dai-tabs", "flow-children": "horizontal", role: "tablist", "aria-label": "Deck AI", children: [["chat", t("Чат"), SP_JSX.jsx(FaComment, {})], ["history", t("История"), SP_JSX.jsx(FaHistory, {})], ["repair", t("Ремонт"), SP_JSX.jsx(FaGamepad, {})], ["settings", t("Настройки"), SP_JSX.jsx(FaCog, {})]].map(([id, label, icon]) => SP_JSX.jsx("div", { role: "tab", "aria-selected": tab === id, className: "dai-tab " + (tab === id ? "selected" : ""), children: SP_JSX.jsxs(Action, { disabled: busy, onClick: () => { if ((id === "settings" || id === "repair") && !fullscreen)
                             openFullscreen(id);
                         else {
                             setTab(id);
                             setMediaOpen(false);
                             setQueueOpen(false);
-                        } }, children: [icon, SP_JSX.jsx("span", { children: label })] }) }, id)) }), SP_JSX.jsxs("div", { className: "dai-viewbar", children: [SP_JSX.jsxs("div", { className: "dai-status", children: [SP_JSX.jsx("span", { className: "dai-dot " + (disconnect ? "offline" : data?.active ? "working" : "") }), SP_JSX.jsx("span", { children: !data ? "Подключение…" : data.ready ? (data.active ? "Deck AI работает…" : gameStatus) : (data.retryIn ? `Нет связи · повтор через ${data.retryIn} с` : "Нет соединения") }), data?.remoteHost && SP_JSX.jsx("small", { children: data.remoteHost }), !!data?.runningCount && SP_JSX.jsxs("small", { className: "dai-running-count", children: [data.runningCount, " \u0432 \u0440\u0430\u0431\u043E\u0442\u0435"] })] }), !fullscreen && SP_JSX.jsx(GameCheckbox, { checked: gameContextEnabled, onChange: toggleGameContext }), !fullscreen && SP_JSX.jsxs(Action, { disabled: busy, onClick: () => openFullscreen(tab), children: [SP_JSX.jsx(FaExpand, {}), "\u041D\u0430 \u0432\u0435\u0441\u044C \u044D\u043A\u0440\u0430\u043D"] })] }), tab !== "repair" && (error || connectionError) && SP_JSX.jsxs("div", { className: "dai-banner", role: "alert", children: [SP_JSX.jsx("span", { children: error || connectionError }), SP_JSX.jsx(Action, { onClick: () => { setError(""); setConnectionError(""); }, children: "\u0417\u0430\u043A\u0440\u044B\u0442\u044C" })] }), tab !== "repair" && !error && !connectionError && (data?.historyWarning || data?.ready === false) && SP_JSX.jsxs("div", { className: "dai-banner", role: "status", children: [SP_JSX.jsx("span", { children: data.historyWarning || data.status }), SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { accept(await refresh()); }), children: "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435" })] }), notice && SP_JSX.jsx("div", { className: "dai-notice", role: "status", children: notice }), SP_JSX.jsxs("div", { className: "dai-page", role: "tabpanel", "aria-label": tab === "chat" ? "Чат" : tab === "history" ? "История" : tab === "repair" ? "Ремонт" : "Настройки", children: [tab === "repair" && SP_JSX.jsx(GameScroll, { className: "dai-scroll dai-stack", children: SP_JSX.jsx(RepairPanel, { copy: copyMessage }) }), tab === "chat" && SP_JSX.jsxs("div", { className: "dai-chat-layout", children: [sidebar, SP_JSX.jsx("div", { className: "dai-chat-main" + (data?.approvals?.length ? " has-approvals" : ""), children: queueOpen ? SP_JSX.jsx(GameScroll, { ref: queueRef, className: "dai-scroll dai-stack dai-queue-view", children: SP_JSX.jsxs("div", { className: "dai-stack-content", children: [SP_JSX.jsx(Action, { onClick: () => setQueueOpen(false), children: "\u2190 \u041A \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044E" }), SP_JSX.jsxs("h3", { children: ["\u041E\u0447\u0435\u0440\u0435\u0434\u044C \u0437\u0430\u043F\u0440\u043E\u0441\u043E\u0432 \u00B7 ", data?.queueTotal ?? data?.outbox.length ?? 0] }), SP_JSX.jsx("p", { className: "dai-muted", children: "\u041E\u0436\u0438\u0434\u0430\u044E\u0449\u0438\u0435 \u0437\u0430\u043F\u0440\u043E\u0441\u044B \u0435\u0449\u0451 \u043D\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u044B. \u0417\u0430\u043F\u0440\u043E\u0441\u044B \u0432\u044B\u043F\u043E\u043B\u043D\u044F\u044E\u0442\u0441\u044F \u043F\u043E \u043E\u0447\u0435\u0440\u0435\u0434\u0438; \u0437\u0430\u043D\u044F\u0442\u044B\u0439 \u0447\u0430\u0442 \u0436\u0434\u0451\u0442 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0438\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u043E\u0442\u0432\u0435\u0442\u0430." }), SP_JSX.jsxs("p", { className: "dai-muted", children: ["\u0412 \u044D\u0442\u043E\u043C \u0447\u0430\u0442\u0435 \u043E\u0436\u0438\u0434\u0430\u044E\u0442: ", queueCounts(data?.outbox || [], data?.threadId || "", data?.remoteHost || "").current, ". \u0412 \u0434\u0440\u0443\u0433\u0438\u0445 \u0447\u0430\u0442\u0430\u0445: ", queueCounts(data?.outbox || [], data?.threadId || "", data?.remoteHost || "").other, "."] }), (data?.queueTotal || 0) > (data?.outbox.length || 0) && SP_JSX.jsxs("p", { className: "dai-muted", children: ["\u041F\u043E\u043A\u0430\u0437\u0430\u043D\u044B \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 ", data?.outbox.length, " \u0437\u0430\u043F\u0440\u043E\u0441\u043E\u0432."] }), !data?.outbox.length && SP_JSX.jsx("p", { className: "dai-muted", children: "\u041E\u0447\u0435\u0440\u0435\u0434\u044C \u043F\u0443\u0441\u0442\u0430." }), data?.outbox.map(job => SP_JSX.jsxs("section", { className: "dai-section dai-queue-item", children: [SP_JSX.jsx("strong", { children: queueStatus(job) }), SP_JSX.jsxs("small", { className: "dai-muted", children: [sameChat(job, data.threadId, data.remoteHost || "") ? "Этот чат" : (job.host || "") !== (data.remoteHost || "") ? "Другое устройство · " + (job.host || "Steam Deck") : (data.threads.find(thread => thread.id === job.threadId)?.name || "Другой чат").slice(0, 80), job.createdAt ? " · " + new Date(job.createdAt * 1000).toLocaleString() : ""] }), SP_JSX.jsx("p", { className: "dai-queue-text", children: expandedJob === job.id ? job.text : job.text.slice(0, 180) + (job.text.length > 180 ? "…" : "") }), job.text.length > 180 && SP_JSX.jsx(Action, { onClick: () => setExpandedJob(expandedJob === job.id ? "" : job.id), children: expandedJob === job.id ? "Свернуть текст" : "Весь текст запроса" }), job.error && SP_JSX.jsx("p", { className: "dai-muted", children: job.error }), job.status === "queued" && SP_JSX.jsx(Action, { disabled: busy || ro, onClick: () => void run(async () => { await queueFront(job.id); accept(await snapshot()); }), children: "\u2191 \u041E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C \u043F\u0435\u0440\u0432\u044B\u043C" }), (job.status === "queued" || job.status === "error") && SP_JSX.jsx(Action, { disabled: busy || ro, onClick: () => void run(async () => { await queueRemove(job.id); accept(await snapshot()); }), children: "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0438\u0437 \u043E\u0447\u0435\u0440\u0435\u0434\u0438" }), job.threadId && SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { if ((job.host || "") !== (data?.remoteHost || ""))
-                                                            accept(await remoteHost(job.host || "")); accept(await selectThread(job.threadId)); setTab("chat"); setQueueOpen(false); }), children: "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0447\u0430\u0442" })] }, job.id))] }) }, "queue") : mediaOpen ? SP_JSX.jsx(GameScroll, { className: "dai-scroll dai-stack", children: SP_JSX.jsxs("div", { className: "dai-stack-content", children: [SP_JSX.jsx(Action, { onClick: () => setMediaOpen(false), children: "\u2190 \u041A \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044E" }), SP_JSX.jsxs("section", { className: "dai-section dai-game-context", children: [SP_JSX.jsxs("h3", { children: [SP_JSX.jsx(FaGamepad, {}), " \u041A\u043E\u043D\u0442\u0435\u043A\u0441\u0442 \u0438\u0433\u0440\u044B"] }), SP_JSX.jsx("p", { className: "dai-muted", children: game ? game.name : "Сейчас Steam не сообщает о запущенной игре." }), game && SP_JSX.jsx("p", { className: "dai-muted", children: game.status || "Игра не передаёт описание текущего места или задания." }), game?.details.map(([key, value]) => SP_JSX.jsxs("p", { className: "dai-muted", children: [key, ": ", value] }, key)), SP_JSX.jsx(GameCheckbox, { checked: gameContextEnabled, onChange: toggleGameContext }), game && SP_JSX.jsxs(Action, { disabled: !currentScreenshots.length, onClick: () => attach(currentScreenshots[0]), children: ["\u0421\u043D\u0438\u043C\u043E\u043A \u0438\u0437 \u044D\u0442\u043E\u0439 \u0438\u0433\u0440\u044B", currentScreenshots[0]?.when ? " · " + new Date(currentScreenshots[0].when * 1000).toLocaleString() : ""] }), SP_JSX.jsx("p", { className: "dai-muted", children: "\u0427\u0442\u043E\u0431\u044B \u043F\u043E\u043A\u0430\u0437\u0430\u0442\u044C, \u0433\u0434\u0435 \u0432\u044B \u0441\u0435\u0439\u0447\u0430\u0441: \u0441\u0434\u0435\u043B\u0430\u0439\u0442\u0435 \u0441\u043D\u0438\u043C\u043E\u043A \u0432 \u0438\u0433\u0440\u0435 \u2014 Steam + R1, \u0437\u0430\u0442\u0435\u043C \u043F\u0440\u0438\u043A\u0440\u0435\u043F\u0438\u0442\u0435 \u0435\u0433\u043E \u0437\u0434\u0435\u0441\u044C. \u0413\u0430\u043B\u043E\u0447\u043A\u0430 \u00AB\u0418\u0433\u0440\u0430\u00BB \u0434\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442 \u043A \u0432\u043E\u043F\u0440\u043E\u0441\u0443 \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0438\u0433\u0440\u044B." })] }), SP_JSX.jsx("h3", { children: "\u0414\u0440\u0443\u0433\u0438\u0435 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u044F" }), SP_JSX.jsx(Action, { disabled: !data?.screenshots.length, onClick: () => attach(data?.screenshots[0]), children: "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0439 \u0441\u043A\u0440\u0438\u043D\u0448\u043E\u0442" }), SP_JSX.jsx(Choice, { label: "\u0414\u0440\u0443\u0433\u043E\u0439 \u0441\u043A\u0440\u0438\u043D\u0448\u043E\u0442", value: shot, options: (data?.screenshots || []).map(x => ({ data: x.path, label: x.name })), onChange: setShot }), SP_JSX.jsx(Action, { disabled: !shot, onClick: () => attach(data?.screenshots.find(x => x.path === shot)), children: "\u041F\u0440\u0438\u043A\u0440\u0435\u043F\u0438\u0442\u044C \u0441\u043A\u0440\u0438\u043D\u0448\u043E\u0442" }), SP_JSX.jsx(Choice, { label: "\u0412\u0438\u0434\u0435\u043E\u0437\u0430\u043F\u0438\u0441\u044C", value: video, options: (data?.videos || []).map(x => ({ data: x.path, label: x.name })), onChange: setVideo }), SP_JSX.jsx(Action, { disabled: !video || busy, onClick: () => void run(async () => { const result = await videoFrames(video); attachMedia(result.frames); }), children: "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u043A\u0430\u0434\u0440\u044B \u0438\u0437 \u0432\u0438\u0434\u0435\u043E" }), !data?.screenshots.length && !data?.videos.length && SP_JSX.jsx("p", { className: "dai-muted", children: "\u0421\u0434\u0435\u043B\u0430\u0439\u0442\u0435 \u0441\u043A\u0440\u0438\u043D\u0448\u043E\u0442 \u0432 \u0438\u0433\u0440\u0435: Steam + R1. \u041E\u043D \u043F\u043E\u044F\u0432\u0438\u0442\u0441\u044F \u0437\u0434\u0435\u0441\u044C." })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs(DFL.Focusable, { className: "dai-toolbar", "flow-children": "horizontal", children: [SP_JSX.jsxs(Action, { disabled: busy || disconnect || ro || data?.active, onClick: startChat, children: [SP_JSX.jsx(FaPlus, {}), SP_JSX.jsx("span", { children: "\u041D\u043E\u0432\u044B\u0439" })] }), SP_JSX.jsxs(Action, { disabled: busy || disconnect, onClick: openFiles, children: [SP_JSX.jsx(FaFolderOpen, {}), SP_JSX.jsx("span", { children: "\u0424\u0430\u0439\u043B\u044B" })] }), SP_JSX.jsxs(Action, { disabled: busy, onClick: () => { setMediaOpen(true); setQuickOpen(false); }, children: [SP_JSX.jsx(FaPaperclip, {}), SP_JSX.jsx("span", { children: "\u0412\u043B\u043E\u0436\u0435\u043D\u0438\u044F" })] }), SP_JSX.jsxs(Action, { onClick: () => setQueueOpen(true), children: [SP_JSX.jsx(FaListUl, {}), SP_JSX.jsxs("span", { children: ["\u041E\u0447\u0435\u0440\u0435\u0434\u044C", (data?.queueTotal || data?.outbox.length) ? " · " + (data?.queueTotal ?? data?.outbox.length) : ""] })] }), SP_JSX.jsxs(Action, { disabled: busy, onClick: () => void run(async () => { accept(await refresh()); setNotice("Обновлено"); }), children: [SP_JSX.jsx(FaSyncAlt, {}), SP_JSX.jsx("span", { children: "\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C" })] })] }), SP_JSX.jsx(GameScroll, { className: "dai-messages", ref: chatRef, onScroll: () => { const el = chatRef.current; if (el) {
+                        } }, children: [icon, SP_JSX.jsx("span", { children: label })] }) }, id)) }), SP_JSX.jsxs("div", { className: "dai-viewbar", children: [SP_JSX.jsxs("div", { className: "dai-status", children: [SP_JSX.jsx("span", { className: "dai-dot " + (disconnect ? "offline" : data?.active ? "working" : "") }), SP_JSX.jsx("span", { children: !data ? t("Подключение…") : data.ready ? (data.active ? t("Deck AI работает…") : gameStatus) : (data.retryIn ? t("Нет связи · повтор через {0} с", data.retryIn) : t("Нет соединения")) }), data?.remoteHost && SP_JSX.jsx("small", { children: data.remoteHost }), !!data?.runningCount && SP_JSX.jsxs("small", { className: "dai-running-count", children: [data.runningCount, t(" в работе")] })] }), !fullscreen && SP_JSX.jsx(GameCheckbox, { checked: gameContextEnabled, onChange: toggleGameContext }), !fullscreen && SP_JSX.jsxs(Action, { disabled: busy, onClick: () => openFullscreen(tab), children: [SP_JSX.jsx(FaExpand, {}), t("На весь экран")] })] }), tab !== "repair" && (error || connectionError) && SP_JSX.jsxs("div", { className: "dai-banner", role: "alert", children: [SP_JSX.jsx("span", { children: systemText(error || connectionError) }), SP_JSX.jsx(Action, { onClick: () => { setError(""); setConnectionError(""); }, children: t("Закрыть") })] }), tab !== "repair" && !error && !connectionError && (data?.historyWarning || data?.ready === false) && SP_JSX.jsxs("div", { className: "dai-banner", role: "status", children: [SP_JSX.jsx("span", { children: systemText(data.historyWarning || data.status) }), SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { accept(await refresh()); }), children: t("Повторить подключение") })] }), notice && SP_JSX.jsx("div", { className: "dai-notice", role: "status", children: systemText(notice) }), SP_JSX.jsxs("div", { className: "dai-page", role: "tabpanel", "aria-label": tab === "chat" ? t("Чат") : tab === "history" ? t("История") : tab === "repair" ? t("Ремонт") : t("Настройки"), children: [tab === "repair" && SP_JSX.jsx(GameScroll, { className: "dai-scroll dai-stack", children: SP_JSX.jsx(RepairPanel, { copy: copyMessage }) }), tab === "chat" && SP_JSX.jsxs("div", { className: "dai-chat-layout", children: [sidebar, SP_JSX.jsx("div", { className: "dai-chat-main" + (data?.approvals?.length ? " has-approvals" : ""), children: queueOpen ? SP_JSX.jsx(GameScroll, { ref: queueRef, className: "dai-scroll dai-stack dai-queue-view", children: SP_JSX.jsxs("div", { className: "dai-stack-content", children: [SP_JSX.jsx(Action, { onClick: () => setQueueOpen(false), children: t("← К сообщению") }), SP_JSX.jsxs("h3", { children: [t("Очередь запросов · "), data?.queueTotal ?? data?.outbox.length ?? 0] }), SP_JSX.jsx("p", { className: "dai-muted", children: t("Ожидающие запросы ещё не отправлены. Запросы выполняются по очереди; занятый чат ждёт завершения текущего ответа.") }), SP_JSX.jsxs("p", { className: "dai-muted", children: [t("В этом чате ожидают: "), queueCounts(data?.outbox || [], data?.threadId || "", data?.remoteHost || "").current, t(". В других чатах: "), queueCounts(data?.outbox || [], data?.threadId || "", data?.remoteHost || "").other, "."] }), (data?.queueTotal || 0) > (data?.outbox.length || 0) && SP_JSX.jsxs("p", { className: "dai-muted", children: [t("Показаны последние "), data?.outbox.length, t(" запросов.")] }), !data?.outbox.length && SP_JSX.jsx("p", { className: "dai-muted", children: t("Очередь пуста.") }), data?.outbox.map(job => SP_JSX.jsxs("section", { className: "dai-section dai-queue-item", children: [SP_JSX.jsx("strong", { children: systemText(queueStatus(job)) }), SP_JSX.jsxs("small", { className: "dai-muted", children: [sameChat(job, data.threadId, data.remoteHost || "") ? t("Этот чат") : (job.host || "") !== (data.remoteHost || "") ? t("Другое устройство · ") + (job.host || "Steam Deck") : (data.threads.find(thread => thread.id === job.threadId)?.name || t("Другой чат")).slice(0, 80), job.createdAt ? " · " + new Date(job.createdAt * 1000).toLocaleString() : ""] }), SP_JSX.jsx("p", { className: "dai-queue-text", children: expandedJob === job.id ? job.text : job.text.slice(0, 180) + (job.text.length > 180 ? "…" : "") }), job.text.length > 180 && SP_JSX.jsx(Action, { onClick: () => setExpandedJob(expandedJob === job.id ? "" : job.id), children: expandedJob === job.id ? t("Свернуть текст") : t("Весь текст запроса") }), job.error && SP_JSX.jsx("p", { className: "dai-muted", children: systemText(job.error) }), job.status === "queued" && SP_JSX.jsx(Action, { disabled: busy || ro, onClick: () => void run(async () => { await queueFront(job.id); accept(await snapshot()); }), children: t("↑ Отправить первым") }), (job.status === "queued" || job.status === "error") && SP_JSX.jsx(Action, { disabled: busy || ro, onClick: () => void run(async () => { await queueRemove(job.id); accept(await snapshot()); }), children: t("Удалить из очереди") }), job.threadId && SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { if ((job.host || "") !== (data?.remoteHost || ""))
+                                                            accept(await remoteHost(job.host || "")); accept(await selectThread(job.threadId)); setTab("chat"); setQueueOpen(false); }), children: t("Открыть чат") })] }, job.id))] }) }, "queue") : mediaOpen ? SP_JSX.jsx(GameScroll, { className: "dai-scroll dai-stack", children: SP_JSX.jsxs("div", { className: "dai-stack-content", children: [SP_JSX.jsx(Action, { onClick: () => setMediaOpen(false), children: t("← К сообщению") }), SP_JSX.jsxs("section", { className: "dai-section dai-game-context", children: [SP_JSX.jsxs("h3", { children: [SP_JSX.jsx(FaGamepad, {}), t(" Контекст игры")] }), SP_JSX.jsx("p", { className: "dai-muted", children: game ? game.name : t("Сейчас Steam не сообщает о запущенной игре.") }), game && SP_JSX.jsx("p", { className: "dai-muted", children: game.status || t("Игра не передаёт описание текущего места или задания.") }), game?.details.map(([key, value]) => SP_JSX.jsxs("p", { className: "dai-muted", children: [key, ": ", value] }, key)), SP_JSX.jsx(GameCheckbox, { checked: gameContextEnabled, onChange: toggleGameContext }), game && SP_JSX.jsxs(Action, { disabled: !currentScreenshots.length, onClick: () => attach(currentScreenshots[0]), children: [t("Снимок из этой игры"), currentScreenshots[0]?.when ? " · " + new Date(currentScreenshots[0].when * 1000).toLocaleString() : ""] }), SP_JSX.jsx("p", { className: "dai-muted", children: t("Чтобы показать, где вы сейчас: сделайте снимок в игре — Steam + R1, затем прикрепите его здесь. Галочка «Игра» добавляет к вопросу только название игры.") })] }), SP_JSX.jsx("h3", { children: t("Другие вложения") }), SP_JSX.jsx(Action, { disabled: !data?.screenshots.length, onClick: () => attach(data?.screenshots[0]), children: t("Последний скриншот") }), SP_JSX.jsx(Choice, { label: t("Другой скриншот"), value: shot, options: (data?.screenshots || []).map(x => ({ data: x.path, label: x.name })), onChange: setShot }), SP_JSX.jsx(Action, { disabled: !shot, onClick: () => attach(data?.screenshots.find(x => x.path === shot)), children: t("Прикрепить скриншот") }), SP_JSX.jsx(Choice, { label: t("Видеозапись"), value: video, options: (data?.videos || []).map(x => ({ data: x.path, label: x.name })), onChange: setVideo }), SP_JSX.jsx(Action, { disabled: !video || busy, onClick: () => void run(async () => { const result = await videoFrames(video); attachMedia(result.frames); }), children: t("Добавить кадры из видео") }), !data?.screenshots.length && !data?.videos.length && SP_JSX.jsx("p", { className: "dai-muted", children: t("Сделайте скриншот в игре: Steam + R1. Он появится здесь.") })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs(DFL.Focusable, { className: "dai-toolbar", "flow-children": "horizontal", children: [SP_JSX.jsxs(Action, { disabled: busy || disconnect || ro || data?.active, onClick: startChat, children: [SP_JSX.jsx(FaPlus, {}), SP_JSX.jsx("span", { children: t("Новый") })] }), SP_JSX.jsxs(Action, { disabled: busy || disconnect, onClick: openFiles, children: [SP_JSX.jsx(FaFolderOpen, {}), SP_JSX.jsx("span", { children: t("Файлы") })] }), SP_JSX.jsxs(Action, { disabled: busy, onClick: () => { setMediaOpen(true); setQuickOpen(false); }, children: [SP_JSX.jsx(FaPaperclip, {}), SP_JSX.jsx("span", { children: t("Вложения") })] }), SP_JSX.jsxs(Action, { onClick: () => setQueueOpen(true), children: [SP_JSX.jsx(FaListUl, {}), SP_JSX.jsxs("span", { children: [t("Очередь"), (data?.queueTotal || data?.outbox.length) ? " · " + (data?.queueTotal ?? data?.outbox.length) : ""] })] }), SP_JSX.jsxs(Action, { disabled: busy, onClick: () => void run(async () => { accept(await refresh()); setNotice(t("Обновлено")); }), children: [SP_JSX.jsx(FaSyncAlt, {}), SP_JSX.jsx("span", { children: t("Обновить") })] })] }), SP_JSX.jsx(GameScroll, { className: "dai-messages", ref: chatRef, onScroll: () => { const el = chatRef.current; if (el) {
                                                 followTail.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
                                                 setShowLatest(!followTail.current);
-                                            } }, children: SP_JSX.jsxs("div", { className: "dai-message-list", children: [!data?.messages.length && SP_JSX.jsxs("div", { className: "dai-empty", children: [SP_JSX.jsx(FaComment, {}), SP_JSX.jsx("h3", { children: "\u041F\u043E\u043C\u043E\u0449\u044C \u043F\u0440\u044F\u043C\u043E \u0432 \u0438\u0433\u0440\u0435" }), SP_JSX.jsxs("p", { children: ["\u0417\u0430\u0434\u0430\u0439\u0442\u0435 \u0432\u043E\u043F\u0440\u043E\u0441 \u0442\u0435\u043A\u0441\u0442\u043E\u043C \u0438\u043B\u0438 \u0433\u043E\u043B\u043E\u0441\u043E\u043C.", SP_JSX.jsx("br", {}), "\u041C\u043E\u0436\u043D\u043E \u0434\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0441\u043A\u0440\u0438\u043D\u0448\u043E\u0442."] }), disconnect && SP_JSX.jsx(Action, { onClick: () => void run(async () => accept(await refresh())), disabled: busy, children: busy ? "Подключение…" : "Подключиться" })] }), data?.hasOlderMessages && SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { followTail.current = false; accept(await olderMessages()); requestAnimationFrame(() => { if (chatRef.current)
-                                                            chatRef.current.scrollTop = 0; }); }), children: "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u043F\u0440\u0435\u0434\u044B\u0434\u0443\u0449\u0438\u0435 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044F" }), data?.messages.map((message, i) => message.role === "tool" ? SP_JSX.jsx(DFL.Focusable, { className: "dai-message tool", focusClassName: "dai-focused", onActivate: () => setOpenTool(openTool === (message.id || String(i)) ? "" : (message.id || String(i))), children: SP_JSX.jsx("pre", { children: openTool === (message.id || String(i)) ? message.text : message.text.split("\n").slice(0, 3).join("\n") + (message.text.split("\n").length > 3 ? "\n…" : "") }) }, message.id || i) : SP_JSX.jsxs(DFL.Focusable, { className: "dai-message " + message.role, focusClassName: "dai-focused", children: [SP_JSX.jsx("small", { children: message.role === "user" ? "Вы" : names[data.provider]?.split(" · ")[0] || "AI" }), SP_JSX.jsx("div", { children: message.text }), !!message.attachments?.length && SP_JSX.jsx(MessageAttachments, { items: message.attachments }), SP_JSX.jsxs("div", { className: "dai-message-tools", children: [SP_JSX.jsxs(Action, { onClick: () => copyMessage(message.text), children: [SP_JSX.jsx(FaCopy, {}), "\u041A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u0442\u044C"] }), message.role === "assistant" && !!window.speechSynthesis && SP_JSX.jsx(Action, { onClick: () => speak(message.id || String(i), message.text), children: speaking === (message.id || String(i)) ? "■ Стоп" : "🔊 Озвучить" })] })] }, message.id || i)), (data ? chatFailures(data.outbox, data.threadId, data.remoteHost || "") : []).map(x => SP_JSX.jsxs("div", { className: "dai-failed", children: [SP_JSX.jsx("p", { children: x.error || "Не удалось отправить" }), SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { await retry(x.id); accept(await snapshot()); }), children: "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0443" })] }, x.id))] }) }), showLatest && SP_JSX.jsx("div", { className: "dai-latest", children: SP_JSX.jsx(Action, { onClick: jumpToLatest, children: "\u2193 \u041A \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0435\u043C\u0443 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044E" }) }), ro && SP_JSX.jsx("div", { className: "dai-notice", role: "status", children: "\u0420\u0435\u0436\u0438\u043C \u0442\u043E\u043B\u044C\u043A\u043E \u0447\u0442\u0435\u043D\u0438\u044F: \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0430, \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F \u0438 \u043F\u0440\u0430\u0432\u043A\u0438 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u044B." }), !!data?.approvals?.length && SP_JSX.jsx(GameScroll, { className: "dai-approvals", role: "alert", children: data.approvals.map(item => SP_JSX.jsxs("div", { className: "dai-approval", children: [SP_JSX.jsxs("strong", { children: ["\u041D\u0443\u0436\u043D\u043E \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u0435 \u00B7 ", item.title] }), SP_JSX.jsx("span", { className: "dai-muted", children: item.summary }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-compose-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(Action, { primary: true, disabled: busy || ro, onClick: () => decide(item, "accept"), children: confirmApproval === item.key ? "Нажмите ещё раз" : "Разрешить" }), SP_JSX.jsx(Action, { disabled: busy || ro, onClick: () => decide(item, "decline"), children: "\u041E\u0442\u043A\u043B\u043E\u043D\u0438\u0442\u044C" })] })] }, item.key)) }), SP_JSX.jsxs("div", { className: "dai-composer", children: [countdown !== null && SP_JSX.jsxs("div", { className: "dai-notice", role: "status", children: ["\u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430 \u0447\u0435\u0440\u0435\u0437 ", countdown, " \u0441", SP_JSX.jsx(Action, { onClick: () => setCountdown(null), children: "\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0443" })] }), quickOpen && data?.threadId && SP_JSX.jsx(DFL.Focusable, { className: "dai-quick", "flow-children": "horizontal", children: quickActions.map(([label, text]) => SP_JSX.jsx(Action, { disabled: busy || disconnect || ro, onClick: () => quick(text), children: label }, label)) }), data?.outbox.some(job => job.status === "recovering") && SP_JSX.jsx("p", { className: "dai-muted dai-queue-state", role: "status", children: "\u041F\u0440\u043E\u0432\u0435\u0440\u044F\u044E \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u043D\u043E\u0433\u043E \u0437\u0430\u043F\u0440\u043E\u0441\u0430\u2026" }), !!data?.outbox.length && SP_JSX.jsx("div", { className: "dai-queue-summary", children: SP_JSX.jsxs(Action, { onClick: () => setQueueOpen(true), children: ["\u041E\u0447\u0435\u0440\u0435\u0434\u044C \u00B7 ", data.queueTotal ?? data.outbox.length, " \u00B7 \u043F\u043E\u0441\u043C\u043E\u0442\u0440\u0435\u0442\u044C"] }) }), images.length > 0 && SP_JSX.jsx("div", { className: "dai-attachments", children: images.map((image, i) => SP_JSX.jsxs(Action, { onClick: () => setImages(old => old.filter((_, n) => n !== i)), children: ["\u00D7 ", image.name] }, image.path + ":" + i)) }), (recording || voiceProcessing) && SP_JSX.jsxs("div", { className: "dai-voice-preview", role: "status", "aria-live": "polite", children: [SP_JSX.jsx("span", { className: "dai-record-dot", "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [SP_JSX.jsx("strong", { children: recording ? "● Запись · распознанный текст" : "Завершаю распознавание…" }), SP_JSX.jsx("span", { role: "textbox", "aria-label": "\u0420\u0430\u0441\u043F\u043E\u0437\u043D\u0430\u043D\u043D\u0430\u044F \u0440\u0435\u0447\u044C", "aria-readonly": "true", children: (data?.voiceId !== session.discardedVoice ? data?.voiceText : "") || (["ru", "en", "ru-fast", "en-fast"].includes(lang) ? "Здесь появится распознанная речь" : "Записываю. Текст появится после «Стоп».") })] })] }), data?.threadId && draftOwner(data) !== data.threadId && !draft && !!drafts.read(data.threadId) &&
-                                                    SP_JSX.jsx(Action, { disabled: busy || recording || voiceProcessing, onClick: () => editDraft(drafts.read(data.threadId)), children: "\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0441\u0442\u0430\u0440\u044B\u0439 \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A" }), SP_JSX.jsx("form", { style: { display: "contents" }, onSubmit: e => { e.preventDefault(); submit(); }, children: SP_JSX.jsx("div", { className: "dai-draft-field", "data-draft-owner": draftOwner(data), onInputCapture: e => { const target = e.target; if (target.tagName === "INPUT")
-                                                            editDraft(target.value, e.currentTarget.dataset.draftOwner || ""); }, children: SP_JSX.jsx(DFL.TextField, { disabled: recording || voiceProcessing, value: draft, placeholder: "\u0421\u043F\u0440\u043E\u0441\u0438\u0442\u044C \u043E\u0431 \u0438\u0433\u0440\u0435\u2026", onChange: e => editDraft(e.target.value, e.target.closest(".dai-draft-field")?.dataset.draftOwner ?? draftId.current), onKeyDown: e => { if ((e.key === "Enter" || e.keyCode === 13) && !e.shiftKey && !e.nativeEvent.isComposing) {
+                                            } }, children: SP_JSX.jsxs("div", { className: "dai-message-list", children: [!data?.messages.length && SP_JSX.jsxs("div", { className: "dai-empty", children: [SP_JSX.jsx(FaComment, {}), SP_JSX.jsx("h3", { children: t("Помощь прямо в игре") }), SP_JSX.jsxs("p", { children: [t("Задайте вопрос текстом или голосом."), SP_JSX.jsx("br", {}), t("Можно добавить скриншот.")] }), disconnect && SP_JSX.jsx(Action, { onClick: () => void run(async () => accept(await refresh())), disabled: busy, children: busy ? t("Подключение…") : t("Подключиться") })] }), data?.hasOlderMessages && SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { followTail.current = false; accept(await olderMessages()); requestAnimationFrame(() => { if (chatRef.current)
+                                                            chatRef.current.scrollTop = 0; }); }), children: t("Показать предыдущие сообщения") }), data?.messages.map((message, i) => message.role === "tool" ? SP_JSX.jsx(DFL.Focusable, { className: "dai-message tool", focusClassName: "dai-focused", onActivate: () => setOpenTool(openTool === (message.id || String(i)) ? "" : (message.id || String(i))), children: SP_JSX.jsx("pre", { children: (() => { const text = uiLanguage === "en" ? (message.textEn ?? message.text) : message.text; return openTool === (message.id || String(i)) ? text : text.split("\n").slice(0, 3).join("\n") + (text.split("\n").length > 3 ? "\n…" : ""); })() }) }, message.id || i) : SP_JSX.jsxs(DFL.Focusable, { className: "dai-message " + message.role, focusClassName: "dai-focused", children: [SP_JSX.jsx("small", { children: message.role === "user" ? t("Вы") : names[data.provider]?.split(" · ")[0] || "AI" }), SP_JSX.jsx("div", { children: message.text }), !!message.attachments?.length && SP_JSX.jsx(MessageAttachments, { items: message.attachments }), SP_JSX.jsxs("div", { className: "dai-message-tools", children: [SP_JSX.jsxs(Action, { onClick: () => copyMessage(message.text), children: [SP_JSX.jsx(FaCopy, {}), t("Копировать")] }), message.role === "assistant" && !!window.speechSynthesis && SP_JSX.jsx(Action, { onClick: () => speak(message.id || String(i), message.text), children: speaking === (message.id || String(i)) ? t("■ Стоп") : t("🔊 Озвучить") })] })] }, message.id || i)), (data ? chatFailures(data.outbox, data.threadId, data.remoteHost || "") : []).map(x => SP_JSX.jsxs("div", { className: "dai-failed", children: [SP_JSX.jsx("p", { children: systemText(x.error || t("Не удалось отправить")) }), SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { await retry(x.id); accept(await snapshot()); }), children: t("Повторить отправку") })] }, x.id))] }) }), showLatest && SP_JSX.jsx("div", { className: "dai-latest", children: SP_JSX.jsx(Action, { onClick: jumpToLatest, children: t("↓ К последнему сообщению") }) }), ro && SP_JSX.jsx("div", { className: "dai-notice", role: "status", children: t("Режим только чтения: отправка, подтверждения и правки отключены.") }), !!data?.approvals?.length && SP_JSX.jsx(GameScroll, { className: "dai-approvals", role: "alert", children: data.approvals.map(item => SP_JSX.jsxs("div", { className: "dai-approval", children: [SP_JSX.jsxs("strong", { children: [t("Нужно подтверждение · "), item.title] }), SP_JSX.jsx("span", { className: "dai-muted", children: systemText(item.summary) }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-compose-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(Action, { primary: true, disabled: busy || ro, onClick: () => decide(item, "accept"), children: confirmApproval === item.key ? t("Нажмите ещё раз") : t("Разрешить") }), SP_JSX.jsx(Action, { disabled: busy || ro, onClick: () => decide(item, "decline"), children: t("Отклонить") })] })] }, item.key)) }), SP_JSX.jsxs("div", { className: "dai-composer", children: [countdown !== null && SP_JSX.jsxs("div", { className: "dai-notice", role: "status", children: [t("Отправка через "), countdown, t(" с"), SP_JSX.jsx(Action, { onClick: () => setCountdown(null), children: t("Отменить отправку") })] }), quickOpen && data?.threadId && SP_JSX.jsx(DFL.Focusable, { className: "dai-quick", "flow-children": "horizontal", children: quickActions.map(([label, text]) => SP_JSX.jsx(Action, { disabled: busy || disconnect || ro, onClick: () => quick(quickSource === null ? t(text) : text), children: quickSource === null ? t(label) : label }, label)) }), data?.outbox.some(job => job.status === "recovering") && SP_JSX.jsx("p", { className: "dai-muted dai-queue-state", role: "status", children: t("Проверяю состояние отправленного запроса…") }), !!data?.outbox.length && SP_JSX.jsx("div", { className: "dai-queue-summary", children: SP_JSX.jsxs(Action, { onClick: () => setQueueOpen(true), children: [t("Очередь · "), data.queueTotal ?? data.outbox.length, t(" · посмотреть")] }) }), images.length > 0 && SP_JSX.jsx("div", { className: "dai-attachments", children: images.map((image, i) => SP_JSX.jsxs(Action, { onClick: () => setImages(old => old.filter((_, n) => n !== i)), children: ["\u00D7 ", image.name] }, image.path + ":" + i)) }), (recording || voiceProcessing) && SP_JSX.jsxs("div", { className: "dai-voice-preview", role: "status", "aria-live": "polite", children: [SP_JSX.jsx("span", { className: "dai-record-dot", "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [SP_JSX.jsx("strong", { children: recording ? t("● Запись · распознанный текст") : t("Завершаю распознавание…") }), SP_JSX.jsx("span", { role: "textbox", "aria-label": t("Распознанная речь"), "aria-readonly": "true", children: (data?.voiceId !== session.discardedVoice ? data?.voiceText : "") || (["ru", "en", "ru-fast", "en-fast"].includes(lang) ? t("Здесь появится распознанная речь") : t("Записываю. Текст появится после «Стоп».")) })] })] }), data?.threadId && draftOwner(data) !== data.threadId && !draft && !!drafts.read(data.threadId) &&
+                                                    SP_JSX.jsx(Action, { disabled: busy || recording || voiceProcessing, onClick: () => editDraft(drafts.read(data.threadId)), children: t("Восстановить старый черновик") }), SP_JSX.jsx("form", { style: { display: "contents" }, onSubmit: e => { e.preventDefault(); submit(); }, children: SP_JSX.jsx("div", { className: "dai-draft-field", "data-draft-owner": draftOwner(data), onInputCapture: e => { const target = e.target; if (target.tagName === "INPUT")
+                                                            editDraft(target.value, e.currentTarget.dataset.draftOwner || ""); }, children: SP_JSX.jsx(DFL.TextField, { disabled: recording || voiceProcessing, value: draft, placeholder: t("Спросить об игре…"), onChange: e => editDraft(e.target.value, e.target.closest(".dai-draft-field")?.dataset.draftOwner ?? draftId.current), onKeyDown: e => { if ((e.key === "Enter" || e.keyCode === 13) && !e.shiftKey && !e.nativeEvent.isComposing) {
                                                                 e.preventDefault();
                                                                 submit();
-                                                            } } }) }, draftOwner(data) || "new") }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-compose-actions", "flow-children": "horizontal", children: [SP_JSX.jsxs(Action, { recording: recording || voiceProcessing, disabled: !data || voiceProcessing || busy, onClick: () => void toggleVoice(), children: [SP_JSX.jsx(FaMicrophone, {}), recording ? "Стоп" : "Голос"] }), !!data?.threadId && SP_JSX.jsx(Action, { disabled: recording || voiceProcessing, onClick: () => setQuickOpen(!quickOpen), children: "\u26A1" }), SP_JSX.jsx(Action, { disabled: voiceStarting || (!draft.trim() && !recording && !voiceProcessing), onClick: clearDraft, children: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C" }), fullscreen && data?.active && data.provider === "codex" && SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { await stop(); accept(await snapshot()); }), children: "\u0421\u0442\u043E\u043F" }), SP_JSX.jsx(Action, { primary: true, disabled: busy || disconnect || ro || recording || voiceProcessing || !draft.trim(), onClick: submit, children: busy ? "…" : "Отправить" })] }), !fullscreen && data?.active && data.provider === "codex" && SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { await stop(); accept(await snapshot()); }), children: "\u041E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u043E\u0442\u0432\u0435\u0442" })] })] }) })] }), tab === "history" && filesOpen && SP_JSX.jsx(GameScroll, { className: "dai-scroll dai-stack", children: SP_JSX.jsxs("div", { className: "dai-stack-content", children: [SP_JSX.jsxs(Action, { disabled: busy, onClick: () => { if (file)
+                                                            } } }) }, draftOwner(data) || "new") }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-compose-actions", "flow-children": "horizontal", children: [SP_JSX.jsxs(Action, { recording: recording || voiceProcessing, disabled: !data || voiceProcessing || busy, onClick: () => void toggleVoice(), children: [SP_JSX.jsx(FaMicrophone, {}), recording ? t("Стоп") : t("Голос")] }), !!data?.threadId && SP_JSX.jsx(Action, { disabled: recording || voiceProcessing, onClick: () => setQuickOpen(!quickOpen), children: "\u26A1" }), SP_JSX.jsx(Action, { disabled: voiceStarting || (!draft.trim() && !recording && !voiceProcessing), onClick: clearDraft, children: t("Очистить") }), fullscreen && data?.active && data.provider === "codex" && SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { await stop(); accept(await snapshot()); }), children: t("Стоп") }), SP_JSX.jsx(Action, { primary: true, disabled: busy || disconnect || ro || recording || voiceProcessing || !draft.trim(), onClick: submit, children: busy ? "…" : t("Отправить") })] }), !fullscreen && data?.active && data.provider === "codex" && SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { await stop(); accept(await snapshot()); }), children: t("Остановить ответ") })] })] }) })] }), tab === "history" && filesOpen && SP_JSX.jsx(GameScroll, { className: "dai-scroll dai-stack", children: SP_JSX.jsxs("div", { className: "dai-stack-content", children: [SP_JSX.jsxs(Action, { disabled: busy, onClick: () => { if (file)
                                         setFile(null);
                                     else
-                                        setFilesOpen(false); }, children: ["\u2190 ", file ? "К папке" : "Назад"] }), SP_JSX.jsx("h3", { children: file ? file.path.split("/").pop() : folder }), SP_JSX.jsxs("p", { className: "dai-muted", children: ["\u0423\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u043E \u00B7 ", (file?.host ?? folderHost) || "Steam Deck"] }), filesStale && SP_JSX.jsx("p", { role: "status", children: "\u0412\u044B\u0431\u0440\u0430\u043D\u043E \u0434\u0440\u0443\u0433\u043E\u0435 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u043E. \u0412\u0435\u0440\u043D\u0438\u0442\u0435\u0441\u044C \u043A \u0438\u0441\u0445\u043E\u0434\u043D\u043E\u043C\u0443 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0443, \u0447\u0442\u043E\u0431\u044B \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u043F\u0440\u0430\u0432\u043A\u0438 \u0438\u043B\u0438 \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440 \u043F\u0430\u043F\u043A\u0438." }), !file && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Action, { disabled: busy || filesStale, onClick: () => openFolder(parentPath(folder)), children: "\u2B11 \u0412\u0432\u0435\u0440\u0445" }), entries.map(name => SP_JSX.jsxs(Action, { disabled: busy || filesStale, onClick: () => isFolder(name) ? openFolder(joinPath(folder, name)) : openFile(joinPath(folder, name)), children: [isFolder(name) ? "📁 " : "📄 ", name] }, name)), !entries.length && SP_JSX.jsx("p", { className: "dai-muted", children: "\u041F\u0430\u043F\u043A\u0430 \u043F\u0443\u0441\u0442\u0430. \u0414\u043E\u0441\u0442\u0443\u043F\u043D\u0430 \u0442\u043E\u043B\u044C\u043A\u043E \u0434\u043E\u043C\u0430\u0448\u043D\u044F\u044F \u043F\u0430\u043F\u043A\u0430; \u043A\u043B\u044E\u0447\u0438 \u0438 \u0441\u0435\u043A\u0440\u0435\u0442\u044B \u0441\u043A\u0440\u044B\u0442\u044B." })] }), file && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("textarea", { className: "dai-textarea", value: fileText, spellCheck: false, onChange: e => setFileText(e.target.value) }), SP_JSX.jsxs("p", { className: "dai-muted", children: [fileText === file.text ? "Без изменений" : "Есть несохранённые правки", " \u00B7 \u0434\u043E 64 \u041A\u0411 \u00B7 \u043F\u0435\u0440\u0435\u0434 \u0437\u0430\u043F\u0438\u0441\u044C\u044E \u0441\u043E\u0437\u0434\u0430\u0451\u0442\u0441\u044F \u043A\u043E\u043F\u0438\u044F .deckai.bak"] }), SP_JSX.jsx(Action, { primary: true, disabled: busy || ro || filesStale || fileText === file.text, onClick: saveFile, children: "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u043D\u0430 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0435" }), SP_JSX.jsx(Action, { disabled: busy || fileText === file.text, onClick: () => setFileText(file.text), children: "\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C \u043F\u0440\u0430\u0432\u043A\u0438" })] })] }) }), tab === "history" && !filesOpen && SP_JSX.jsx(GameScroll, { className: "dai-scroll dai-stack", children: SP_JSX.jsxs("div", { className: "dai-stack-content", children: [SP_JSX.jsx(Action, { primary: true, disabled: busy || disconnect || ro || data?.active, onClick: () => void run(async () => { accept(await newThread()); setTab("chat"); }), children: "\uFF0B \u041D\u043E\u0432\u044B\u0439 \u0447\u0430\u0442" }), SP_JSX.jsxs(Action, { disabled: busy || disconnect, onClick: () => { setFilesOpen(true); openFolder("~"); }, children: ["\uD83D\uDCC1 \u0424\u0430\u0439\u043B\u044B \u043D\u0430 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0435", data?.remoteHost ? " · " + data.remoteHost : ""] }), !!data?.recentEvents?.length && SP_JSX.jsxs("section", { className: "dai-section dai-events", children: [SP_JSX.jsx("h3", { children: "\u0427\u0442\u043E \u043F\u0440\u043E\u0438\u0437\u043E\u0448\u043B\u043E" }), data.recentEvents.slice(0, 8).map(item => SP_JSX.jsxs("p", { className: "dai-muted", children: [item.kind === "approval" ? "⏸" : item.kind === "failed" ? "✗" : "✓", " ", new Date(item.at * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), " \u00B7 ", (item.host || "Steam Deck") + " · " + item.title] }, item.id))] }), (data?.provider === "codex" || !data) && SP_JSX.jsx(Choice, { label: "\u0423\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u043E", value: data?.remoteHost || "", options: [{ data: "", label: "Этот Steam Deck" }, ...(data?.sshHosts || []).map(x => ({ data: x, label: x }))], disabled: busy || data?.active, onChange: value => void run(async () => accept(await remoteHost(value))) }), data?.remoteHost && SP_JSX.jsxs(Action, { disabled: busy, onClick: () => void run(async () => { accept(await refresh()); setNotice("Список задач обновлён"); }), children: ["\u21BB \u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0437\u0430\u0434\u0430\u0447\u0438 \u043D\u0430 ", data.remoteHost] }), SP_JSX.jsx(DFL.TextField, { value: historyQuery, placeholder: "\u041D\u0430\u0439\u0442\u0438 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u2026", onChange: e => setHistoryQuery(e.target.value) }), (data?.allTasks || []).some(t => t.host !== (data?.remoteHost || "") || t.running) && SP_JSX.jsxs("section", { className: "dai-section dai-all-tasks", children: [SP_JSX.jsx("h3", { children: "\u0417\u0430\u0434\u0430\u0447\u0438 \u043D\u0430 \u0432\u0441\u0435\u0445 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430\u0445" }), (data?.allTasks || []).filter(t => t.host !== (data?.remoteHost || "") || t.running).slice(0, 12).map(t => SP_JSX.jsx(Action, { disabled: busy || (data?.active && !data.remoteHost && t.host === ""), onClick: () => void run(async () => { if (t.host !== (data?.remoteHost || ""))
-                                                accept(await remoteHost(t.host)); accept(await selectThread(t.id)); setTab("chat"); }), children: SP_JSX.jsxs("span", { children: [t.running && SP_JSX.jsx("span", { className: "dai-dot working", "aria-label": "\u0412\u044B\u043F\u043E\u043B\u043D\u044F\u0435\u0442\u0441\u044F" }), (t.host || "Steam Deck") + " · " + t.name] }) }, t.host + ":" + t.id))] }), !data?.threads.length && SP_JSX.jsx("p", { className: "dai-muted", children: "\u0412\u0430\u0448\u0438 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F \u0437\u0434\u0435\u0441\u044C." }), data?.threads.filter(x => x.name.toLocaleLowerCase().includes(historyQuery.toLocaleLowerCase())).sort((a, b) => Number(!!b.running) - Number(!!a.running)).map(thread => SP_JSX.jsx("div", { className: "dai-history-item " + (thread.id === data.threadId ? "selected" : "") + (thread.running ? " running" : ""), children: SP_JSX.jsxs(Action, { disabled: busy || (data.active && thread.id !== data.threadId && !data.remoteHost), onClick: () => chooseThread(thread.id), children: [SP_JSX.jsxs("span", { children: [thread.running && SP_JSX.jsx("span", { className: "dai-dot working", "aria-label": "\u0412\u044B\u043F\u043E\u043B\u043D\u044F\u0435\u0442\u0441\u044F" }), thread.name || "Новый чат"] }), thread.id === data.threadId && SP_JSX.jsx("small", { children: "\u0422\u0435\u043A\u0443\u0449\u0438\u0439" })] }) }, thread.id))] }) }), tab === "settings" && SP_JSX.jsx(GameScroll, { className: "dai-scroll dai-stack dai-settings", children: SP_JSX.jsxs("div", { className: "dai-settings-grid", children: [SP_JSX.jsxs("div", { className: "dai-settings-column", children: [SP_JSX.jsxs("section", { className: "dai-section dai-model-settings", children: [SP_JSX.jsx("h3", { children: "\u041C\u043E\u0434\u0435\u043B\u044C \u0438 \u043E\u0442\u0432\u0435\u0442" }), SP_JSX.jsxs("div", { className: "dai-model-fields", children: [SP_JSX.jsx(Choice, { label: "\u0421\u0435\u0440\u0432\u0438\u0441", value: data?.provider || "codex", options: Object.entries(names).map(([data, label]) => ({ data, label })), disabled: busy || data?.active, onChange: value => void run(async () => { accept(await setProvider(value)); setKey(""); }) }), SP_JSX.jsx(Choice, { label: "\u041C\u043E\u0434\u0435\u043B\u044C", value: model?.id || "", options: (data?.models || []).map(x => ({ data: x.id, label: x.name })), disabled: busy, onChange: id => { const next = data?.models.find(x => x.id === id); settings(id, next?.defaultEffort || next?.efforts[0]?.id || "", "default"); } }), data?.provider === "codex" && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Choice, { label: "\u0413\u043B\u0443\u0431\u0438\u043D\u0430 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438", value: effort, options: (model?.efforts || []).map(x => ({ data: x.id, label: x.name })), disabled: busy, onChange: value => settings(model?.id || "", value, tier) }), SP_JSX.jsx(Choice, { label: "\u0421\u043A\u043E\u0440\u043E\u0441\u0442\u044C", value: tier, options: [{ data: "default", label: "Обычная" }, ...(model?.tiers.includes("priority") ? [{ data: "priority", label: "Приоритетная" }] : [])], disabled: busy, onChange: value => settings(model?.id || "", effort, value) })] })] }), (data?.provider === "deepseek" || data?.provider === "tokenharbor" || isCustom) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(DFL.TextField, { bIsPassword: true, value: key, placeholder: "\u041A\u043B\u044E\u0447 API", onChange: e => setKey(e.target.value) }), SP_JSX.jsx(Action, { disabled: busy || !key.trim(), onClick: () => void run(async () => { await setProviderKey(key.trim()); setKey(""); accept(await refresh()); setNotice("Ключ сохранён"); }), children: "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u043A\u043B\u044E\u0447" }), SP_JSX.jsx("p", { className: "dai-muted", children: "\u041A\u043B\u044E\u0447 \u0445\u0440\u0430\u043D\u0438\u0442\u0441\u044F \u0432 \u0441\u0438\u0441\u0442\u0435\u043C\u043D\u043E\u043C \u0445\u0440\u0430\u043D\u0438\u043B\u0438\u0449\u0435 SteamOS." })] }), data?.provider === "claude" && SP_JSX.jsx("p", { className: "dai-muted", children: "Desktop Mode \u2192 Deck AI \u2192 + \u2192 \u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0438\u0442\u044C Claude Code \u0438\u043B\u0438 Anthropic Console (API). \u0412\u0445\u043E\u0434 \u0432\u044B\u043F\u043E\u043B\u043D\u044F\u0435\u0442\u0441\u044F \u0432 \u043E\u0444\u0438\u0446\u0438\u0430\u043B\u044C\u043D\u043E\u043C CLI: \u0441\u0432\u043E\u0439 \u0430\u043A\u043A\u0430\u0443\u043D\u0442, API-\u043A\u043B\u044E\u0447 \u0438\u043B\u0438 \u043E\u0431\u043B\u0430\u0447\u043D\u044B\u0439 \u0434\u043E\u0441\u0442\u0443\u043F. \u0420\u0430\u0441\u0445\u043E\u0434\u044B \u0437\u0430\u0432\u0438\u0441\u044F\u0442 \u043E\u0442 \u0441\u043F\u043E\u0441\u043E\u0431\u0430 \u0434\u043E\u0441\u0442\u0443\u043F\u0430." }), isCustom && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("p", { className: "dai-muted", children: "\u0414\u043B\u044F \u044D\u0442\u043E\u0433\u043E \u043E\u0431\u043B\u0430\u0447\u043D\u043E\u0433\u043E \u0441\u0435\u0440\u0432\u0438\u0441\u0430 \u043D\u0443\u0436\u0435\u043D API-\u043A\u043B\u044E\u0447. \u041E\u043D \u0445\u0440\u0430\u043D\u0438\u0442\u0441\u044F \u0432 \u0441\u0438\u0441\u0442\u0435\u043C\u043D\u043E\u043C \u0445\u0440\u0430\u043D\u0438\u043B\u0438\u0449\u0435 SteamOS." }), SP_JSX.jsx(Action, { disabled: busy || ro, onClick: () => DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: "Удалить «" + (names[data.provider] || "") + "»?", strOKButtonText: "\u0423\u0434\u0430\u043B\u0438\u0442\u044C", strCancelButtonText: "\u041E\u0442\u043C\u0435\u043D\u0430", onOK: () => void run(async () => { await customRemove(data.provider); accept(await refresh()); }) })), children: "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u044D\u0442\u043E \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435" })] })] }), SP_JSX.jsxs("section", { className: "dai-section dai-appearance", children: [SP_JSX.jsx("h3", { children: "\u041E\u0444\u043E\u0440\u043C\u043B\u0435\u043D\u0438\u0435" }), SP_JSX.jsxs("div", { className: "dai-field", children: [SP_JSX.jsx("span", { className: "dai-label", children: "\u0426\u0432\u0435\u0442\u043E\u0432\u0430\u044F \u0442\u0435\u043C\u0430" }), SP_JSX.jsx(DFL.Focusable, { className: "dai-swatches", "flow-children": "horizontal", children: themes.map(theme => SP_JSX.jsxs(DFL.DialogButton, { className: "dai-button dai-swatch" + (appearance.theme === theme.id ? " dai-selected" : ""), "aria-pressed": appearance.theme === theme.id, onClick: () => setAppearanceChoice("theme", theme.id), children: [SP_JSX.jsx("span", { className: "dai-swatch-dot", style: { background: theme.swatch } }), theme.name] }, theme.id)) })] }), SP_JSX.jsx(Segmented, { label: "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044F", value: appearance.bubbles, options: bubbleStyles, onChange: id => setAppearanceChoice("bubbles", id) }), SP_JSX.jsx(Segmented, { label: "\u041F\u043B\u043E\u0442\u043D\u043E\u0441\u0442\u044C", value: appearance.density, options: densities, onChange: id => setAppearanceChoice("density", id) }), SP_JSX.jsx(Segmented, { label: "\u041A\u043E\u043C\u043F\u043E\u043D\u043E\u0432\u043A\u0430", value: appearance.layout, options: layouts, onChange: id => setAppearanceChoice("layout", id) }), appearance.layout === "split" && !fullscreen && SP_JSX.jsx("p", { className: "dai-muted", children: "\u0414\u0432\u0435 \u043A\u043E\u043B\u043E\u043D\u043A\u0438 \u0432\u043A\u043B\u044E\u0447\u0430\u0442\u0441\u044F \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u00AB\u041D\u0430 \u0432\u0435\u0441\u044C \u044D\u043A\u0440\u0430\u043D\u00BB." })] }), SP_JSX.jsxs("section", { className: "dai-section dai-custom-ai", children: [SP_JSX.jsx("h3", { children: "\u0421\u0432\u043E\u0439 \u043E\u0431\u043B\u0430\u0447\u043D\u044B\u0439 \u0418\u0418" }), SP_JSX.jsx("p", { className: "dai-muted", children: "\u041F\u043E\u0434\u043E\u0439\u0434\u0451\u0442 \u043B\u044E\u0431\u043E\u0439 \u043E\u0431\u043B\u0430\u0447\u043D\u044B\u0439 \u0441\u0435\u0440\u0432\u0438\u0441 \u0441 OpenAI-\u0441\u043E\u0432\u043C\u0435\u0441\u0442\u0438\u043C\u044B\u043C API: OpenAI, Gemini, Groq, Mistral, DeepSeek, xAI, OpenRouter \u0438 \u0434\u0440\u0443\u0433\u0438\u0435. \u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0433\u043E\u0442\u043E\u0432\u044B\u0439 \u0430\u0434\u0440\u0435\u0441 \u0438\u043B\u0438 \u0443\u043A\u0430\u0436\u0438\u0442\u0435 \u0441\u0432\u043E\u0439 (\u0442\u043E\u043B\u044C\u043A\u043E https). \u041B\u043E\u043A\u0430\u043B\u044C\u043D\u044B\u0435 \u0441\u0435\u0440\u0432\u0435\u0440\u044B \u043D\u0435 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u044E\u0442\u0441\u044F." }), SP_JSX.jsx(DFL.Focusable, { className: "dai-quick", "flow-children": "horizontal", children: (data?.presets || []).map(p => SP_JSX.jsx(Action, { onClick: () => setCustom(old => ({ ...old, name: old.name || p.name.split(" · ")[0], url: p.url })), children: p.name }, p.url)) }), SP_JSX.jsx(DFL.TextField, { value: custom.name, placeholder: "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 (\u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440, Groq)", onChange: e => setCustom({ ...custom, name: e.target.value }) }), SP_JSX.jsx(DFL.TextField, { value: custom.url, placeholder: "\u0410\u0434\u0440\u0435\u0441 API, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 https://api.groq.com/openai/v1", onChange: e => setCustom({ ...custom, url: e.target.value }) }), SP_JSX.jsx(DFL.TextField, { value: custom.models, placeholder: "\u041C\u043E\u0434\u0435\u043B\u0438 \u0447\u0435\u0440\u0435\u0437 \u0437\u0430\u043F\u044F\u0442\u0443\u044E (\u043D\u0435\u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E)", onChange: e => setCustom({ ...custom, models: e.target.value }) }), SP_JSX.jsx(DFL.TextField, { bIsPassword: true, value: custom.key, placeholder: "\u041A\u043B\u044E\u0447 API", onChange: e => setCustom({ ...custom, key: e.target.value }) }), SP_JSX.jsx(Action, { primary: true, disabled: busy || ro || !custom.name.trim() || !custom.url.trim() || !custom.key.trim(), onClick: () => void run(async () => { const result = await customSave(custom.name.trim(), custom.url.trim(), custom.models, custom.key.trim()); setCustom({ name: "", url: "", models: "", key: "" }); accept(await setProvider(result.id)); setNotice("Подключение добавлено"); }), children: "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0438 \u0432\u044B\u0431\u0440\u0430\u0442\u044C" })] }), SP_JSX.jsxs("section", { className: "dai-section dai-text-settings", children: [SP_JSX.jsx("h3", { children: "\u0418\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441 \u0438 \u0433\u043E\u043B\u043E\u0441" }), SP_JSX.jsxs("div", { className: "dai-personal-fields", children: [SP_JSX.jsxs("div", { className: "dai-field", children: [SP_JSX.jsx("span", { className: "dai-label", children: "\u041C\u0430\u0441\u0448\u0442\u0430\u0431 \u0447\u0430\u0442\u0430 \u0438 \u043A\u043D\u043E\u043F\u043E\u043A" }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-scale-controls", "flow-children": "horizontal", children: [SP_JSX.jsx(Action, { disabled: textScale <= .7, onClick: () => setTextScale(textScale - .1), children: "\u0410\u2212" }), SP_JSX.jsxs("span", { className: "dai-scale-value", "aria-live": "polite", children: [Math.round(textScale * 100), "%"] }), SP_JSX.jsx(Action, { disabled: textScale >= 1.5, onClick: () => setTextScale(textScale + .1), children: "\u0410+" }), SP_JSX.jsx(Action, { disabled: textScale === 1, onClick: () => setTextScale(1), children: "\u0421\u0431\u0440\u043E\u0441" })] })] }), SP_JSX.jsx(Choice, { label: "\u042F\u0437\u044B\u043A \u0440\u0430\u0441\u043F\u043E\u0437\u043D\u0430\u0432\u0430\u043D\u0438\u044F", value: lang, options: !data?.speechReady ? [{ data: "ru", label: "Русский" }, { data: "en", label: "English" }] : [{ data: "auto", label: "Определять автоматически" }, ...Object.entries(speechLanguages).sort(([a], [b]) => a === "ru" ? -1 : b === "ru" ? 1 : a === "en" ? -1 : b === "en" ? 1 : 0).map(([data, label]) => ({ data, label })), { data: "ru-fast", label: "Русский · экономный" }, { data: "en-fast", label: "English · экономный" }], onChange: value => { setLang(value); localStorage.setItem("codex-game-voice", value); } })] }), data?.speechVersion === 2 && !data.speechReady && SP_JSX.jsx("p", { className: "dai-muted", children: "\u0414\u043B\u044F \u0434\u0440\u0443\u0433\u0438\u0445 \u044F\u0437\u044B\u043A\u043E\u0432 \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u0435 \u043C\u043D\u043E\u0433\u043E\u044F\u0437\u044B\u0447\u043D\u0443\u044E \u043C\u043E\u0434\u0435\u043B\u044C: scripts/download-models.sh --accurate-ru" }), SP_JSX.jsxs("div", { className: "dai-game-setting", children: [SP_JSX.jsx("span", { className: "dai-muted", children: "\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0442\u044C \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0438\u0433\u0440\u044B" }), SP_JSX.jsx(GameCheckbox, { checked: gameContextEnabled, onChange: toggleGameContext })] }), SP_JSX.jsxs("div", { className: "dai-game-setting", children: [SP_JSX.jsx("span", { className: "dai-muted", children: "\u0421\u043E\u043E\u0431\u0449\u0430\u0442\u044C \u043E \u0433\u043E\u0442\u043E\u0432\u043D\u043E\u0441\u0442\u0438 \u0437\u0430\u0434\u0430\u0447 (\u0443\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u044F Steam)" }), SP_JSX.jsx(GameCheckbox, { checked: notify, onChange: () => { const next = !notify; localStorage.setItem("deck-ai-notify", next ? "on" : "off"); setNotify(next); } })] }), SP_JSX.jsxs("div", { className: "dai-game-setting", children: [SP_JSX.jsx("span", { className: "dai-muted", children: "\u041E\u0442\u043F\u0440\u0430\u0432\u043B\u044F\u0442\u044C \u0433\u043E\u043B\u043E\u0441\u043E\u0432\u043E\u0435 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435 \u0447\u0435\u0440\u0435\u0437 3 \u0441 \u043F\u043E\u0441\u043B\u0435 \u00AB\u0421\u0442\u043E\u043F\u00BB" }), SP_JSX.jsx(GameCheckbox, { checked: autoSend, onChange: () => { const next = !autoSend; localStorage.setItem("deck-ai-auto-send", next ? "on" : "off"); setAutoSend(next); } })] }), SP_JSX.jsxs("div", { className: "dai-game-setting", children: [SP_JSX.jsx("span", { className: "dai-muted", children: "\u0422\u043E\u043B\u044C\u043A\u043E \u0447\u0442\u0435\u043D\u0438\u0435 (\u0431\u0435\u0437 \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0438, \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u0439 \u0438 \u043F\u0440\u0430\u0432\u043E\u043A)" }), SP_JSX.jsx(GameCheckbox, { checked: ro, onChange: () => void run(async () => { await setReadOnly(!ro); accept(await snapshot()); }) })] }), SP_JSX.jsxs("div", { className: "dai-field", children: [SP_JSX.jsx("span", { className: "dai-label", children: "\u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0444\u0440\u0430\u0437\u044B \u26A1 (\u0441\u0442\u0440\u043E\u043A\u0430: \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 | \u0442\u0435\u043A\u0441\u0442)" }), SP_JSX.jsx("textarea", { className: "dai-textarea dai-textarea-small", value: quickSource ?? parseQuickActions(null).map(([a, b]) => a === b ? a : a + " | " + b).join("\n"), onChange: e => { setQuickSource(e.target.value); localStorage.setItem("deck-ai-quick", e.target.value); } })] }), SP_JSX.jsxs(Action, { disabled: busy || !data?.loadedModels, onClick: () => void run(async () => { await unloadModels(); accept(await snapshot()); setNotice("Модели распознавания выгружены из памяти"); }), children: ["\u041E\u0441\u0432\u043E\u0431\u043E\u0434\u0438\u0442\u044C \u043F\u0430\u043C\u044F\u0442\u044C", data?.loadedModels ? ` · загружено моделей: ${data.loadedModels}` : ""] })] })] }), SP_JSX.jsxs("div", { className: "dai-settings-column", children: [SP_JSX.jsxs("section", { className: "dai-section dai-connection-settings", children: [SP_JSX.jsx("h3", { children: "\u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435 Codex" }), SP_JSX.jsxs("div", { className: "dai-connection-bar", children: [SP_JSX.jsx("p", { className: "dai-muted", children: (data?.active ? "Deck AI работает…" : data?.status) || "Сервер пока недоступен. Можно повторить подключение." }), SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { accept(await refresh()); setNotice("Соединение обновлено"); }), children: busy ? "Подключение…" : "Переподключиться" })] }), (!data || data.provider === "codex") && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Choice, { label: "\u0423\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u043E", value: data?.remoteHost || "", options: [{ data: "", label: "Этот Steam Deck" }, ...(data?.sshHosts || []).map(x => ({ data: x, label: x }))], disabled: busy || data?.active, onChange: value => void run(async () => accept(await remoteHost(value))) }), SP_JSX.jsxs("div", { className: "dai-host-entry", children: [SP_JSX.jsx(DFL.TextField, { value: host, placeholder: "\u0414\u0440\u0443\u0433\u043E\u0439 SSH-\u0430\u043B\u0438\u0430\u0441", onChange: e => setHost(e.target.value) }), SP_JSX.jsx(Action, { disabled: busy || !host.trim() || data?.active, onClick: () => void run(async () => { accept(await remoteHost(host.trim())); setHost(""); }), children: "\u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0438\u0442\u044C" })] })] })] }), !!data?.sshHosts.length && SP_JSX.jsxs("section", { className: "dai-section dai-watch", children: [SP_JSX.jsx("h3", { children: "\u0421\u043B\u0435\u0434\u0438\u0442\u044C \u0432 \u0444\u043E\u043D\u0435" }), SP_JSX.jsx("p", { className: "dai-muted", children: "\u0423\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u044F \u0438 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F \u0441 \u044D\u0442\u0438\u0445 \u043C\u0430\u0448\u0438\u043D \u043F\u0440\u0438\u0445\u043E\u0434\u044F\u0442, \u0434\u0430\u0436\u0435 \u043A\u043E\u0433\u0434\u0430 \u043E\u043D\u0438 \u043D\u0435 \u0432\u044B\u0431\u0440\u0430\u043D\u044B. \u0414\u043E 5 \u043C\u0430\u0448\u0438\u043D." }), data.sshHosts.map(name => { const on = !!data.watchHosts?.includes(name); return SP_JSX.jsxs("div", { className: "dai-game-setting", children: [SP_JSX.jsxs("span", { className: "dai-muted", children: [name, on && data.watchStatus?.[name] ? " · " + { connected: "на связи", offline: "нет связи", connecting: "подключаюсь", active: "выбрана" }[data.watchStatus[name]] : ""] }), SP_JSX.jsx(GameCheckbox, { checked: on, onChange: () => void run(async () => { const next = on ? (data.watchHosts || []).filter(x => x !== name) : [...(data.watchHosts || []), name]; await watchHosts(next); accept(await snapshot()); }) })] }, name); })] }), SP_JSX.jsxs("section", { className: "dai-section dai-share", children: [SP_JSX.jsx("h3", { children: "\u0414\u043E\u0441\u0442\u0443\u043F \u0441 \u0434\u0440\u0443\u0433\u043E\u0433\u043E \u043A\u043E\u043C\u043F\u044C\u044E\u0442\u0435\u0440\u0430" }), SP_JSX.jsx("p", { className: "dai-muted", children: "\u0423\u043F\u0440\u0430\u0432\u043B\u044F\u0439\u0442\u0435 \u0437\u0430\u0434\u0430\u0447\u0430\u043C\u0438 \u044D\u0442\u043E\u0433\u043E Deck \u0441 Mac \u0438\u043B\u0438 \u041F\u041A \u043F\u043E SSH: \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u0438\u0437 \u0432\u0430\u0448\u0435\u0433\u043E Codex \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F \u0437\u0434\u0435\u0441\u044C." }), SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => setShare(await shareStatus())), children: "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F" }), share && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("p", { className: "dai-muted dai-check " + (share.sshActive ? "ok" : "bad"), children: [share.sshActive ? "✓ SSH-сервер работает" : "✗ SSH-сервер выключен", " \u00B7 \u043A\u043B\u044E\u0447\u0435\u0439: ", share.keys, share.codex ? "" : " · Codex не найден"] }), !share.sshActive && SP_JSX.jsx("p", { className: "dai-muted", children: share.enableHint }), SP_JSX.jsxs("p", { className: "dai-muted", children: ["\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C ", share.user, " \u00B7 \u0430\u0434\u0440\u0435\u0441\u0430: ", share.addresses.join(", ") || "не найдены"] }), SP_JSX.jsx("p", { className: "dai-muted", children: "\u041D\u0430 Mac \u0438\u043B\u0438 \u041F\u041A \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u0435 \u043C\u0430\u0441\u0442\u0435\u0440 connect-deck.py \u0438\u0437 \u0430\u0440\u0445\u0438\u0432\u0430 Remote Control. \u0410\u0434\u0440\u0435\u0441 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430 \u0443\u043A\u0430\u0437\u0430\u043D \u0432\u044B\u0448\u0435." }), SP_JSX.jsx("p", { className: "dai-muted", children: "\u041E\u0442\u043F\u0435\u0447\u0430\u0442\u043A\u0438 SSH \u0434\u043B\u044F \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0438 \u043F\u0435\u0440\u0432\u043E\u0433\u043E \u0441\u043E\u0435\u0434\u0438\u043D\u0435\u043D\u0438\u044F:" }), SP_JSX.jsx("pre", { className: "dai-snippet", children: (share.fingerprints || []).join("\n") || "SSH ещё не создал ключи: сначала включите сервер." }), SP_JSX.jsx("p", { className: "dai-muted", children: "\u0414\u043B\u044F \u0440\u0443\u0447\u043D\u043E\u0439 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 ~/.ssh/config:" }), SP_JSX.jsx("pre", { className: "dai-snippet", children: share.snippet }), SP_JSX.jsx("p", { className: "dai-muted", children: "\u0412\u0441\u0442\u0430\u0432\u044C\u0442\u0435 \u043F\u0443\u0431\u043B\u0438\u0447\u043D\u044B\u0439 \u043A\u043B\u044E\u0447 \u0438\u0437 \u043C\u0430\u0441\u0442\u0435\u0440\u0430 \u043D\u0430 Mac \u0438\u043B\u0438 \u041F\u041A:" }), SP_JSX.jsx(DFL.TextField, { value: shareKey, placeholder: "ssh-ed25519 AAAA\u2026", onChange: e => setShareKey(e.target.value) }), SP_JSX.jsx(Action, { disabled: busy || ro || !shareKey.trim(), onClick: () => void run(async () => { const result = await shareAddKey(shareKey.trim()); setShareKey(""); setShare(await shareStatus()); setNotice(result.added ? "Ключ добавлен" : "Такой ключ уже есть"); }), children: "\u0420\u0430\u0437\u0440\u0435\u0448\u0438\u0442\u044C \u044D\u0442\u043E\u043C\u0443 \u043A\u043E\u043C\u043F\u044C\u044E\u0442\u0435\u0440\u0443" })] })] }), SP_JSX.jsxs("section", { className: "dai-section dai-diagnostics", children: [SP_JSX.jsx("h3", { children: "\u0414\u0438\u0430\u0433\u043D\u043E\u0441\u0442\u0438\u043A\u0430" }), SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { setChecks(null); const result = await diagnose(); setChecks(result.checks); }), children: busy ? "Проверяю…" : "Проверить подключение" }), checks?.map(check => SP_JSX.jsxs("p", { className: "dai-muted dai-check " + (check.ok ? "ok" : "bad"), children: [check.ok ? "✓" : "✗", " ", check.name, check.detail ? " · " + check.detail : ""] }, check.name))] }), SP_JSX.jsxs("section", { className: "dai-section dai-account-settings", children: [SP_JSX.jsx("h3", { children: "\u0410\u043A\u043A\u0430\u0443\u043D\u0442 ChatGPT" }), SP_JSX.jsxs("div", { className: "dai-account-meta", children: [SP_JSX.jsx("p", { className: "dai-account", children: data?.account?.email || "Вход не выполнен" }), data?.account?.planType && SP_JSX.jsx("p", { className: "dai-muted", children: data.account.planType })] }), SP_JSX.jsxs("div", { className: "dai-account-actions", children: [SP_JSX.jsx(Action, { disabled: busy, onClick: signIn, children: data?.account ? "Сменить аккаунт" : "Войти в аккаунт" }), data?.loginPending && SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { await accountCancelLogin(); setLoginUrl(""); accept(await snapshot()); }), children: "\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C \u0432\u0445\u043E\u0434" }), loginUrl && SP_JSX.jsx("p", { className: "dai-login-url", children: loginUrl }), data?.account && SP_JSX.jsx(Action, { disabled: busy, onClick: () => DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: "\u0412\u044B\u0439\u0442\u0438 \u0438\u0437 ChatGPT?", strDescription: "\u0414\u043B\u044F \u0440\u0430\u0431\u043E\u0442\u044B Codex \u043F\u043E\u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u0441\u043D\u043E\u0432\u0430 \u0432\u043E\u0439\u0442\u0438.", strOKButtonText: "\u0412\u044B\u0439\u0442\u0438", strCancelButtonText: "\u041E\u0442\u043C\u0435\u043D\u0430", onOK: () => void run(async () => { await accountLogout(); accept(await refresh()); }) })), children: "\u0412\u044B\u0439\u0442\u0438 \u0438\u0437 \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0430" })] })] })] })] }) })] })] });
+                                        setFilesOpen(false); }, children: ["\u2190 ", file ? t("К папке") : t("Назад")] }), SP_JSX.jsx("h3", { children: file ? file.path.split("/").pop() : folder }), SP_JSX.jsxs("p", { className: "dai-muted", children: [t("Устройство · "), (file?.host ?? folderHost) || "Steam Deck"] }), filesStale && SP_JSX.jsx("p", { role: "status", children: t("Выбрано другое устройство. Вернитесь к исходному устройству, чтобы сохранить правки или продолжить просмотр папки.") }), !file && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Action, { disabled: busy || filesStale, onClick: () => openFolder(parentPath(folder)), children: t("⬑ Вверх") }), entries.map(name => SP_JSX.jsxs(Action, { disabled: busy || filesStale, onClick: () => isFolder(name) ? openFolder(joinPath(folder, name)) : openFile(joinPath(folder, name)), children: [isFolder(name) ? "📁 " : "📄 ", name] }, name)), !entries.length && SP_JSX.jsx("p", { className: "dai-muted", children: t("Папка пуста. Доступна только домашняя папка; ключи и секреты скрыты.") })] }), file && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("textarea", { className: "dai-textarea", value: fileText, spellCheck: false, onChange: e => setFileText(e.target.value) }), SP_JSX.jsxs("p", { className: "dai-muted", children: [fileText === file.text ? t("Без изменений") : t("Есть несохранённые правки"), t(" · до 64 КБ · перед записью создаётся копия .deckai.bak")] }), SP_JSX.jsx(Action, { primary: true, disabled: busy || ro || filesStale || fileText === file.text, onClick: saveFile, children: t("Сохранить на устройстве") }), SP_JSX.jsx(Action, { disabled: busy || fileText === file.text, onClick: () => setFileText(file.text), children: t("Отменить правки") })] })] }) }), tab === "history" && !filesOpen && SP_JSX.jsx(GameScroll, { className: "dai-scroll dai-stack", children: SP_JSX.jsxs("div", { className: "dai-stack-content", children: [SP_JSX.jsx(Action, { primary: true, disabled: busy || disconnect || ro || data?.active, onClick: () => void run(async () => { accept(await newThread()); setTab("chat"); }), children: t("＋ Новый чат") }), SP_JSX.jsxs(Action, { disabled: busy || disconnect, onClick: () => { setFilesOpen(true); openFolder("~"); }, children: [t("📁 Файлы на устройстве"), data?.remoteHost ? " · " + data.remoteHost : ""] }), !!data?.recentEvents?.length && SP_JSX.jsxs("section", { className: "dai-section dai-events", children: [SP_JSX.jsx("h3", { children: t("Что произошло") }), data.recentEvents.slice(0, 8).map(item => SP_JSX.jsxs("p", { className: "dai-muted", children: [item.kind === "approval" ? "⏸" : item.kind === "failed" ? "✗" : "✓", " ", new Date(item.at * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), " \u00B7 ", (item.host || "Steam Deck") + " · " + item.title] }, item.id))] }), (data?.provider === "codex" || !data) && SP_JSX.jsx(Choice, { label: t("Устройство"), value: data?.remoteHost || "", options: [{ data: "", label: t("Этот Steam Deck") }, ...(data?.sshHosts || []).map(x => ({ data: x, label: x }))], disabled: busy || data?.active, onChange: value => void run(async () => accept(await remoteHost(value))) }), data?.remoteHost && SP_JSX.jsxs(Action, { disabled: busy, onClick: () => void run(async () => { accept(await refresh()); setNotice(t("Список задач обновлён")); }), children: [t("↻ Обновить задачи на "), data.remoteHost] }), SP_JSX.jsx(DFL.TextField, { value: historyQuery, placeholder: t("Найти разговор…"), onChange: e => setHistoryQuery(e.target.value) }), (data?.allTasks || []).some(task => task.host !== (data?.remoteHost || "") || task.running) && SP_JSX.jsxs("section", { className: "dai-section dai-all-tasks", children: [SP_JSX.jsx("h3", { children: t("Задачи на всех устройствах") }), (data?.allTasks || []).filter(task => task.host !== (data?.remoteHost || "") || task.running).slice(0, 12).map(task => SP_JSX.jsx(Action, { disabled: busy || (data?.active && !data.remoteHost && task.host === ""), onClick: () => void run(async () => { if (task.host !== (data?.remoteHost || ""))
+                                                accept(await remoteHost(task.host)); accept(await selectThread(task.id)); setTab("chat"); }), children: SP_JSX.jsxs("span", { children: [task.running && SP_JSX.jsx("span", { className: "dai-dot working", "aria-label": t("Выполняется") }), (task.host || "Steam Deck") + " · " + task.name] }) }, task.host + ":" + task.id))] }), !data?.threads.length && SP_JSX.jsx("p", { className: "dai-muted", children: t("Ваши разговоры появятся здесь.") }), data?.threads.filter(x => x.name.toLocaleLowerCase().includes(historyQuery.toLocaleLowerCase())).sort((a, b) => Number(!!b.running) - Number(!!a.running)).map(thread => SP_JSX.jsx("div", { className: "dai-history-item " + (thread.id === data.threadId ? "selected" : "") + (thread.running ? " running" : ""), children: SP_JSX.jsxs(Action, { disabled: busy || (data.active && thread.id !== data.threadId && !data.remoteHost), onClick: () => chooseThread(thread.id), children: [SP_JSX.jsxs("span", { children: [thread.running && SP_JSX.jsx("span", { className: "dai-dot working", "aria-label": t("Выполняется") }), thread.name || t("Новый чат")] }), thread.id === data.threadId && SP_JSX.jsx("small", { children: t("Текущий") })] }) }, thread.id))] }) }), tab === "settings" && SP_JSX.jsx(GameScroll, { className: "dai-scroll dai-stack dai-settings", children: SP_JSX.jsxs("div", { className: "dai-settings-grid", children: [SP_JSX.jsxs("div", { className: "dai-settings-column", children: [SP_JSX.jsxs("section", { className: "dai-section dai-model-settings", children: [SP_JSX.jsx("h3", { children: t("Модель и ответ") }), SP_JSX.jsxs("div", { className: "dai-model-fields", children: [SP_JSX.jsx(Choice, { label: t("Сервис"), value: data?.provider || "codex", options: Object.entries(names).map(([data, label]) => ({ data, label: data.startsWith("custom:") ? label : t(label) })), disabled: busy || data?.active, onChange: value => void run(async () => { accept(await setProvider(value)); setKey(""); }) }), SP_JSX.jsx(Choice, { label: t("Модель"), value: model?.id || "", options: (data?.models || []).map(x => ({ data: x.id, label: x.name })), disabled: busy, onChange: id => { const next = data?.models.find(x => x.id === id); settings(id, next?.defaultEffort || next?.efforts[0]?.id || "", "default"); } }), data?.provider === "codex" && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Choice, { label: t("Глубина обработки"), value: effort, options: (model?.efforts || []).map(x => ({ data: x.id, label: t(x.name) })), disabled: busy, onChange: value => settings(model?.id || "", value, tier) }), SP_JSX.jsx(Choice, { label: t("Скорость"), value: tier, options: [{ data: "default", label: t("Обычная") }, ...(model?.tiers.includes("priority") ? [{ data: "priority", label: t("Приоритетная") }] : [])], disabled: busy, onChange: value => settings(model?.id || "", effort, value) })] })] }), (data?.provider === "deepseek" || data?.provider === "tokenharbor" || isCustom) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(DFL.TextField, { bIsPassword: true, value: key, placeholder: t("Ключ API"), onChange: e => setKey(e.target.value) }), SP_JSX.jsx(Action, { disabled: busy || !key.trim(), onClick: () => void run(async () => { await setProviderKey(key.trim()); setKey(""); accept(await refresh()); setNotice(t("Ключ сохранён")); }), children: t("Сохранить ключ") }), SP_JSX.jsx("p", { className: "dai-muted", children: t("Ключ хранится в системном хранилище SteamOS.") })] }), data?.provider === "claude" && SP_JSX.jsx("p", { className: "dai-muted", children: t("Desktop Mode → Deck AI → + → Подключить Claude Code или Anthropic Console (API). Вход выполняется в официальном CLI: свой аккаунт, API-ключ или облачный доступ. Расходы зависят от способа доступа.") }), isCustom && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("p", { className: "dai-muted", children: t("Для этого облачного сервиса нужен API-ключ. Он хранится в системном хранилище SteamOS.") }), SP_JSX.jsx(Action, { disabled: busy || ro, onClick: () => DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: t("Удалить «") + (names[data.provider] || "") + "»?", strOKButtonText: t("Удалить"), strCancelButtonText: t("Отмена"), onOK: () => void run(async () => { await customRemove(data.provider); accept(await refresh()); }) })), children: t("Удалить это подключение") })] })] }), SP_JSX.jsxs("section", { className: "dai-section dai-appearance", children: [SP_JSX.jsx("h3", { children: t("Оформление") }), SP_JSX.jsxs("div", { className: "dai-field", children: [SP_JSX.jsx("span", { className: "dai-label", children: t("Цветовая тема") }), SP_JSX.jsx(DFL.Focusable, { className: "dai-swatches", "flow-children": "horizontal", children: themes.map(theme => SP_JSX.jsxs(DFL.DialogButton, { className: "dai-button dai-swatch" + (appearance.theme === theme.id ? " dai-selected" : ""), "aria-pressed": appearance.theme === theme.id, onClick: () => setAppearanceChoice("theme", theme.id), children: [SP_JSX.jsx("span", { className: "dai-swatch-dot", style: { background: theme.swatch } }), t(theme.name)] }, theme.id)) })] }), SP_JSX.jsx(Segmented, { label: t("Сообщения"), value: appearance.bubbles, options: bubbleStyles, onChange: id => setAppearanceChoice("bubbles", id) }), SP_JSX.jsx(Segmented, { label: t("Плотность"), value: appearance.density, options: densities, onChange: id => setAppearanceChoice("density", id) }), SP_JSX.jsx(Segmented, { label: t("Компоновка"), value: appearance.layout, options: layouts, onChange: id => setAppearanceChoice("layout", id) }), appearance.layout === "split" && !fullscreen && SP_JSX.jsx("p", { className: "dai-muted", children: t("Две колонки включатся в режиме «На весь экран».") })] }), SP_JSX.jsxs("section", { className: "dai-section dai-custom-ai", children: [SP_JSX.jsx("h3", { children: t("Свой облачный ИИ") }), SP_JSX.jsx("p", { className: "dai-muted", children: t("Подойдёт любой облачный сервис с OpenAI-совместимым API: OpenAI, Gemini, Groq, Mistral, DeepSeek, xAI, OpenRouter и другие. Выберите готовый адрес или укажите свой (только https). Локальные серверы не поддерживаются.") }), SP_JSX.jsx(DFL.Focusable, { className: "dai-quick", "flow-children": "horizontal", children: (data?.presets || []).map(p => SP_JSX.jsx(Action, { onClick: () => setCustom(old => ({ ...old, name: old.name || p.name.split(" · ")[0], url: p.url })), children: p.name }, p.url)) }), SP_JSX.jsx(DFL.TextField, { value: custom.name, placeholder: t("Название (например, Groq)"), onChange: e => setCustom({ ...custom, name: e.target.value }) }), SP_JSX.jsx(DFL.TextField, { value: custom.url, placeholder: t("Адрес API, например https://api.groq.com/openai/v1"), onChange: e => setCustom({ ...custom, url: e.target.value }) }), SP_JSX.jsx(DFL.TextField, { value: custom.models, placeholder: t("Модели через запятую (необязательно)"), onChange: e => setCustom({ ...custom, models: e.target.value }) }), SP_JSX.jsx(DFL.TextField, { bIsPassword: true, value: custom.key, placeholder: t("Ключ API"), onChange: e => setCustom({ ...custom, key: e.target.value }) }), SP_JSX.jsx(Action, { primary: true, disabled: busy || ro || !custom.name.trim() || !custom.url.trim() || !custom.key.trim(), onClick: () => void run(async () => { const result = await customSave(custom.name.trim(), custom.url.trim(), custom.models, custom.key.trim()); setCustom({ name: "", url: "", models: "", key: "" }); accept(await setProvider(result.id)); setNotice(t("Подключение добавлено")); }), children: t("Добавить и выбрать") })] }), SP_JSX.jsxs("section", { className: "dai-section dai-text-settings", children: [SP_JSX.jsx("h3", { children: t("Интерфейс и голос") }), SP_JSX.jsx(Choice, { label: t("Язык интерфейса"), value: uiLanguage, options: [{ data: "en", label: "English" }, { data: "ru", label: t("Русский") }], onChange: value => void run(async () => { const result = await saveInterfaceLanguage(value); setUILanguage(result.uiLanguage); accept(await snapshot()); }) }), SP_JSX.jsx("p", { className: "dai-muted", children: t("Язык меню не меняет текст ваших разговоров и язык диктовки.") }), SP_JSX.jsxs("div", { className: "dai-personal-fields", children: [SP_JSX.jsxs("div", { className: "dai-field", children: [SP_JSX.jsx("span", { className: "dai-label", children: t("Масштаб чата и кнопок") }), SP_JSX.jsxs(DFL.Focusable, { className: "dai-scale-controls", "flow-children": "horizontal", children: [SP_JSX.jsx(Action, { disabled: textScale <= .7, onClick: () => setTextScale(textScale - .1), children: t("А−") }), SP_JSX.jsxs("span", { className: "dai-scale-value", "aria-live": "polite", children: [Math.round(textScale * 100), "%"] }), SP_JSX.jsx(Action, { disabled: textScale >= 1.5, onClick: () => setTextScale(textScale + .1), children: t("А+") }), SP_JSX.jsx(Action, { disabled: textScale === 1, onClick: () => setTextScale(1), children: t("Сброс") })] })] }), SP_JSX.jsx(Choice, { label: t("Язык распознавания"), value: lang, options: !data?.speechReady ? [{ data: "ru", label: t("Русский") }, { data: "en", label: "English" }] : [{ data: "auto", label: t("Определять автоматически") }, ...Object.entries(speechLanguages).sort(([a], [b]) => a === "ru" ? -1 : b === "ru" ? 1 : a === "en" ? -1 : b === "en" ? 1 : 0).map(([data, label]) => ({ data, label: speechLanguageName(data, label) })), { data: "ru-fast", label: t("Русский · экономный") }, { data: "en-fast", label: t("English · экономный") }], onChange: value => { setLang(value); localStorage.setItem("codex-game-voice", value); } })] }), data?.speechVersion === 2 && !data.speechReady && SP_JSX.jsx("p", { className: "dai-muted", children: t("Для других языков установите многоязычную модель: scripts/download-models.sh --accurate-ru") }), SP_JSX.jsxs("div", { className: "dai-game-setting", children: [SP_JSX.jsx("span", { className: "dai-muted", children: t("Добавлять только название игры") }), SP_JSX.jsx(GameCheckbox, { checked: gameContextEnabled, onChange: toggleGameContext })] }), SP_JSX.jsxs("div", { className: "dai-game-setting", children: [SP_JSX.jsx("span", { className: "dai-muted", children: t("Сообщать о готовности задач (уведомления Steam)") }), SP_JSX.jsx(GameCheckbox, { checked: notify, onChange: () => { const next = !notify; localStorage.setItem("deck-ai-notify", next ? "on" : "off"); setNotify(next); } })] }), SP_JSX.jsxs("div", { className: "dai-game-setting", children: [SP_JSX.jsx("span", { className: "dai-muted", children: t("Отправлять голосовое сообщение через 3 с после «Стоп»") }), SP_JSX.jsx(GameCheckbox, { checked: autoSend, onChange: () => { const next = !autoSend; localStorage.setItem("deck-ai-auto-send", next ? "on" : "off"); setAutoSend(next); } })] }), SP_JSX.jsxs("div", { className: "dai-game-setting", children: [SP_JSX.jsx("span", { className: "dai-muted", children: t("Только чтение (без отправки, подтверждений и правок)") }), SP_JSX.jsx(GameCheckbox, { checked: ro, onChange: () => void run(async () => { await setReadOnly(!ro); accept(await snapshot()); }) })] }), SP_JSX.jsxs("div", { className: "dai-field", children: [SP_JSX.jsx("span", { className: "dai-label", children: t("Быстрые фразы ⚡ (строка: название | текст)") }), SP_JSX.jsx("textarea", { className: "dai-textarea dai-textarea-small", value: quickSource ?? parseQuickActions(null).map(([a, b]) => a === b ? t(a) : t(a) + " | " + t(b)).join("\n"), onChange: e => { setQuickSource(e.target.value); localStorage.setItem("deck-ai-quick", e.target.value); } })] }), SP_JSX.jsxs(Action, { disabled: busy || !data?.loadedModels, onClick: () => void run(async () => { await unloadModels(); accept(await snapshot()); setNotice(t("Модели распознавания выгружены из памяти")); }), children: [t("Освободить память"), data?.loadedModels ? t(" · загружено моделей: {0}", data.loadedModels) : ""] })] })] }), SP_JSX.jsxs("div", { className: "dai-settings-column", children: [SP_JSX.jsxs("section", { className: "dai-section dai-connection-settings", children: [SP_JSX.jsx("h3", { children: t("Подключение Codex") }), SP_JSX.jsxs("div", { className: "dai-connection-bar", children: [SP_JSX.jsx("p", { className: "dai-muted", children: (data?.active ? t("Deck AI работает…") : data?.status) || t("Сервер пока недоступен. Можно повторить подключение.") }), SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { accept(await refresh()); setNotice(t("Соединение обновлено")); }), children: busy ? t("Подключение…") : t("Переподключиться") })] }), (!data || data.provider === "codex") && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Choice, { label: t("Устройство"), value: data?.remoteHost || "", options: [{ data: "", label: t("Этот Steam Deck") }, ...(data?.sshHosts || []).map(x => ({ data: x, label: x }))], disabled: busy || data?.active, onChange: value => void run(async () => accept(await remoteHost(value))) }), SP_JSX.jsxs("div", { className: "dai-host-entry", children: [SP_JSX.jsx(DFL.TextField, { value: host, placeholder: t("Другой SSH-алиас"), onChange: e => setHost(e.target.value) }), SP_JSX.jsx(Action, { disabled: busy || !host.trim() || data?.active, onClick: () => void run(async () => { accept(await remoteHost(host.trim())); setHost(""); }), children: t("Подключить") })] })] })] }), !!data?.sshHosts.length && SP_JSX.jsxs("section", { className: "dai-section dai-watch", children: [SP_JSX.jsx("h3", { children: t("Следить в фоне") }), SP_JSX.jsx("p", { className: "dai-muted", children: t("Уведомления и подтверждения с этих машин приходят, даже когда они не выбраны. До 5 машин.") }), data.sshHosts.map(name => { const on = !!data.watchHosts?.includes(name); return SP_JSX.jsxs("div", { className: "dai-game-setting", children: [SP_JSX.jsxs("span", { className: "dai-muted", children: [name, on && data.watchStatus?.[name] ? " · " + { connected: t("на связи"), offline: t("нет связи"), connecting: t("подключаюсь"), active: t("выбрана") }[data.watchStatus[name]] : ""] }), SP_JSX.jsx(GameCheckbox, { checked: on, onChange: () => void run(async () => { const next = on ? (data.watchHosts || []).filter(x => x !== name) : [...(data.watchHosts || []), name]; await watchHosts(next); accept(await snapshot()); }) })] }, name); })] }), SP_JSX.jsxs("section", { className: "dai-section dai-share", children: [SP_JSX.jsx("h3", { children: t("Доступ с другого компьютера") }), SP_JSX.jsx("p", { className: "dai-muted", children: t("Управляйте задачами этого Deck с Mac или ПК по SSH: команды из вашего Codex появятся здесь.") }), SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => setShare(await shareStatus())), children: t("Показать данные подключения") }), share && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("p", { className: "dai-muted dai-check " + (share.sshActive ? "ok" : "bad"), children: [share.sshActive ? t("✓ SSH-сервер работает") : t("✗ SSH-сервер выключен"), t(" · ключей: "), share.keys, share.codex ? "" : t(" · Codex не найден")] }), !share.sshActive && SP_JSX.jsx("p", { className: "dai-muted", children: share.enableHint }), SP_JSX.jsxs("p", { className: "dai-muted", children: [t("Пользователь "), share.user, t(" · адреса: "), share.addresses.join(", ") || t("не найдены")] }), SP_JSX.jsx("p", { className: "dai-muted", children: t("На Mac или ПК запустите мастер connect-deck.py из архива Remote Control. Адрес устройства указан выше.") }), SP_JSX.jsx("p", { className: "dai-muted", children: t("Отпечатки SSH для проверки первого соединения:") }), SP_JSX.jsx("pre", { className: "dai-snippet", children: (share.fingerprints || []).join("\n") || t("SSH ещё не создал ключи: сначала включите сервер.") }), SP_JSX.jsx("p", { className: "dai-muted", children: t("Для ручной настройки ~/.ssh/config:") }), SP_JSX.jsx("pre", { className: "dai-snippet", children: share.snippet }), SP_JSX.jsx("p", { className: "dai-muted", children: t("Вставьте публичный ключ из мастера на Mac или ПК:") }), SP_JSX.jsx(DFL.TextField, { value: shareKey, placeholder: "ssh-ed25519 AAAA\u2026", onChange: e => setShareKey(e.target.value) }), SP_JSX.jsx(Action, { disabled: busy || ro || !shareKey.trim(), onClick: () => void run(async () => { const result = await shareAddKey(shareKey.trim()); setShareKey(""); setShare(await shareStatus()); setNotice(result.added ? t("Ключ добавлен") : t("Такой ключ уже есть")); }), children: t("Разрешить этому компьютеру") })] })] }), SP_JSX.jsxs("section", { className: "dai-section dai-diagnostics", children: [SP_JSX.jsx("h3", { children: t("Диагностика") }), SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { setChecks(null); const result = await diagnose(); setChecks(result.checks); }), children: busy ? t("Проверяю…") : t("Проверить подключение") }), checks?.map(check => SP_JSX.jsxs("p", { className: "dai-muted dai-check " + (check.ok ? "ok" : "bad"), children: [check.ok ? "✓" : "✗", " ", systemText(check.name), check.detail ? " · " + systemText(check.detail) : ""] }, check.name))] }), SP_JSX.jsxs("section", { className: "dai-section dai-account-settings", children: [SP_JSX.jsx("h3", { children: t("Аккаунт ChatGPT") }), SP_JSX.jsxs("div", { className: "dai-account-meta", children: [SP_JSX.jsx("p", { className: "dai-account", children: data?.account?.email || t("Вход не выполнен") }), data?.account?.planType && SP_JSX.jsx("p", { className: "dai-muted", children: data.account.planType })] }), SP_JSX.jsxs("div", { className: "dai-account-actions", children: [SP_JSX.jsx(Action, { disabled: busy, onClick: signIn, children: data?.account ? t("Сменить аккаунт") : t("Войти в аккаунт") }), data?.loginPending && SP_JSX.jsx(Action, { disabled: busy, onClick: () => void run(async () => { await accountCancelLogin(); setLoginUrl(""); accept(await snapshot()); }), children: t("Отменить вход") }), loginUrl && SP_JSX.jsx("p", { className: "dai-login-url", children: loginUrl }), data?.account && SP_JSX.jsx(Action, { disabled: busy, onClick: () => DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: t("Выйти из ChatGPT?"), strDescription: t("Для работы Codex потребуется снова войти."), strOKButtonText: t("Выйти"), strCancelButtonText: t("Отмена"), onOK: () => void run(async () => { await accountLogout(); accept(await refresh()); }) })), children: t("Выйти из аккаунта") })] })] })] })] }) })] })] });
 }
 let lastEvent = null;
 async function showNotifications() {
@@ -3603,8 +4238,8 @@ async function showNotifications() {
         for (const item of result.notifications.slice(-3)) {
             const where = item.host ? " · " + item.host : "";
             toaster.toast({
-                title: item.kind === "approval" ? "Deck AI · нужно подтверждение" : item.kind === "failed" ? "Deck AI · ошибка" : item.kind === "cancelled" ? "Deck AI · задача остановлена" : "Deck AI · задача готова",
-                body: (item.kind === "approval" && item.summary ? item.summary : item.title) + where,
+                title: item.kind === "approval" ? t("Deck AI · нужно подтверждение") : item.kind === "failed" ? t("Deck AI · ошибка") : item.kind === "cancelled" ? t("Deck AI · задача остановлена") : t("Deck AI · задача готова"),
+                body: (item.kind === "approval" && item.summary ? systemText(item.summary) : item.title) + where,
                 critical: item.kind === "approval", duration: item.kind === "approval" ? 15000 : 6000,
                 onClick: () => {
                     void (async () => {

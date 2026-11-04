@@ -369,7 +369,7 @@ class Panel(Gtk.Application):
         # A manual Gdk.Device grab could keep all clicks on the scrollbar.
         scrollbar=self.chat_scroll.get_vscrollbar()
         scrollbar.connect('button-press-event',self.manual_scroll)
-        self.outbox_expander=Gtk.Expander(label='Очередь · 0')
+        self.outbox_expander=Gtk.Expander(label=translator.text('Очередь')+' · 0')
         self.outbox_list=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=5)
         queue_scroll=Gtk.ScrolledWindow()
         queue_scroll.set_policy(Gtk.PolicyType.NEVER,Gtk.PolicyType.AUTOMATIC)
@@ -1136,9 +1136,9 @@ class Panel(Gtk.Application):
         tiers={'default'}
         for tier in model.get('serviceTiers') or []:
             ident=tier['id']
-            if ident not in tiers:self.speed_picker.append(ident,'Fast · приоритет' if ident=='priority' else tier.get('name',ident));tiers.add(ident)
+            if ident not in tiers:self.speed_picker.append(ident,translator.text('Fast · приоритет') if ident=='priority' else tier.get('name',ident));tiers.add(ident)
         if 'fast' in (model.get('additionalSpeedTiers') or []) and 'priority' not in tiers:
-            self.speed_picker.append('priority','Fast · приоритет');tiers.add('priority')
+            self.speed_picker.append('priority',translator.text('Fast · приоритет'));tiers.add('priority')
         tier=prefs.get('tier') or (self.current_tier if selected==self.current_model else None) or 'default'
         self.speed_picker.set_active_id(tier if tier in tiers else 'default')
         codex_source=self.provider=='codex'
@@ -1154,8 +1154,8 @@ class Panel(Gtk.Application):
         effort=effort or self.effort_picker.get_active_id()
         tier=tier or self.speed_picker.get_active_id() or 'default'
         model_name=next((m.get('displayName') or (m.get('model') or m['id']) for m in self.available_models if (m.get('model') or m['id'])==selected),selected or 'Выбрать модель')
-        effort_name=translator.text(labels.get(effort,effort)) if effort else 'авто'
-        tier_name='Fast' if tier=='priority' else 'обычная'
+        effort_name=translator.text(labels.get(effort,effort)) if effort else translator.text('авто')
+        tier_name='Fast' if tier=='priority' else translator.text('обычная')
         self.model_menu_label.set_text(model_name if self.provider!='codex' else f'{model_name}  ·  {effort_name}  ·  {tier_name}')
 
     def runtime_changed(self,*_):
@@ -1334,7 +1334,7 @@ class Panel(Gtk.Application):
             content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=7,margin=14)
             custom=self.custom_entry(getattr(self,'provider','codex'))
             assistant_name={'claude':'CLAUDE','deepseek':'DEEPSEEK','tokenharbor':'DEEPSEEK','codex':'CODEX'}.get(getattr(self,'provider','codex'),custom['name'].upper()[:20] if custom else 'CODEX')
-            heading = Gtk.Label(label='ВЫ' if kind=='userMessage' else assistant_name)
+            heading = UILabel(label='ВЫ' if kind=='userMessage' else assistant_name)
             heading.set_xalign(0); heading.get_style_context().add_class('message-author')
             heading_row=Gtk.Box(spacing=8)
             heading_row.pack_start(heading,True,True,0)

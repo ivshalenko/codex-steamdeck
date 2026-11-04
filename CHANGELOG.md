@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0-rc.14
+
+- Add a persistent English/Russian interface choice shared by Decky views and the desktop companion. Conversation and file content is preserved.
+- Localize controls, appearance, queue labels, notifications, diagnostics and built-in quick phrases.
+- Render English tool captions without rewriting commands, diffs or program output.
+- Publish 22 actual English captures from new demonstration conversations, with English Steam menus; retain the original Russian media.
+- Translate desktop message headings, model summaries and the English installer language control. Add illustrated English installation and pairing guides.
+
 ## 1.0.0-rc.13
 
 - Keep file browsing and saving tied to the device that opened the file. Preserve unsaved edits after changing devices.

@@ -1,0 +1,215 @@
+{
+  "version": "1.0.0-rc.14",
+  "capturedOn": "2026-11-04",
+  "language": "English",
+  "device": "Steam Deck running SteamOS",
+  "originalRussianMedia": "../screenshots/",
+  "notes": [
+    "Actual Decky, GTK and Steam notification captures; no pixel translation or injected conversation snapshots.",
+    "New English demonstration conversations were created through the real Codex service.",
+    "Game setup requests and simulated error reports do not establish that a game was installed or ran.",
+    "The isolated free-space project was actually repaired; the original unit test was unchanged and passed.",
+    "Automated pointer input was used. Physical controller testing is separate.",
+    "The notification image is a capture of the actual separate Steam notification window."
+  ],
+  "screenshots": {
+    "01-bloodborne-setup.png": {
+      "caption": "A new English conversation about planning Bloodborne emulation with user-supplied game files; no installation is claimed.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "ecdc26b55dd0c0e2c0db5791515c3786d1ff326860b78a55ef6c9419f04f8f96"
+    },
+    "02-bloodborne-error.png": {
+      "caption": "A controlled example Vulkan error report and a real English diagnostic reply. The error report is simulated.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "60e8863e489e9dfe855241256fd4633223029be6dfd10aec9931431796d0fde6"
+    },
+    "03-zelda-botw.png": {
+      "caption": "A new English request for a Breath of the Wild setup checklist using user-supplied files; no game was downloaded.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "f7ff2e1c3379562c0572daf894d4b3bc41b58ead9f574e1d74f3fba95436fdee"
+    },
+    "04-zelda-totk.png": {
+      "caption": "A new English Tears of the Kingdom planning conversation with performance limitations; no installation is claimed.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "3d4549dbf62e2b7b74a08bc8e21ff74329f843c8711822b6a7e6240aa4d40cdf"
+    },
+    "05-keyboard-troubleshooting.png": {
+      "caption": "A simulated on-screen keyboard problem and a real English troubleshooting reply.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "18184272384c79a1e270fafc3500626ed240e8ffe926044b959269cd54c21d8b"
+    },
+    "10-owned-game-files.png": {
+      "caption": "A new English conversation explaining bring-your-own-file requirements and the limits of the plugin.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "cd3d6503a0ba8d183c96c5e3eca99e18967c012081d7f470fe67b97588cf2c8a"
+    },
+    "06-fullscreen-chat.png": {
+      "caption": "The actual English full-screen chat with a new empty conversation.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "39196b957f64039c78ae7292603e87d4873674c5f02f8f37c13b01ec09eaefa6"
+    },
+    "07-appearance-settings.png": {
+      "caption": "English appearance controls: themes, message style, density and layout.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "a4514f0e121d2f0b8f760cc5ef4b8ef3c9cef456109a0a8baa6f3f06ec8d53f9"
+    },
+    "28-language-settings.png": {
+      "caption": "The real English/Russian interface selector and separate speech-language setting.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "fb52a148af259085aafa89fda91aa715ad25b7849684dccc47590ae6b266f64e"
+    },
+    "08-compact-panel.png": {
+      "caption": "The actual compact Decky panel in English.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "4716f1c2ca558358cdee255cacd2362bc0aa03d79cd0a4f0ca6395ec850844f0"
+    },
+    "16-failing-test.png": {
+      "caption": "The actual desktop conversation showing the controlled failing free-space test.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual GTK window capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "e3e8d7c2077ab699e0089b59fff06c872f8d225f8338826b5d48178428f6883b"
+    },
+    "18-bug-fix-request.png": {
+      "caption": "A real English request to fix the controlled example while keeping its test unchanged.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "bf24ff66dcee417326cfae364d4df192e25182b81590c59932196ce945bae95a"
+    },
+    "25-action-confirmation.png": {
+      "caption": "A real approval request for the reviewed one-line correction in the controlled demonstration.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "5926f2eb2dfbbb8679df1ac1519eca6c0f83399ed40c075611fe612409baaef1"
+    },
+    "26-second-confirmation.png": {
+      "caption": "The second confirmation is visible; the demonstration file is still unchanged.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "c6ba7534915e9af937ad09708e81d6cd3f10bb65e17a299d52c59d364ba9f69d"
+    },
+    "20-live-fix-result.png": {
+      "caption": "The actual English result of the correction; the unchanged test passes.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "3df6c137fad49930a702aae674849226b2a1f80ea163595192371b4c3a8591d3"
+    },
+    "27-confirmed-result.png": {
+      "caption": "The real result after the two-step approval and a verified passing test.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "3df6c137fad49930a702aae674849226b2a1f80ea163595192371b4c3a8591d3"
+    },
+    "15-bug-fix-result.png": {
+      "caption": "The actual desktop conversation after the agent repaired a small demonstration project; the unchanged unit test passes.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual GTK window capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "5492ced1ac972ce3330e5129563b11d15c813a276d18a9da76d917cd1c8a0c48"
+    },
+    "17-diff-and-passing-test.png": {
+      "caption": "Real desktop history with the subtraction fix and successful unit test.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual GTK window capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "5492ced1ac972ce3330e5129563b11d15c813a276d18a9da76d917cd1c8a0c48"
+    },
+    "14-mac-controls-deck.png": {
+      "caption": "A real conversation created from the Mac using deck-remote, running on the Steam Deck; no commands were executed by the model.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "0a15a5a657ff45b7dda262ea76e6ceb61e093e2612c7eff7b4ada86a9b3310fb"
+    },
+    "11-completion-notification.png": {
+      "caption": "An actual English Steam toast emitted when the demonstration task completed in the background.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual Steam notification window capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "77d604bc027748e8dc88595e3dc71ca965789518ffa3ae4d8ed7d3d65237aa1c"
+    },
+    "12-notification-result.png": {
+      "caption": "Clicking the actual completion notification opens the correct English conversation.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual interface capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "5b437fed31d36a9a7066db146bb7b1d0facbea92c6316dea12bcf8bece2e3c8c"
+    },
+    "09-installation-wizard.png": {
+      "caption": "The real first-run installation wizard in English. No installation options were executed for this capture.",
+      "version": "1.0.0-rc.14",
+      "language": "en",
+      "source": "actual GTK window capture",
+      "visibleRussianText": false,
+      "viewportUnchanged": true,
+      "sha256": "e714d371f4e5122c3696e85856549716dfd7954e35f87d476c7d59debaa47284"
+    }
+  }
+}
