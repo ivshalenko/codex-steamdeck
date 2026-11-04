@@ -2,11 +2,11 @@
 
 **Русский** · [English](../README.md)
 
-[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.13-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
+[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.14-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.14) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
 
 **Попросите о помощи, разберитесь с ошибкой запуска или отправьте задачу с Mac.** Deck AI добавляет Codex в меню быстрого доступа Steam Deck: полноэкранный чат, подтверждение действий, вложения и уведомления. В комплекте — настольное приложение и удалённое управление по SSH.
 
-[![Скачать Deck AI — откройте релиз rc.13 и выберите Install-Deck-AI.desktop.](brand/install-ru.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13)
+[![Скачать Deck AI — откройте релиз rc.14 и выберите Install-Deck-AI.desktop.](brand/install-ru.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.14)
 
 **[Установка](#установка-на-steam-deck)** · **[Демонстрация](#как-это-выглядит)** · **[Связь с Mac / ПК](#компьютер-как-пульт-steam-deck-как-исполнитель)** · **[Ответы на вопросы](#ответы-на-вопросы)** · **[Все инструкции](#куда-дальше)**
 
@@ -22,7 +22,7 @@
 
 ![Полноэкранный чат на настоящем Steam Deck: результат разрешённой команды. Снято в rc.8.](media/screenshots/27-rc8-confirmed-result.png)
 
-**Настоящая команда, явное подтверждение, результат для проверки.** Кадр снят в rc.8; текущая версия — rc.13. [Смотреть 35-секундную демонстрацию →](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.8/08-rc8-live-confirmation.mp4)
+**Настоящая команда, явное подтверждение, результат для проверки.** Кадр снят в rc.8; текущая версия — rc.14. [Смотреть 35-секундную демонстрацию →](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.8/08-rc8-live-confirmation.mp4)
 
 | Настройте под себя | Возвращайтесь к игре |
 | --- | --- |
@@ -39,11 +39,11 @@
 
 | Шаг | Что сделать |
 | --- | --- |
-| **01 · Скачать** | Перейдите в **Desktop Mode**. Откройте [релиз rc.13](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13) и скачайте **Install-Deck-AI.desktop** на сам Deck. |
+| **01 · Скачать** | Перейдите в **Desktop Mode**. Откройте [релиз rc.14](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.14) и скачайте **Install-Deck-AI.desktop** на сам Deck. |
 | **02 · Установить и войти** | Откройте файл в Dolphin, разрешите выполнение, если потребуется. Следуйте мастеру: оставьте установку Codex, если его ещё нет, и выберите плагин при установленном Decky. Откройте Deck AI и войдите в ChatGPT. Пароль sudo вводится только в запросе терминала SteamOS. |
 | **03 · Начать** | Вернитесь в **Gaming Mode → (…) → Decky → Deck AI → Новый чат**. Попробуйте: «Покажи свободное место на Steam Deck». Перед разрешением действия прочитайте запрос. |
 
-**[Подробная инструкция с иллюстрациями →](QUICKSTART.md)** · [Ручная установка ZIP](QUICKSTART.md#если-установлен-только-zip-decky)
+**[Подробная инструкция с иллюстрациями →](QUICKSTART.ru.md)** · [Ручная установка ZIP](QUICKSTART.ru.md#если-установлен-только-zip-decky)
 
 ![Настоящий мастер установки Deck AI на Steam Deck.](images/installation-wizard.png)
 
@@ -63,7 +63,7 @@
 
 **Deck → компьютер** настраивается отдельно: включите SSH и войдите в Codex на Mac/Linux, затем выберите этот компьютер в Deck AI. Для Windows в качестве исполнителя нужен WSL. Клиент подключения с Windows доступен, но проверка на настоящем Windows ещё требуется.
 
-Оба устройства должны оставаться включёнными и доступными. Начните в одной сети; для доступа вне дома нужен собственный VPN. **[Подключение, команды Windows и решение неполадок →](REMOTE-CONTROL.md)**
+Оба устройства должны оставаться включёнными и доступными. Начните в одной сети; для доступа вне дома нужен собственный VPN. **[Подключение, команды Windows и решение неполадок →](REMOTE-CONTROL.ru.md)**
 
 ## Что ещё умеет Deck AI
 
@@ -90,22 +90,22 @@ Deck AI бесплатен по Apache-2.0. Подписка на облачны
 
 ### Чат долго подключается. Отправить запрос ещё раз?
 
-Сначала проверьте очередь и текущий разговор. После сна или смены сети дождитесь восстановления либо нажмите «Переподключиться». Черновик и сохранённая история остаются доступны. [Что делать при ошибке](QUICKSTART.md#что-делать-при-ошибке).
+Сначала проверьте очередь и текущий разговор. После сна или смены сети дождитесь восстановления либо нажмите «Переподключиться». Черновик и сохранённая история остаются доступны. [Что делать при ошибке](QUICKSTART.ru.md#что-делать-при-ошибке).
 
 ### Плагин есть в официальном магазине Decky?
 
 Нет. 3 ноября 2026 заявку отклонили по правилам об оболочках для LLM и коде, написанном преимущественно ИИ. Проект создан со значительным участием Claude/Codex и распространяется самостоятельно через GitHub. [Решение и статус](DECKY-SUBMISSION.md).
 
-### Что проверено в rc.13?
+### Что проверено в rc.14?
 
-Прошли 206 Python-тестов, 33 теста интерфейсной логики и 14 проверок Gaming Mode. Установленная сборка завершила 70 циклов за 35 минут, отдельный 20-минутный прогон вложений и 15-минутный прогон HTTP. Проверены запись файлов Mac ↔ Deck, два ответа настоящего Codex в одном чате и публичный установщик. Это один Deck разработчика; физические кнопки, чистая установка на другом устройстве, Stable/Beta, сон во время задачи, Windows и все дополнительные провайдеры требуют отдельных проверок. [Описание релиза](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13) · [Список проверок](RELEASE-CHECKLIST.md).
+Прошли 210 Python-тестов и 37 тестов интерфейсной логики. Все 14 проверок Gaming Mode прошли сначала на английском, затем на русском. Проверены настоящее исправление демо-проекта с неизменённым тестом, чат с Mac и переход из уведомления. [Проверки rc.14](RELEASE-rc.14.md). Длительные прогоны rc.13 остаются результатами предыдущей версии. Проверки физических кнопок, второго чистого устройства, сна во время задачи и Windows ещё требуются.
 
 ## Куда дальше
 
 | Начать пользоваться | Посмотреть возможности | Помочь проекту |
 | --- | --- | --- |
-| [Установка](QUICKSTART.md) | [Скриншоты и видео](MEDIA.md) | [Сообщить об ошибке](https://github.com/ivshalenko/codex-steamdeck/issues/new?template=bug.yml) |
-| [Подключение Mac / ПК](REMOTE-CONTROL.md) | [Диагностика запуска](LAUNCH-REPAIR.md) | [Предложить функцию](https://github.com/ivshalenko/codex-steamdeck/issues/new?template=feature.yml) |
+| [Установка](QUICKSTART.ru.md) | [Скриншоты и видео](MEDIA.md) | [Сообщить об ошибке](https://github.com/ivshalenko/codex-steamdeck/issues/new?template=bug.yml) |
+| [Подключение Mac / ПК](REMOTE-CONTROL.ru.md) | [Диагностика запуска](LAUNCH-REPAIR.md) | [Предложить функцию](https://github.com/ivshalenko/codex-steamdeck/issues/new?template=feature.yml) |
 | [Вход в Claude Code](CLAUDE-AUTH.md) | [Похожие проекты](COMPARISON.md) | [Участие в разработке](CONTRIBUTING.md) |
 
 ## Разработка и авторство
@@ -117,6 +117,8 @@ npm --prefix decky ci --ignore-scripts
 venv/bin/python scripts/build-release.py
 ```
 
-Требования: SteamOS x86-64 и Python 3.9+. Графическому приложению нужен GTK 3/PyGObject; извлечению кадров — FFmpeg. Разблокировка корневой файловой системы SteamOS не требуется. Обновления сохраняют пользовательские данные. Команда `~/.local/bin/deck-ai-uninstall` удаляет управляемые файлы настольного приложения и оставляет данные; удаление плагина описано в [инструкции](QUICKSTART.md).
+Требования: SteamOS x86-64 и Python 3.9+. Графическому приложению нужен GTK 3/PyGObject; извлечению кадров — FFmpeg. Разблокировка корневой файловой системы SteamOS не требуется. Обновления сохраняют пользовательские данные. Команда `~/.local/bin/deck-ai-uninstall` удаляет управляемые файлы настольного приложения и оставляет данные; удаление плагина описано в [инструкции](QUICKSTART.ru.md).
 
 Автор — **[ivshalenko](https://github.com/ivshalenko)**. [Apache-2.0](../LICENSE) · [NOTICE](../NOTICE) · [Лицензии зависимостей](../decky/THIRD_PARTY_NOTICES.txt). В релизе есть соответствующий пакет исходников LGPL. При распространении сохраняйте авторство и уведомления. Независимый проект, не связанный с Valve, OpenAI или Anthropic.
+
+Английский комплект: [22 новых скриншота rc.14](MEDIA.en.md). Язык меню Decky: Настройки → Интерфейс и голос → Язык интерфейса. Русские чаты и материалы остаются на месте.

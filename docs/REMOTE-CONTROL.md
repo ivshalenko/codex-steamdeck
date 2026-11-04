@@ -1,56 +1,64 @@
-# Steam Deck ↔ Mac / PC
+# Your computer and Steam Deck
 
-## С компьютера управлять Steam Deck / Computer → Deck
+[Project](../README.md) · [Installation](QUICKSTART.md) · [Russian guide](REMOTE-CONTROL.ru.md)
 
-Оба устройства должны быть включены в одной сети. Codex работает и выполняет команды **на Steam Deck**. Компьютер служит пультом. Нужен ваш собственный вход в ChatGPT на Deck.
+## Computer to Steam Deck
 
-1. На Deck откройте **Decky → Deck AI → Настройки → Доступ с другого компьютера → Показать данные подключения**. Запишите IP. Без Decky: в настольном Deck AI нажмите **+ → Управлять этим Steam Deck с Mac / ПК** — там есть адрес, отпечатки SSH, кнопка включения сервера и поле ключа.
-2. Если SSH выключен: Desktop Mode → Konsole → `passwd` (задайте пароль администратора), затем `sudo systemctl enable --now sshd`. Пароль вводите только на самом Deck. Не пересылайте его в чат.
-3. На Mac/ПК скачайте и распакуйте **remote-control.zip** из [последнего релиза](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13). Нужен Python 3.9+ ([python.org](https://www.python.org/downloads/)) и OpenSSH Client. На Windows OpenSSH включается в «Дополнительные компоненты» системы.
-4. Mac: откройте Terminal в распакованной папке, выполните `python3 scripts/connect-deck.py`. Windows: дважды нажмите **Connect-Steam-Deck.cmd**. Linux: `python3 scripts/connect-deck.py`.
-5. Введите IP Deck. Мастер создаст отдельный ключ. Если IP поменялся, запустите мастер снова: он обновит только собственный блок deck-ai и сохранит резервную копию SSH-конфигурации. Пользовательские изменения в этом блоке требуют ручной настройки. Скопируйте показанную **публичную** строку `ssh-ed25519 …` на Deck в поле публичного ключа → **Разрешить этому компьютеру**. Закрытый ключ остаётся на компьютере.
-6. Вернитесь в мастер и нажмите Enter. Сверьте SSH-отпечаток с показанным на Deck. Подтвердите только совпадающий отпечаток. Пароль Deck для этого подключения не нужен.
-7. Мастер покажет полный путь к команде. Mac/Linux:
+**Codex runs and executes commands on Deck. Your computer is the remote control.** Start with both devices awake on the same network and sign into ChatGPT on Deck first.
+
+1. On Deck, open **Decky → Deck AI → Settings** and find the remote-access section. Show the connection information and note the IP address. Without Decky, use the desktop app's **+** menu to manage access from a Mac/PC; it shows the address, SSH fingerprints, server control and public-key field.
+2. If SSH is off, open Konsole in Desktop Mode. Run `passwd` to set your SteamOS password if needed, then `sudo systemctl enable --now sshd`. Enter the password only on Deck.
+3. On your computer, download and extract **remote-control.zip** from the [rc.14 release](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.14). Install Python 3.9+ from [python.org](https://www.python.org/downloads/) and OpenSSH Client if missing. On Windows, OpenSSH Client is a Windows Optional Feature.
+4. **Mac/Linux:** open a terminal in the extracted folder and run `python3 scripts/connect-deck.py`. **Windows:** open **Connect-Steam-Deck.cmd**.
+5. Enter Deck's IP. The wizard creates a dedicated SSH key. Copy the displayed **public** `ssh-ed25519 …` line into Deck AI's public-key field on Deck and authorize that computer. The private key stays on your computer.
+6. Continue the wizard. Compare the SSH fingerprint with the one shown on Deck and accept only a matching fingerprint. This connection does not need your Deck password.
+7. Use the launcher path printed by the wizard. On Mac/Linux:
 
 ```sh
-~/.local/bin/deck-remote new "Проверь свободное место на Steam Deck" --wait
+~/.local/bin/deck-remote new "Show the free space on my Steam Deck" --wait
 ~/.local/bin/deck-remote list
 ~/.local/bin/deck-remote read THREAD_ID
-~/.local/bin/deck-remote send THREAD_ID "Продолжи проверку" --wait
+~/.local/bin/deck-remote send THREAD_ID "Continue the check" --wait
 ```
 
-Windows PowerShell:
+On Windows PowerShell:
 
 ```powershell
-& "$HOME/.local/bin/deck-remote.cmd" new "Проверь свободное место на Steam Deck" --wait
+& "$HOME/.local/bin/deck-remote.cmd" new "Show the free space on my Steam Deck" --wait
 & "$HOME/.local/bin/deck-remote.cmd" list
 ```
 
-Ответы и продолжение диалога сохраняются на Deck. Открытые файлы сохраняют привязку к устройству. Если переключить устройство во второй панели, правки остаются в редакторе, а для сохранения нужно вернуться к исходному устройству. Редактор проверяет версию файла и сохраняет исходное содержимое в .deckai.bak. Для сохранения на Mac/Linux используются штатные утилиты блокировки и SHA-256. Не закрывайте крышку ноутбука/не усыпляйте Deck во время проверки связи. Включённый SSH позволяет авторизованному пользователю выполнять команды от вашего имени: добавляйте только собственные публичные ключи. Чтобы отключить доступ: удалите добавленную строку из `~/.ssh/authorized_keys` на Deck. `sudo systemctl disable --now sshd` отключает весь SSH-сервер (также остальные SSH-подключения).
+![Actual conversation created on Mac and answered on Steam Deck.](media/en/screenshots/14-mac-controls-deck.png)
 
-## Со Steam Deck управлять Mac / Linux / Windows WSL
+The reply and conversation are saved on Deck. Both devices must stay awake and reachable. If Deck's IP changes, rerun the wizard; it updates only its own `deck-ai` SSH block and backs up the configuration. Manually modified managed blocks require manual attention.
 
-Здесь **исполнитель — компьютер**, а Steam Deck — пульт. Это отдельное направление; оно не настраивается автоматически предыдущим мастером.
+SSH lets an authorized user run commands as your Deck user. Authorize only your own public keys. To revoke a computer, remove its key line from Deck's `~/.ssh/authorized_keys`. `sudo systemctl disable --now sshd` stops all SSH access, including unrelated connections.
 
-1. Установите [официальный Codex CLI](https://github.com/openai/codex#quickstart) на компьютере и выполните вход в ChatGPT.
-2. Mac: System Settings → General → Sharing → Remote Login. Разрешите нужного пользователя. Linux: установите и включите OpenSSH Server средствами своего дистрибутива.
-3. На Deck создайте ключ `ssh-keygen -t ed25519`, публичную строку из `~/.ssh/id_ed25519.pub` добавьте в `~/.ssh/authorized_keys` **на компьютере**. Приватный ключ не копируйте.
-4. На Deck выполните `ssh USER@COMPUTER_IP`, сверьте отпечаток и убедитесь, что вход по ключу работает. `exit` возвращает на Deck.
-5. В настольном Deck AI нажмите **+ → Подключить удалённый Codex**: адрес, имя SSH-пользователя, путь ключа. Либо создайте SSH-алиас в `~/.ssh/config` и выберите его в Decky → Настройки → Устройство.
-6. Проверьте безобидным запросом: «Покажи ОС и текущую папку». Убедитесь, что это нужный компьютер, прежде чем поручать изменение файлов.
+## Steam Deck to a computer
 
-**Windows как исполнитель:** используйте Linux в WSL с Codex и SSH-сервером внутри WSL. Нативный Windows SSH-host этим релизом не проверен и не заявлен как поддерживаемый. **Windows как пульт → Steam Deck** поддержан мастером, но требует отдельной проверки на настоящем Windows.
+This direction is separate: **the computer runs Codex, and Deck is the remote control**.
 
-## Вне дома и неполадки
+1. Install the [official Codex CLI](https://github.com/openai/codex#quickstart) and sign into ChatGPT on that computer.
+2. On Mac, enable System Settings → General → Sharing → Remote Login for the intended user. On Linux, install and enable OpenSSH Server using your distribution's tools.
+3. On Deck, create a key with `ssh-keygen -t ed25519`. Add the public line from `~/.ssh/id_ed25519.pub` to `~/.ssh/authorized_keys` **on the computer**. Never copy the private key.
+4. From Deck, run `ssh USER@COMPUTER_IP`. Compare the host fingerprint, check that key sign-in works, then use `exit` to return to Deck.
+5. In the desktop app's **+** menu, configure a remote Codex with the host, SSH user and key path. Alternatively, create an SSH alias in Deck's `~/.ssh/config` and select it in Decky device settings.
+6. Ask “Show the operating system and current folder.” Confirm the result belongs to the intended computer before requesting edits.
 
-Вне одной сети используйте собственный VPN (например, Tailscale) на обоих устройствах и VPN-адрес вместо домашнего IP. VPN не входит в Deck AI и не настраивается мастером. Не открывайте порт 22 роутера в интернет ради плагина.
+Windows as the execution host requires **WSL with Codex and an SSH server inside WSL**. Native Windows hosting is unverified. Windows as a remote-control client has a launcher, but still needs an independent real Windows-device check.
 
-- Timeout: Deck уснул, IP изменился или устройства в разных сетях. Посмотрите адрес снова; закрепите IP в настройках роутера при необходимости.
-- Permission denied (publickey): ключ не сохранён на Deck, выбран другой пользователь или другой закрытый ключ.
-- Host key changed: не отключайте проверку. Убедитесь, что это ваш Deck и что он переустанавливался; лишь затем обновляйте запись known_hosts.
-- Codex not found: установите Codex и войдите на **устройстве-исполнителе**.
-- Чат виден, команда не запускается: проверьте подтверждение в чате и режим «только чтение»; откройте Диагностику. Возобновите диалог после сна кнопкой «Переподключиться».
+File editing remains tied to the device that opened the file. If you switch devices, unsaved edits remain in the editor; switch back to save. Saving checks the original file version and preserves its previous contents in `.deckai.bak`.
 
-## English quick path
+## Away from home and troubleshooting
 
-On Deck: Deck AI Settings → Remote access → show address. Enable `sshd` in Desktop Mode if needed (`passwd`, then `sudo systemctl enable --now sshd`). On your computer install Python 3.9+ and OpenSSH Client, unzip the release's remote-control ZIP, run `python3 scripts/connect-deck.py` (Windows: `Connect-Steam-Deck.cmd`). Paste its **public** key into Deck AI, save, then continue the wizard and compare the SSH host fingerprint with Deck's screen. Use the generated `deck-remote` launcher for `new`, `list`, `read`, and `send`. Tasks execute on Deck. For the reverse direction enable SSH + sign into Codex on your Mac/Linux computer, authorize Deck's public key there, and select that host in Deck AI. Windows hosts require WSL; native Windows hosting is unverified. Internet access needs your own VPN; devices must stay awake.
+Use your own VPN on both devices and connect to Deck's VPN address. VPN setup is separate from Deck AI. Avoid forwarding SSH port 22 from your router to the internet.
+
+| Problem | Check |
+| --- | --- |
+| Connection timeout | Deck may be asleep, its IP may have changed, or the devices may be on different networks. Check the address again. |
+| Permission denied (publickey) | Verify the saved public key, SSH username and selected private key. |
+| Host key changed | Confirm that this is your Deck and whether it was reinstalled before updating `known_hosts`. Keep host-key checking enabled. |
+| Codex not found | Install Codex and sign in on the device that executes the task. |
+| Chat opens but a task does not run | Check pending action approvals and read-only mode. Open Diagnostics; reconnect after sleep if needed. |
+
+Do not close your laptop lid or suspend Deck during a connection check. Keep passwords, private keys and account tokens out of chat messages and GitHub issues.

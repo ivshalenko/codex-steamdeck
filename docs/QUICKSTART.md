@@ -1,53 +1,63 @@
-# Deck AI: первый запуск
+# Deck AI: your first conversation
 
-## Steam Deck — установка без сборки
+[Project](../README.md) · [Russian guide](QUICKSTART.ru.md) · [Connect a computer](REMOTE-CONTROL.md)
 
-1. Нужны интернет, свободные 800 МБ и доступ к своему ChatGPT. Для голоса потребуется дополнительное место. Перейдите в **Desktop Mode**: Steam → Power → Switch to Desktop.
-2. Откройте [последний релиз](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13). Скачайте **Install-Deck-AI.desktop** именно на Steam Deck.
-3. В Dolphin откройте Downloads. Нажмите на установщик. Если система спрашивает, разрешите выполнение: **Execute / Trust and launch**. Если файл открылся как текст: Properties → Permissions → **Is executable**, затем откройте снова. Это обычное разрешение на запуск скачанного приложения.
-4. Мастер покажет этапы установки. Codex загружается официальным установщиком OpenAI с GitHub, закреплённым на версии 0.166.0 и проверяемым по SHA-256. Оставьте «Установить Codex», если его ещё нет. Для плагина нужен [Decky Loader](https://decky.xyz); мастер не устанавливает Decky за вас. Если Decky установлен, отметьте его пункт. Не закрывайте мастер до сообщения «Готово».
-5. При запросе sudo в отдельном терминале введите **свой пароль SteamOS**. Если он ещё не задан: откройте Konsole и выполните `passwd`. При вводе пароля символы не отображаются — это нормально. Приложение не получает и не хранит пароль.
-6. Нажмите **Открыть Deck AI и войти**. Войдите через ChatGPT в браузере. При входе по коду откройте показанный адрес на телефоне/компьютере и введите код только на официальной странице OpenAI.
-7. Вернитесь в Gaming Mode. Откройте **(…) → Decky → Deck AI**. В настройках выберите Codex. Нажмите **Новый чат**, напишите «Покажи свободное место на Steam Deck» и отправьте.
+## Install on Steam Deck
 
-Нужен ручной способ: скачайте **steamdeck.tar.gz**, распакуйте, откройте Konsole в полученной папке и выполните `python3 scripts/setup.py`. Для установки без мастера: `bash install.sh --decky`. Этот способ не устанавливает Codex автоматически; сначала установите [официальный CLI](https://github.com/openai/codex#quickstart).
+1. Have internet access, at least **800 MB free**, and your own ChatGPT account. Voice packs need extra space and are optional. Switch to **Desktop Mode**: Steam → Power → Switch to Desktop.
+2. Open the [rc.14 release](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.14). Download **Install-Deck-AI.desktop** onto the Deck.
+3. In Dolphin, open Downloads and launch the installer. If asked, choose **Execute / Trust and launch**. If it opens as text, use Properties → Permissions → **Is executable**, then open it again.
+4. Follow the wizard. Keep **Install official Codex CLI if it is missing** selected when needed. The official OpenAI installer is pinned to Codex 0.166.0 and checked by SHA-256. For Gaming Mode, install [Decky Loader](https://decky.xyz) first, then select the Decky option. This wizard does not install Decky itself.
+5. If a terminal asks for sudo, enter your **SteamOS password there**. To create one, open Konsole and run `passwd`. Password characters are not displayed while typing. Deck AI does not store this password.
+6. Wait for **Ready**, then choose **Open Deck AI and sign in**. Complete ChatGPT sign-in in the browser. For device-code sign-in, enter the displayed code only on the official OpenAI page.
+7. Return to **Gaming Mode → (…) → Decky → Deck AI**. Select Codex in Settings, then **New chat**. Try: “Show the free space on my Steam Deck.” Read any proposed action before approving it.
 
-![Мастер установки Deck AI на Steam Deck](images/installation-wizard.png)
+![Actual English installation wizard on Steam Deck.](media/en/screenshots/09-installation-wizard.png)
 
-## Если установлен только ZIP Decky
+Manual alternative: download the release's **steamdeck.tar.gz**, extract it, open Konsole in the extracted folder and run `python3 scripts/setup.py`. `bash install.sh --decky` installs without the wizard but does not automatically install Codex; install the [official CLI](https://github.com/openai/codex#quickstart) separately in that case.
 
-Включите Developer Mode в Decky → Settings → Developer → **Install Plugin from ZIP** и выберите **decky.zip** из релиза. У пакета есть собственный Python-код и WebSocket-библиотека: настольное приложение для текстового чата не требуется. **Codex CLI и вход ChatGPT всё равно нужны на Deck.** Установите их мастером выше. Для Deck AI доступна ручная установка из GitHub Releases. [Официальный каталог отклонил заявку](DECKY-SUBMISSION.md).
+## Choose your language
 
-![Компактная панель Deck AI](images/compact-panel.png)
+In Decky, open **Settings → Interface and voice → Interface language → English**. Russian is also available. Both Decky views share the saved preference with the desktop companion. Menu language does not translate existing conversations or change dictation language. Start a **New chat** and write in English for a new English conversation.
 
-## Каждый день
+![Actual interface language controls.](media/en/screenshots/28-language-settings.png)
 
-- **Чат**: вопросы, команды и прикреплённые изображения. Сначала убедитесь, что выбрано нужное устройство.
-- **История**: выберите диалог и продолжайте его. Не отправляйте запрос повторно, пока предыдущий остаётся в очереди: сначала откройте его состояние.
-- **Полный экран**: кнопка разворачивания; обратно в панель или к игре — кнопками в заголовке.
-- **Подтверждения**: прочитайте команду/изменения перед разрешением. Для знакомства оставьте автоматическое подтверждение выключенным. «Только чтение» блокирует изменения через интерфейс.
-- **Уведомления**: включите в настройках. После завершения задачи при закрытой панели появится уведомление Decky; нажатие открывает нужный диалог. Не завершайте Steam или Decky во время работы. Во сне задачи не выполняются на выключенном/уснувшем устройстве.
-- **Голос**: в настольном приложении откройте Настройки → Языки. Выберите язык и загрузите пакет, дождитесь готовности. Распознавание локальное; сам текст запроса и вложения уходят выбранному облачному провайдеру. Другие провайдеры и озвучка необязательны.
-- **Скриншоты / видео**. В чате нажмите **Вложения**, выберите скриншот Steam или запись. Из видео прикладываются до четырёх кадров. В одном сообщении помещается до пяти изображений. Если места осталось меньше, интерфейс покажет, сколько кадров добавлено. Игровые файлы и покупки приложение не предоставляет.
+The wizard selects its initial language from SteamOS and has its own English/Russian button. To make Steam's surrounding menus English too, change Steam's language in **Steam → Settings → Interface** and apply any requested restart. This is a separate Steam setting.
 
-![Настоящее уведомление о завершении демонстрационной задачи](images/completion-notification.png)
+## Decky ZIP only
 
-[Настроить Mac / Windows / Linux и удалённое управление →](REMOTE-CONTROL.md)
+In Decky settings, enable Developer Mode, then open Developer → **Install Plugin from ZIP** and select the release's **decky.zip**. The ZIP includes its Python runtime and WebSocket dependency. Text chat does not require the desktop companion, but **Codex CLI and ChatGPT sign-in are still required on Deck**. The wizard above can set them up.
 
-## Что делать при ошибке
+Deck AI is manually distributed through GitHub Releases. It is [not in the official Decky store](DECKY-SUBMISSION.md). Avoid installing duplicate copies under different plugin folders.
 
-| На экране | Что сделать |
-|---|---|
-| Codex CLI не установлен | Desktop Mode → Install Deck AI → установить Codex. Затем войти в ChatGPT. |
-| Вход не выполнен | Настройки → Аккаунт → Войти через ChatGPT; завершить вход в браузере. |
-| Чат загружается после сна | Подождать восстановления сети → Повторить подключение. Сохранённая история остаётся на экране с предупреждением, пока не придут свежие данные. Черновик сохраняется. |
-| Задача с ошибкой в очереди | Открыть её чат и проверить результат до повторной отправки. Старые ошибки не удаляются автоматически. |
-| Голос недоступен | Загрузить языковой пакет, проверить микрофон, отключить speaker monitor. Для текста голос не нужен. |
-| API-ключ не сохраняется | Разблокировать KWallet в Desktop Mode. Не вставлять ключи в сообщения или issue. |
-| Decky показывает ошибку | Настройки Deck AI → Диагностика. Обновить ZIP из релиза, перезапустить Decky. Приложить версию и текст ошибки в [issue](https://github.com/ivshalenko/codex-steamdeck/issues). |
+![Actual compact English Decky panel.](media/en/screenshots/08-compact-panel.png)
 
-Обновление повторно запускает тот же мастер. Чаты, модели, аккаунты и SSH-ключи сохраняются. Предыдущая папка плагина сохраняется рядом как `.Codex-backup-…`. Не устанавливайте две копии Deck AI в разные папки плагинов одновременно. Для удаления настольного приложения используйте `~/.local/bin/deck-ai-uninstall`; пользовательские данные останутся. ZIP удаляется средствами Decky.
+## Daily use
 
-## English
+- **Chat:** ask a question, give a task or attach an image. Check which device is selected before asking for file changes.
+- **History:** continue an existing conversation. If a task is waiting, inspect its queue entry before sending the same request again.
+- **Full screen:** expand from the compact panel; use **To panel** or **Back to game** in the header to return.
+- **Actions:** read the proposed command or change. Keep auto-approval off while getting familiar with the app. Read-only mode blocks changes through this interface.
+- **Notifications:** enable completion notifications in Settings. With the panel closed, a Steam toast opens the corresponding chat. Keep Steam and Decky running; a sleeping device cannot perform tasks.
+- **Voice:** add an optional language pack in the desktop app's language settings and wait until it is ready. Dictation is local; the resulting prompt goes to your chosen cloud provider. Voice is not required for text chat.
+- **Attachments:** choose Steam screenshots or a recording. A recording contributes up to four sampled frames, within a five-image limit per message. It is not full video analysis. Deck AI supplies no game files, firmware, keys or purchases.
 
-Switch to Desktop Mode. Download **Install-Deck-AI.desktop** from [Releases](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13), mark it executable/trusted in Dolphin if prompted, and open it. The wizard installs the app, offers the official Codex CLI if missing, and optionally installs the Decky plugin (Decky must already be installed). A terminal shows any SteamOS sudo password prompt. Click **Open Deck AI**, sign into ChatGPT, return to Gaming Mode, then **(…) → Decky → Deck AI → New chat**. Voice is optional and configured later in the desktop app's language settings. The ZIP plugin bundles its own core runtime, but still needs Codex installed and signed in. Follow the [remote-control guide](REMOTE-CONTROL.md) for computer pairing. This is a release candidate; suspend/resume, independent fresh-device installation and physical controller testing are still listed in the release report.
+![Actual English task-completion notification.](media/en/screenshots/11-completion-notification.png)
+
+[Connect your Mac, Windows or Linux computer →](REMOTE-CONTROL.md)
+
+## Troubleshooting
+
+| What you see | What to try |
+| --- | --- |
+| Codex CLI missing | Run the installer in Desktop Mode with the Codex option, then sign in with ChatGPT. |
+| Not signed in | Open Deck AI's account settings, choose ChatGPT sign-in and finish in the browser. |
+| Slow reconnect after sleep | Let the network recover, then reconnect. Saved history can remain visible with a warning until fresh data arrives. Your draft is preserved. |
+| A failed task in the queue | Open its conversation and check the result before retrying. Old failures are not silently deleted. |
+| Voice unavailable | Download its language pack, check the microphone and avoid recording speaker-monitor output. Text chat remains usable. |
+| API key will not save | Unlock KWallet in Desktop Mode. Do not paste API keys into messages or GitHub issues. |
+| Decky error | Open Deck AI's Diagnostics. Update the plugin ZIP and restart Decky if needed. Report the version and error text in an [issue](https://github.com/ivshalenko/codex-steamdeck/issues). |
+
+Run the same wizard to update. Chats, voice models, accounts and SSH keys are retained. The installer keeps the previous plugin folder beside it as `.Codex-backup-…`. Use `~/.local/bin/deck-ai-uninstall` to remove managed desktop files while retaining user data; remove the ZIP plugin through Decky.
+
+This is a release candidate. Independent clean-device installation, suspend during an active task and physical controller checks remain outstanding. See the [release checks](RELEASE-rc.14.md).

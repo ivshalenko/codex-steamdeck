@@ -28,8 +28,8 @@ export function readGameContext(source:SteamSources):GameContext|null{
   return context;
  }catch{return null;}
 }
-export function withGameContext(question:string,game:GameContext|null,enabled:boolean):string{
- return enabled&&game?question+'\n\nИгра: '+game.name:question;
+export function withGameContext(question:string,game:GameContext|null,enabled:boolean,gamePrefix="\n\nИгра: "):string{
+ return enabled&&game?question+gamePrefix+game.name:question;
 }
 export function gameScreenshots<T extends {path:string;when?:number}>(screenshots:T[],game:GameContext|null):T[]{
  if(!game)return [];

@@ -5,8 +5,19 @@ Run with the companion's venv Python while Steam Gaming Mode is active.
 Checks compact layout, full-screen settings, expansion/collapse and draft and
 attachment preservation. Does not send messages or change model settings.
 """
-import json,time,urllib.request,base64
+import argparse,json,time,urllib.request,base64
 from websockets.sync.client import connect
+
+parser=argparse.ArgumentParser()
+parser.add_argument('--language',choices=('ru','en'),default='ru')
+language=parser.parse_args().language
+labels={'Настройки':'Settings','Чат':'Chat','Ремонт':'Repair','К игре':'Back to game','В панель':'To panel','Вложения':'Attachments','Другие вложения':'More attachments','← К сообщению':'← Back to message','Очистить':'Clear','Файлы':'Files','Игра':'Game'}
+def label(value):return labels.get(value,value) if language=='en' else value
+def localized(expression):
+ if language=='en':
+  for ru,en in sorted(labels.items(),key=lambda item:-len(item[0])):
+   expression=expression.replace(json.dumps(ru),json.dumps(en)).replace(ru,en)
+ return expression
 
 def pages():return json.load(urllib.request.urlopen('http://127.0.0.1:8080/json/list',timeout=3))
 def command(title,method,params):
@@ -17,6 +28,7 @@ def command(title,method,params):
    r=json.loads(ws.recv(timeout=5))
    if r.get('id')==1:return r.get('result',r)
 def evaluate(title,expression):
+ expression=localized(expression)
  r=command(title,'Runtime.evaluate',{'expression':expression,'returnByValue':True,'awaitPromise':True})
  if 'exceptionDetails' in r:raise RuntimeError(str(r['exceptionDetails']))
  return r.get('result',{}).get('value')
@@ -28,10 +40,11 @@ def wait(title,expression):
  raise TimeoutError(expression)
 SHARED='SharedJSContext'
 QAM=next(p['title'] for p in pages() if p['title'].startswith('QuickAccess_'))
-FULL=next(p['title'] for p in pages() if 'browserType=4' in p['url'] or p['title']=='Режим Big Picture')
+FULL=next(p['title'] for p in pages() if 'browserType=4' in p['url'] or p['title'] in ('Режим Big Picture','Big Picture Mode','Steam Big Picture Mode'))
 def open_panel():
  evaluate(SHARED,"DeckyPluginLoader.deckyState.setActivePlugin('Deck AI');DFL.Navigation.OpenQuickAccessMenu(999)")
  wait(QAM,"!!document.querySelector('.dai-root')")
+ wait(QAM,"document.querySelector('.dai-root').dataset.language==="+json.dumps(language))
 def fill(title,value):
  evaluate(title,"document.querySelector('.dai-composer input').focus();document.querySelector('.dai-composer input').select()")
  command(title,'Input.insertText',{'text':value})
@@ -69,7 +82,7 @@ try:
  print('PASS attachments are reachable from chat and return preserves the draft',flush=True)
  select_tab(QAM,"Настройки")
  wait(FULL,"!!document.querySelector('.dai-fullscreen .dai-settings-grid')")
- assert evaluate(FULL,"document.querySelector('.dai-tab[aria-selected=true]').innerText")=='Настройки'
+ assert evaluate(FULL,"document.querySelector('.dai-tab[aria-selected=true]').innerText")==label('Настройки')
  wait(FULL,"document.querySelector('.dai-fullscreen').getBoundingClientRect().width>=innerWidth-1")
  geometry=evaluate(FULL,"(()=>{const e=document.querySelector('.dai-fullscreen'),g=document.querySelector('.dai-settings-grid');return {root:e.getBoundingClientRect().toJSON(),viewport:[innerWidth,innerHeight],columns:getComputedStyle(g).gridTemplateColumns,overflow:e.scrollWidth>e.clientWidth};})()")
  print('Full-screen geometry:',geometry,flush=True)
@@ -97,7 +110,7 @@ try:
  print('PASS collapse restores draft and attachments in compact panel',flush=True)
  click(QAM,"document.querySelector('.dai-viewbar>.dai-button')")
  wait(FULL,"!!document.querySelector('.dai-fullscreen .dai-composer')")
- assert evaluate(FULL,"document.querySelector('.dai-tab[aria-selected=true]').innerText")=='Чат'
+ assert evaluate(FULL,"document.querySelector('.dai-tab[aria-selected=true]').innerText")==label('Чат')
  assert evaluate(FULL,"document.querySelector('.dai-composer input').value")==test_draft
  print('PASS expand button opens full-screen chat directly',flush=True)
  if geometry['viewport'][1]>=500 and expected_images<=1:
@@ -109,7 +122,7 @@ try:
  open_panel()
  select_tab(QAM,"Настройки")
  wait(FULL,"!!document.querySelector('.dai-fullscreen .dai-settings-grid')")
- assert evaluate(FULL,"document.querySelector('.dai-tab[aria-selected=true]').innerText")=='Настройки'
+ assert evaluate(FULL,"document.querySelector('.dai-tab[aria-selected=true]').innerText")==label('Настройки')
  print('PASS reopening Settings over full-screen Chat selects the right tab',flush=True)
  click(FULL,"[...document.querySelectorAll('.dai-full-header .dai-button')].find(e=>e.innerText.includes('К игре'))")
  wait(FULL,"!document.querySelector('.dai-fullscreen')")

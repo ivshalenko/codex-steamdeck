@@ -271,7 +271,7 @@ def extract_messages(thread,limit=40):
         for item in reversed(turn.get("items", [])):
             kind = item.get("type")
             if kind in ("commandExecution", "fileChange"):
-                row = {"id": item.get("id", ""), "role": "tool", "text": tool_text(item), "attachments": []}
+                row = {"id": item.get("id", ""), "role": "tool", "text": tool_text(item), "textEn": tool_text(item, "en"), "attachments": []}
             else:
                 if kind == "userMessage":
                     text = "\n".join(part.get("text", "") for part in item.get("content", [])
@@ -291,16 +291,17 @@ def extract_messages(thread,limit=40):
             if limit is not None and len(items) == limit:
                 return items[::-1]
     return items[::-1]
-def tool_text(item):
+def tool_text(item,language='ru'):
     """Compact, defensive summary of a command run or file change (with diff)."""
     if item.get('type')=='commandExecution':
         out=str(item.get('aggregatedOutput') or item.get('output') or '').strip()
         code=item.get('exitCode')
-        return ('$ '+str(item.get('command') or '')[:300]+('' if code is None else f'\n[код {code}]')+('\n'+out[-500:] if out else '')).strip()
+        label='exit code' if language=='en' else 'код'
+        return ('$ '+str(item.get('command') or '')[:300]+('' if code is None else f'\n[{label} {code}]')+('\n'+out[-500:] if out else '')).strip()
     changes=item.get('changes') or []
     names=', '.join(str(c.get('path','')) for c in changes[:6])
     diff='\n'.join(str(c.get('diff','')) for c in changes[:3] if c.get('diff'))[:1200]
-    return ('Изменены файлы: '+names+('\n'+diff if diff else '')).strip()
+    return (('Files changed: ' if language=='en' else 'Изменены файлы: ')+names+('\n'+diff if diff else '')).strip()
 def list_screenshots(directory=None):
     found=[]
     paths = STEAM.glob('*/760/remote/*/screenshots/*') if directory is None else directory.iterdir() if directory.is_dir() else ()
@@ -535,7 +536,17 @@ def _safe_snapshot():
 def get_snapshot():
     # Snapshot reads and view changes share one lock: an older read cannot
     # return another chat's messages under a newly selected thread ID.
-    with snapshot_lock:return _safe_snapshot()
+    with snapshot_lock:return {**_safe_snapshot(),'uiLanguage':interface_language()}
+
+def interface_language():
+    try:value=(STATE/'language').read_text().strip()
+    except OSError:return 'ru'
+    return 'ru' if value=='ru' else 'en'
+
+def set_interface_language(value):
+    if value not in ('ru','en'):raise ValueError('Choose English or Russian.')
+    atomic_text(STATE/'language',value+'\n')
+    return {'uiLanguage':value}
 cache_screens=[];cache_media=[];cache_media_time=0;model_catalog=[];model_cache_time=0
 
 vosk_models={};vosk_used=0.0;vosk_lock=threading.Lock()
@@ -902,6 +913,7 @@ def _call(method,params):
     if method in ("repair_status", "repair_screenshots", "repair_inspect", "repair_command"):
         return launch_repair_call(method, params)
     if method=='snapshot':return get_snapshot()
+    if method=='interface_language':return set_interface_language(params.get('language'))
     if method=='older_messages':
         key=(remote_host,thread_id);history_limits[key]=history_limits.get(key,40)+80
         return get_snapshot()

@@ -73,6 +73,7 @@ class Plugin:
         return response.get("result")
     async def older_messages(self):return await self._rpc("older_messages",timeout=60)
     async def get_snapshot(self):return await self._rpc("snapshot",timeout=60)
+    async def set_interface_language(self,language):return await self._rpc("interface_language",{"language":language})
     async def refresh(self):return await self._rpc("refresh",timeout=60)
     async def select_thread(self,ident):return await self._rpc("select_thread",{"id":ident},timeout=60)
     async def new_thread(self):return await self._rpc("new_thread",timeout=60)
