@@ -1,6 +1,6 @@
 # An illustrated setup, in your language
 
-[Download Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.15/Install-Deck-AI.desktop) · [Full installation guide](QUICKSTART.md) · [Russian guide](QUICKSTART.ru.md)
+[Download Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.17/Install-Deck-AI.desktop) · [Full installation guide](QUICKSTART.md) · [Russian guide](QUICKSTART.ru.md)
 
 The launcher opens a graphical download window, checks the release checksum, then opens the full setup. It also comes inside the repository ZIP, so you do not need to build source code. SteamOS still requires you to trust a downloaded executable once.
 
@@ -8,7 +8,7 @@ The launcher opens a graphical download window, checks the release checksum, the
 
 English is the default, including on a fresh profile with a Russian system locale. Automatic setup installs the app, missing official Codex and the Gaming Mode plugin. If Decky Loader is missing, its official installer runs in a visible terminal. An existing Loader is reused; your chats, accounts and models remain.
 
-![Actual automatic setup on Steam Deck.](media/en/installer/01-automatic.png)
+![Actual automatic setup on Steam Deck.](media/en/branding/installer-automatic.png)
 
 ## Custom components and access
 
@@ -16,7 +16,9 @@ Choose which components to install. Local dictation downloads only the selected 
 
 Automatic setup does not enable new SSH access or add voice packs. You can add these later. It does not turn off existing SSH or remove previously installed voice packs.
 
-![Actual custom setup. Decky is unchecked for this isolated installation test.](media/en/installer/02-custom.png)
+![Actual rc.17 custom setup on Steam Deck.](media/en/branding/installer-custom.png)
+
+The two screenshots above show the rc.17 native installer, captured without starting installation in a temporary profile. The progress, completion and first-launch captures below document the earlier rc.15 installation test.
 
 ## Visible progress and a truthful result
 
@@ -34,6 +36,6 @@ Choose Russian in the installer and both the desktop companion and Decky use Rus
 
 ![Actual first launch after choosing English.](media/en/installer/06-first-launch-en.png)
 
-[Download the English installer screenshots](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.15/deck-ai-1.0.0-rc.15-installer-media.zip) · [Capture manifest](media/en/installer/manifest.json)
+[Earlier English installer gallery (rc.15)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.15/deck-ai-1.0.0-rc.15-installer-media.zip) · [Capture manifest](media/en/installer/manifest.json)
 
 These are real GTK captures on Steam Deck. The fresh-profile check installed the desktop app and pinned official Codex in a temporary HOME, then updated with Russian selected and checked both first launches. It did not replace the user's Decky Loader or enable SSH for that test. Missing-Loader installation and administrator failures have isolated regression coverage; a second clean physical Deck remains an independent check. [Verification details](RELEASE-rc.15.md).

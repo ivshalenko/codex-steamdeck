@@ -1,6 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
-  <title id="title">Deck AI — ИИ под рукой. Прямо на Deck.</title>
-  <desc id="desc">Чат, помощь с ошибками и управление Steam Deck с компьютера. Проект ivshalenko.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-labelledby="title desc">
+<title id="title">Deck AI — ИИ под рукой. Прямо на Deck.</title><desc id="desc">Deck AI artwork in midnight blue, ice blue and silver, with the approved Steam Deck illustration.</desc>
+<defs><clipPath id="brand-clip"><rect x="1" y="1" width="1198" height="398" rx="24"/></clipPath><linearGradient id="brand-bg" x2="1" y2="1"><stop stop-color="#162330"/><stop offset="1" stop-color="#0b1119"/></linearGradient><radialGradient id="brand-halo"><stop stop-color="#63bde9" stop-opacity=".18"/><stop offset="1" stop-color="#63bde9" stop-opacity="0"/></radialGradient></defs>
+<rect x="1" y="1" width="1198" height="398" rx="24" fill="url(#brand-bg)" stroke="#304252"/>
+<g clip-path="url(#brand-clip)"><ellipse cx="983.9999999999999" cy="180.0" rx="348.0" ry="320.0" fill="url(#brand-halo)"/></g>
+<text x="52" y="48" fill="#a8bdce" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" letter-spacing="2.5">ПОМОЩНИК ДЛЯ STEAM DECK</text><text x="48" y="156" fill="#f1f7fb" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="700" letter-spacing="-4">Deck </text><text x="285" y="156" fill="#a8e1fa" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="700" letter-spacing="-4">AI</text><text x="52" y="215" fill="#f1f7fb" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="600" >ИИ под рукой. Прямо на Deck.</text><text x="52" y="255" fill="#a8bdce" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" >Общайтесь. Решайте задачи. Играйте.</text><g transform="translate(702 99) rotate(-6 200 80) scale(1.08)">
   <defs>
     <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#162330"/><stop offset="1" stop-color="#0b1119"/></linearGradient>
     <radialGradient id="halo"><stop stop-color="#63bde9" stop-opacity=".18"/><stop offset="1" stop-color="#63bde9" stop-opacity="0"/></radialGradient>
@@ -10,24 +13,7 @@
     <linearGradient id="stick" x2="0" y2="1"><stop stop-color="#68737e"/><stop offset=".4" stop-color="#3a4551"/><stop offset="1" stop-color="#121a23"/></linearGradient>
     <linearGradient id="pad" x2="1" y2="1"><stop stop-color="#303a46"/><stop offset="1" stop-color="#1e2834"/></linearGradient>
   </defs>
-  <rect x="1" y="1" width="1198" height="418" rx="26" fill="url(#bg)" stroke="#2a3b4b"/>
-  <circle cx="965" cy="192" r="275" fill="url(#halo)"/>
-  <path d="M750 44v250M790 44v250M830 44v250M870 44v250M910 44v250M950 44v250M990 44v250M1030 44v250M1070 44v250M1110 44v250M730 96h420M730 136h420M730 176h420M730 216h420M730 256h420M730 296h420" fill="none" stroke="#a8e1fa" opacity=".035"/>
-  <g font-family="Arial, Helvetica, sans-serif">
-    <circle cx="60" cy="55" r="4" fill="#a8e1fa"/>
-    <text x="76" y="60" fill="#a8bdce" font-size="12" letter-spacing="2.6">ПОМОЩНИК ДЛЯ STEAM DECK</text>
-    <text x="54" y="163" fill="#f1f7fb" font-size="94" font-weight="700" letter-spacing="-5">Deck <tspan fill="#a8e1fa">AI</tspan></text>
-    <text x="58" y="222" fill="#f1f7fb" font-size="30" font-weight="600" letter-spacing="-.8">ИИ под рукой. Прямо на Deck.</text>
-    <text x="58" y="265" fill="#a8bdce" font-size="19">Общайтесь. Решайте задачи. Играйте.</text>
-    <path d="M58 313h1084" stroke="#304252"/>
-    <text x="58" y="360" fill="#c7d8e5" font-size="14" letter-spacing=".5">GAMING MODE</text>
-    <circle cx="203" cy="355" r="2" fill="#65869d"/>
-    <text x="221" y="360" fill="#c7d8e5" font-size="14" letter-spacing=".5">РАБОЧИЙ СТОЛ</text>
-    <circle cx="374" cy="355" r="2" fill="#65869d"/>
-    <text x="392" y="360" fill="#c7d8e5" font-size="14" letter-spacing=".5">ПУЛЬТ С MAC / ПК</text>
-    <text x="1142" y="360" text-anchor="end" fill="#7b95a9" font-size="13">OPEN SOURCE / IVSHALENKO</text>
-  </g>
-  <g transform="translate(700 104) rotate(-6 220 87) scale(1.1)">
+  <g id="steam-deck">
     <!-- Front proportions and control placement follow Valve's Steam Deck OLED technical view. -->
     <path d="M34 3H366Q400 3 400 38V113Q400 157 354 157H46Q0 157 0 113V38Q0 3 34 3Z" fill="#05090e" opacity=".6" transform="translate(0 5)"/>
     <path d="M34 0H366Q400 0 400 36V111Q400 157 354 157H46Q0 157 0 111V36Q0 0 34 0Z" fill="url(#shell)" stroke="#536171" stroke-width="1.2"/>
@@ -83,4 +69,4 @@
       <circle cx="94" cy="31" r="5" fill="#d9f5ff" stroke="none"/>
     </g>
   </g>
-</svg>
+</g><path d="M52 310H1148" stroke="#304252"/><text x="52" y="355" fill="#a8bdce" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" letter-spacing=".7">GAMING MODE</text><text x="228" y="355" fill="#a8bdce" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" letter-spacing=".7">РАБОЧИЙ СТОЛ</text><text x="415" y="355" fill="#a8bdce" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" letter-spacing=".7">MAC / PC REMOTE</text><text x="1148" y="355" fill="#7b95a9" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end">OPEN SOURCE / IVSHALENKO</text></svg>
