@@ -3,6 +3,7 @@ import hmac
 import json
 import re
 import secrets
+import sys
 import threading
 import time
 from http.cookies import SimpleCookie
@@ -63,6 +64,10 @@ class LocalServer(ThreadingHTTPServer):
             super().process_request_thread(request, client_address)
         finally:
             self.slots.release()
+
+    def handle_error(self, request, client_address):
+        if not isinstance(sys.exc_info()[1], (BrokenPipeError, ConnectionResetError)):
+            super().handle_error(request, client_address)
 
 
 class RepairRemote:

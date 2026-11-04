@@ -21,3 +21,13 @@ test('old errors stay in their own conversation and device',()=>{
  assert.deepEqual(chatFailures(jobs,'visible','mac').map(j=>j.id),['2']);
  assert.deepEqual(chatFailures(jobs,'new'),[]);
 });
+
+test('mirrored thread identifiers remain scoped to their device',()=>{
+ const jobs=[
+  {id:'1',threadId:'same',host:'mac',status:'queued',text:''},
+  {id:'2',threadId:'same',host:'deck',status:'queued',text:''},
+  {id:'3',threadId:'same',status:'queued',text:''},
+ ];
+ assert.deepEqual(queueCounts(jobs,'same','mac'),{waiting:3,current:1,other:2});
+ assert.deepEqual(queueCounts(jobs,'same'),{waiting:3,current:1,other:2});
+});

@@ -341,6 +341,66 @@ class DeviceFilesTests(unittest.TestCase):
             with self.assertRaises(backend.RpcError):
                 backend.read_file(host, str(self.home/'big.txt'))
 
+    def test_writes_preserve_mode_unicode_and_crlf(self):
+        import hashlib, stat
+        path = self.home/'proj/скрипт с пробелами.sh'
+        for host in ('desk', ''):
+            path.write_bytes(b'first\r\n');path.chmod(0o750)
+            backend.write_file(host,str(path),'вторая\r\n',hashlib.sha256(b'first\r\n').hexdigest())
+            self.assertEqual(path.read_bytes(),'вторая\r\n'.encode())
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode),0o750)
+            self.assertEqual(Path(str(path)+'.deckai.bak').read_bytes(),b'first\r\n')
+
+    def test_backup_and_legacy_temp_links_do_not_modify_another_file(self):
+        import hashlib
+        path = self.home/'proj/a.txt';other=self.home/'.env'
+        other.write_text('fixture secret')
+        good=hashlib.sha256(path.read_bytes()).hexdigest()
+        for host in ('desk',''):
+            backup=Path(str(path)+'.deckai.bak');backup.symlink_to(other)
+            with self.assertRaises(backend.RpcError):backend.write_file(host,str(path),'new',good)
+            self.assertEqual(other.read_text(),'fixture secret');backup.unlink()
+            legacy=Path(str(path)+'.deckai.tmp');legacy.symlink_to(other)
+            backend.write_file(host,str(path),'new',good)
+            self.assertEqual(other.read_text(),'fixture secret');self.assertTrue(legacy.is_symlink())
+            legacy.unlink();Path(str(path)+'.deckai.bak').unlink()
+            path.write_text('привет\n')
+
+    def test_local_and_remote_writers_respect_the_same_lock(self):
+        import fcntl,hashlib
+        path=self.home/'proj/a.txt';good=hashlib.sha256(path.read_bytes()).hexdigest()
+        lock_path=path.with_name('.'+path.name+'.deckai.lock')
+        with lock_path.open('w') as locked:
+            fcntl.flock(locked,fcntl.LOCK_EX)
+            for host in ('desk',''):
+                with self.assertRaisesRegex(backend.RpcError,'сохраняется'):
+                    backend.write_file(host,str(path),'new',good)
+        backend.write_file('desk',str(path),'new',good)
+        with self.assertRaisesRegex(backend.RpcError,'изменился'):
+            backend.write_file('',str(path),'stale',good)
+        self.assertEqual(path.read_text(),'new')
+
+    def test_remote_save_rechecks_after_upload_before_replacing_the_file(self):
+        import hashlib,time
+        path=self.home/'proj/a.txt';good=hashlib.sha256(path.read_bytes()).hexdigest()
+        process=subprocess.Popen(['/bin/sh','-c',backend._SH_WRITE,'sh',str(path),good],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        try:
+            process.stdin.write(b'new');process.stdin.flush()
+            deadline=time.monotonic()+3
+            while time.monotonic()<deadline:
+                if any(file.read_bytes()==b'new' for file in path.parent.glob('.deckai-write.*')):break
+                time.sleep(.01)
+            else:self.fail('The staged upload did not start')
+            path.write_text('manual edit')
+            process.stdin.close();process.stdin=None
+            process.communicate(timeout=5)
+            self.assertEqual(process.returncode,8)
+            self.assertEqual(path.read_text(),'manual edit')
+            self.assertFalse(Path(str(path)+'.deckai.bak').exists())
+            self.assertEqual(list(path.parent.glob('.deckai-*')),[])
+        finally:
+            if process.poll() is None:process.kill();process.communicate()
+
 
 class WatchAndModeTests(unittest.TestCase):
     def setUp(self):

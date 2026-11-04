@@ -1,8 +1,8 @@
 # Deck AI for Steam Deck
 
-AI chat in Steam Deck's Quick Access menu, with an optional desktop app, local dictation and remote control over SSH. **Community project, release candidate 1.0.0-rc.12.** Not affiliated with Valve or OpenAI.
+AI chat in Steam Deck's Quick Access menu, with an optional desktop app, local dictation and remote control over SSH. **Community project, release candidate 1.0.0-rc.13.** Not affiliated with Valve or OpenAI.
 
-**[Download / Скачать](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.12)** · **[Установка по шагам / Quick start](docs/QUICKSTART.md)** · **[Steam Deck ↔ Mac / PC](docs/REMOTE-CONTROL.md)** · **[Report an issue](https://github.com/ivshalenko/codex-steamdeck/issues)**
+**[Download / Скачать](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.13)** · **[Установка по шагам / Quick start](docs/QUICKSTART.md)** · **[Steam Deck ↔ Mac / PC](docs/REMOTE-CONTROL.md)** · **[Report an issue](https://github.com/ivshalenko/codex-steamdeck/issues)**
 
 ## Quick start
 

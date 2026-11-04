@@ -48,3 +48,13 @@ export function createSnapshotReader<T>(request:()=>Promise<T>,now=()=>performan
   });
  };
 }
+
+export function appendAttachments<T extends {path:string}>(current:T[],incoming:T[]){
+ const seen=new Set(current.map(image=>image.path));
+ const unique:T[]=[];
+ for(const image of incoming){
+  if(!seen.has(image.path)){seen.add(image.path);unique.push(image);}
+ }
+ const accepted=unique.slice(0,Math.max(0,5-current.length));
+ return {images:[...current,...accepted],added:accepted.length,omitted:unique.length-accepted.length};
+}

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Small JSON-lines bridge for the Decky Quick Access plugin."""
-import json, os, sys, threading, uuid, time, subprocess, shutil
+import json, os, sys, threading, uuid, time, subprocess, shutil, select
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from array import array
@@ -324,7 +324,8 @@ def list_videos():
             except OSError:pass
     return sorted(found,key=lambda x:x['when'],reverse=True)[:40]
 def allowed_image(path):
-    p=Path(path).resolve(strict=True)
+    try:p=Path(path).resolve(strict=True)
+    except FileNotFoundError:raise ValueError('Вложение удалено или перемещено. Уберите его из сообщения и выберите изображение снова.') from None
     generated=STATE/'game-frames'
     if not (p.is_relative_to(STEAM.resolve()) or p.is_relative_to(generated.resolve()) or p.is_relative_to((STATE/'chat-attachments').resolve())) or not p.is_file() or p.suffix.lower() not in ('.png','.jpg','.jpeg','.webp'):raise ValueError('Выбирайте изображение из скриншотов Steam или сохранённых кадров игры.')
     if p.stat().st_size>30_000_000:raise ValueError('Изображение слишком большое (лимит 30 МБ).')
@@ -336,11 +337,19 @@ def video_frames(path):
     generated=STATE/'game-frames';generated.mkdir(parents=True,exist_ok=True,mode=0o700);os.chmod(generated,0o700)
     dest=generated/str(uuid.uuid4());dest.mkdir(parents=True,exist_ok=True,mode=0o700)
     args=[shutil.which('ffmpeg') or '/usr/bin/ffmpeg','-nostdin','-hide_banner','-loglevel','error','-protocol_whitelist','file,crypto,data','-i',str(source),'-vf','fps=1/30:start_time=0:round=up,scale=960:-2,format=yuvj420p','-threads','2','-frames:v','4','-q:v','3',str(dest/'frame-%02d.jpg')]
-    try:subprocess.run(args,timeout=90,check=True,capture_output=True,text=True)
-    except subprocess.CalledProcessError as exc:raise RuntimeError('Не удалось прочитать запись Steam: '+(exc.stderr or '')[-500:])
-    except subprocess.TimeoutExpired:raise RuntimeError('Не удалось извлечь кадры за 90 секунд.')
-    frames=sorted(dest.glob('frame-*.jpg'))
-    if not frames:raise RuntimeError('В выбранной записи не удалось найти кадры.')
+    frames=[]
+    try:
+        subprocess.run(args,timeout=90,check=True,capture_output=True,text=True)
+        frames=sorted(dest.glob('frame-*.jpg'))
+        if not frames:raise RuntimeError('В выбранной записи не удалось найти кадры.')
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError('Не удалось прочитать запись Steam: '+(exc.stderr or '')[-500:]) from None
+    except subprocess.TimeoutExpired:
+        raise RuntimeError('Не удалось извлечь кадры за 90 секунд.') from None
+    except OSError:
+        raise RuntimeError('Не удалось запустить FFmpeg. Проверьте его установку и доступность записи Steam.') from None
+    finally:
+        if not frames:shutil.rmtree(dest,ignore_errors=True)
     return [{'path':str(f),'name':'Кадр '+str(i+1)} for i,f in enumerate(frames)]
 def models():
     result=bridge.request('model/list',{'limit':100,'includeHidden':True},timeout=20);data=result.get('data',[])
@@ -563,12 +572,13 @@ def voice_capture(language,silence=0.0):
         result=[];pcm=[]
         started=time.monotonic();changed=started;previous=''
         while not stop.is_set() and time.monotonic()-started<90:
-            block=recorder.stdout.read(4000)
+            if voice_text!=previous:previous=voice_text;changed=time.monotonic()
+            if silence and voice_text and time.monotonic()-changed>=silence:break
+            ready,_,_=select.select([recorder.stdout],[],[],.25)
+            if not ready:continue
+            block=os.read(recorder.stdout.fileno(),4000)
             if not block:break
             pcm.append(block)
-            if voice_text!=previous:previous=voice_text;changed=time.monotonic()
-            # Optional hands-free end of phrase: stop after a pause that follows speech.
-            if silence and voice_text and time.monotonic()-changed>=silence:break
             if recognizer is None:continue
             if recognizer.AcceptWaveform(block):
                 text=json.loads(recognizer.Result()).get('text','')
@@ -594,7 +604,9 @@ def voice_capture(language,silence=0.0):
         if recorder:
             if recorder.poll() is None:recorder.terminate()
             try:recorder.wait(timeout=3)
-            except subprocess.TimeoutExpired:recorder.kill()
+            except subprocess.TimeoutExpired:
+                recorder.kill();recorder.wait(timeout=3)
+            recorder.stdout.close();recorder.stderr.close()
         voice_stop=None;voice_state='done'
 def voice_result():
     return {'voiceId':voice_id,'voiceState':voice_state,'voiceText':voice_text,'voiceError':voice_error}
@@ -637,7 +649,11 @@ def send_message(text,images,model,effort,tier):
     global thread_id,outbox,status,provider_active,provider_status
     if not isinstance(text,str) or not text.strip():raise ValueError('Введите сообщение.')
     if len(text)>30000:raise ValueError('Сообщение слишком длинное (лимит 30 000 символов).')
-    selected=[archive_image(allowed_image(p),STATE) for p in (images or [])[:5]]
+    images=images or []
+    if not isinstance(images,(list,tuple)) or len(images)>5 or any(not isinstance(path,str) for path in images):
+        raise ValueError('Прикрепите не больше пяти изображений к одному сообщению.')
+    paths=[allowed_image(path) for path in images]
+    selected=[archive_image(path,STATE) for path in paths]
     if provider in provider_chats:
         if provider_active:raise RuntimeError('Дождитесь ответа текущей модели.')
         if not model:raise RuntimeError('Список моделей не загрузился. Обновите каталог и повторите попытку.')
@@ -791,11 +807,13 @@ def device_host():return remote_host
 def files_call(kind,params):
     import hashlib
     host=remote_host
+    if params.get('expectedHost') is not None and params['expectedHost']!=host:
+        raise ValueError('Устройство изменилось. Вернитесь к устройству, на котором открыли файл.')
     if kind=='list':
-        folder,names=device.list_files(host,str(params.get('path') or '~'));return {'path':folder,'entries':names}
+        folder,names=device.list_files(host,str(params.get('path') or '~'));return {'path':folder,'entries':names,'host':host}
     path=str(params.get('path',''))
     if kind=='read':
-        text=device.read_file(host,path);return {'path':path,'text':text,'sha256':hashlib.sha256(text.encode('utf-8')).hexdigest()}
+        text=device.read_file(host,path);return {'path':path,'text':text,'sha256':hashlib.sha256(text.encode('utf-8')).hexdigest(),'host':host}
     return device.write_file(host,path,str(params.get('text','')),str(params.get('expected','')))
 def poll_events(since):
     """Cheap call used by the plugin while the panel is closed (no server round trip)."""
@@ -816,12 +834,12 @@ def unload_models():
     return {'loaded':0}
 def diagnose():
     """One-click health report for the current device (local or SSH)."""
-    checks=[]
+    checks=[];host=remote_host
     def add(name,ok,detail=''):checks.append({'name':name,'ok':bool(ok),'detail':str(detail)[:200]})
     def remote(command,timeout=15):
-        return subprocess.run(ssh_command(remote_host,command),capture_output=True,text=True,timeout=timeout)
-    if remote_host:
-        for name,command in (('SSH-доступ без пароля','true'),('Codex установлен','command -v codex'),('Версия Codex','codex --version'),('Папка для скриншотов доступна','mkdir -p "$HOME/.cache/deck-ai-uploads" && test -w "$HOME/.cache/deck-ai-uploads"')):
+        return subprocess.run(ssh_command(host,command),capture_output=True,text=True,timeout=timeout)
+    if host:
+        for name,command in (('SSH-доступ без пароля','true'),('Codex установлен',device._REMOTE_CODEX+'command -v codex'),('Версия Codex',device._REMOTE_CODEX+'codex --version'),('Папка для скриншотов доступна','mkdir -p "$HOME/.cache/deck-ai-uploads" && test -w "$HOME/.cache/deck-ai-uploads"')):
             try:
                 result=remote(command);add(name,result.returncode==0,(result.stdout or result.stderr).strip())
                 if name.startswith('SSH') and result.returncode:break
@@ -964,7 +982,7 @@ def _call(method,params):
     if method=='retry':
         job=next((j for j in outbox if j['id']==params.get('id')),None)
         if not job:raise ValueError('Сообщение не найдено.')
-        if job['status']=='sending':raise ValueError('Это сообщение уже отправляется.')
+        if job['status'] in ('sending','recovering'):raise ValueError('Этот запрос отправляется или проверяется на сервере. Дождитесь результата.')
         job['status']='queued';job.pop('error',None);atomic(STATE/'decky-outbox.json',outbox);dispatch();return {'queued':True}
     if method=='stop':
         if provider in provider_chats:return {'stopped':False}

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0-rc.13
+
+- Keep file browsing and saving tied to the device that opened the file. Preserve unsaved edits after changing devices.
+- Serialize file saves, check the version again on the destination, preserve executable permissions and replace backups atomically.
+- Write unique state backups atomically, retain the last five and skip media directories before traversal.
+- Keep queue counts and labels scoped to the selected device. Prevent retrying a request still being recovered.
+- Enforce five-image attachment limits visibly, validate every image before copying and explain missing attachments.
+- Clean up failed video extraction and stop dictation even when the microphone stream stalls.
+- Use the same Codex executable lookup for remote diagnostics and normal connections. Treat ordinary browser disconnections without traceback noise.
+
 ## 1.0.0-rc.12
 
 - Render only the visible history window and share periodic reads across Decky views.

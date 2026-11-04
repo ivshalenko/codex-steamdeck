@@ -4,8 +4,8 @@ import { DialogButton, Dropdown, Focusable, TextField, ConfirmModal, showModal, 
 import { FaMicrophone, FaComment, FaHistory, FaCog, FaExpand, FaCompress, FaArrowLeft, FaGamepad, FaCopy, FaPlus, FaFolderOpen, FaListUl, FaSyncAlt } from "react-icons/fa";
 import logo from "../deck-ai.png";
 import css from "./style.css";
-import { createDraftStore, createSnapshotReader, createViewGate, draftOwner } from "./drafts";
-import { chatFailures, queueCounts, queueStatus, type QueueJob } from "./queue";
+import { appendAttachments, createDraftStore, createSnapshotReader, createViewGate, draftOwner } from "./drafts";
+import { chatFailures, queueCounts, queueStatus, sameChat, type QueueJob } from "./queue";
 import { speechLanguages } from "./speech-languages";
 import { parseQuickActions } from "./quick";
 import { themes, densities, bubbleStyles, layouts, readAppearance, withChoice, effectiveLayout, appearanceKey, type Appearance } from "./appearance";
@@ -51,9 +51,9 @@ const watchHosts=callable<[hosts:string[]],unknown>("watch");
 const setReadOnly=callable<[value:boolean],unknown>("read_only");
 const queueFront=callable<[id:string],unknown>("queue_front");
 const queueRemove=callable<[id:string],unknown>("queue_remove");
-const fileList=callable<[path:string],{path:string;entries:string[]}>("file_list");
-const fileRead=callable<[path:string],{path:string;text:string;sha256:string}>("file_read");
-const fileWrite=callable<[path:string,text:string,expected:string],{saved:boolean;sha256:string}>("file_write");
+const fileList=callable<[path:string,host?:string],{path:string;entries:string[];host:string}>("file_list");
+const fileRead=callable<[path:string,host?:string],{path:string;text:string;sha256:string;host:string}>("file_read");
+const fileWrite=callable<[path:string,text:string,expected:string,host?:string],{saved:boolean;sha256:string}>("file_write");
 const shareStatus=callable<[],Share>("share_status");
 const shareAddKey=callable<[key:string],{added:boolean;keys:number}>("share_add_key");
 const customSave=callable<[name:string,baseUrl:string,models:string,key:string],{id:string}>("custom_save");
@@ -210,8 +210,9 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const [confirmApproval,setConfirmApproval]=useState("");
  const [filesOpen,setFilesOpen]=useState(false);
  const [folder,setFolder]=useState("~");
+ const [folderHost,setFolderHost]=useState("");
  const [entries,setEntries]=useState<string[]>([]);
- const [file,setFile]=useState<{path:string;text:string;sha256:string}|null>(null);
+ const [file,setFile]=useState<{path:string;text:string;sha256:string;host:string}|null>(null);
  const [fileText,setFileText]=useState("");
  const [speaking,setSpeaking]=useState("");
  const touchAnchor=useRef<HTMLSpanElement>(null);
@@ -343,6 +344,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  },[countdown]);
  const quick=(text:string)=>void run(async()=>{if(!data)return;await sendMessage(text,[],model?.id||"",effort,tier,sendContext(data));setNotice("Запрос принят · в очереди");setQuickOpen(false);followTail.current=true;accept(await snapshot());});
  const ro=!!data?.readOnly;
+ const filesStale=(file?.host??folderHost)!==(data?.remoteHost||"");
  const names:Record<string,string>={...providerNames,...Object.fromEntries((data?.customProviders||[]).map(c=>[c.id,c.name]))};
  const isCustom=!!data?.customProviders?.some(c=>c.id===data.provider);
  const [custom,setCustom]=useState({name:"",url:"",models:"",key:""});
@@ -351,9 +353,9 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
   if(decision!=="decline"&&confirmApproval!==item.key){setConfirmApproval(item.key);setNotice("Нажмите «Разрешить» ещё раз, чтобы подтвердить");return;}
   setConfirmApproval("");await approve(item.key,decision);setNotice(decision==="decline"?"Отклонено":"Разрешено");accept(await snapshot());
  });
- const openFolder=(path:string)=>void run(async()=>{const result=await fileList(path);setFolder(result.path);setEntries(sortEntries(result.entries));setFile(null);});
- const openFile=(path:string)=>void run(async()=>{const result=await fileRead(path);setFile(result);setFileText(result.text);});
- const saveFile=()=>void run(async()=>{if(!file)return;const result=await fileWrite(file.path,fileText,file.sha256);setFile({...file,text:fileText,sha256:result.sha256});setNotice("Файл сохранён · копия: "+file.path.split("/").pop()+".deckai.bak");});
+ const openFolder=(path:string)=>void run(async()=>{const result=await fileList(path,data?.remoteHost||"");setFolder(result.path);setFolderHost(result.host);setEntries(sortEntries(result.entries));setFile(null);});
+ const openFile=(path:string)=>void run(async()=>{const result=await fileRead(path,folderHost);setFile(result);setFileText(result.text);});
+ const saveFile=()=>void run(async()=>{if(!file)return;const result=await fileWrite(file.path,fileText,file.sha256,file.host);setFile({...file,text:fileText,sha256:result.sha256});setNotice("Файл сохранён · копия: "+file.path.split("/").pop()+".deckai.bak");});
  const chooseThread=(id:string)=>void run(async()=>{
   
   const current=session.snapshot;
@@ -390,7 +392,14 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  });
  const jumpToLatest=()=>{followTail.current=true;setShowLatest(false);const el=chatRef.current;if(el)el.scrollTop=el.scrollHeight;};
  const settings=(id:string,depth:string,speed:string)=>void run(async()=>{await saveSettings(id,depth,speed);accept(await snapshot());});
- const attach=(media?:Media)=>{if(!media)return;setImages(old=>old.some(x=>x.path===media.path)?old:[...old,media]);setMediaOpen(false);};
+ const attachMedia=(incoming:Media[])=>{
+  const previous=session.attachments.get(draftId.current)||[];
+  const result=appendAttachments(previous,incoming);
+  if(result.omitted&&!result.added){setError("Достигнут лимит пяти изображений. Уберите лишние вложения, чтобы прикрепить другое.");return;}
+  if(result.omitted)setNotice(`Добавлено изображений: ${result.added}. Для остальных освободите место. Лимит — пять.`);
+  setImages(result.images);setMediaOpen(false);
+ };
+ const attach=(media?:Media)=>{if(media)attachMedia([media]);};
  const signIn=()=>void run(async()=>{const result=await accountLogin();setLoginUrl(result.url+(result.userCode?" · Код: "+result.userCode:""));setNotice(result.opened?"Откройте страницу входа и завершите авторизацию.":"Ссылка для входа показана ниже.");accept(await snapshot());});
  const disconnect=!data?.ready;
  return <Focusable style={{"--dai-text-scale":textScale} as CSSProperties} data-text-scale={textScale} data-theme={appearance.theme} data-density={appearance.density} data-bubbles={appearance.bubbles} data-layout={layout} className={"dai-root"+(fullscreen?" dai-fullscreen":"")} onSecondaryButton={()=>{if(tab==="chat"&&!busy)void toggleVoice();}} onSecondaryActionDescription={tab==="chat"?(recording?"Стоп":"Голос"):undefined} onCancel={event=>{
@@ -418,12 +427,12 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     <Action onClick={()=>setQueueOpen(false)}>← К сообщению</Action>
     <h3>Очередь запросов · {data?.queueTotal??data?.outbox.length??0}</h3>
     <p className="dai-muted">Ожидающие запросы ещё не отправлены. Запросы выполняются по очереди; занятый чат ждёт завершения текущего ответа.</p>
-    <p className="dai-muted">В этом чате ожидают: {queueCounts(data?.outbox||[],data?.threadId||"").current}. В других чатах: {queueCounts(data?.outbox||[],data?.threadId||"").other}.</p>
+    <p className="dai-muted">В этом чате ожидают: {queueCounts(data?.outbox||[],data?.threadId||"",data?.remoteHost||"").current}. В других чатах: {queueCounts(data?.outbox||[],data?.threadId||"",data?.remoteHost||"").other}.</p>
     {(data?.queueTotal||0)>(data?.outbox.length||0)&&<p className="dai-muted">Показаны последние {data?.outbox.length} запросов.</p>}
     {!data?.outbox.length&&<p className="dai-muted">Очередь пуста.</p>}
     {data?.outbox.map(job=><section className="dai-section dai-queue-item" key={job.id}>
      <strong>{queueStatus(job)}</strong>
-     <small className="dai-muted">{job.threadId===data.threadId?"Этот чат":(data.threads.find(thread=>thread.id===job.threadId)?.name||"Другой чат").slice(0,80)}{job.createdAt?" · "+new Date(job.createdAt*1000).toLocaleString():""}</small>
+     <small className="dai-muted">{sameChat(job,data.threadId,data.remoteHost||"")?"Этот чат":(job.host||"")!==(data.remoteHost||"")?"Другое устройство · "+(job.host||"Steam Deck"):(data.threads.find(thread=>thread.id===job.threadId)?.name||"Другой чат").slice(0,80)}{job.createdAt?" · "+new Date(job.createdAt*1000).toLocaleString():""}</small>
      <p className="dai-queue-text">{expandedJob===job.id?job.text:job.text.slice(0,180)+(job.text.length>180?"…":"")}</p>
      {job.text.length>180&&<Action onClick={()=>setExpandedJob(expandedJob===job.id?"":job.id)}>{expandedJob===job.id?"Свернуть текст":"Весь текст запроса"}</Action>}
      {job.error&&<p className="dai-muted">{job.error}</p>}
@@ -446,7 +455,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     <Choice label="Другой скриншот" value={shot} options={(data?.screenshots||[]).map(x=>({data:x.path,label:x.name}))} onChange={setShot}/>
     <Action disabled={!shot} onClick={()=>attach(data?.screenshots.find(x=>x.path===shot))}>Прикрепить скриншот</Action>
     <Choice label="Видеозапись" value={video} options={(data?.videos||[]).map(x=>({data:x.path,label:x.name}))} onChange={setVideo}/>
-    <Action disabled={!video||busy} onClick={()=>void run(async()=>{const result=await videoFrames(video);setImages(old=>[...old,...result.frames]);setMediaOpen(false);})}>Добавить кадры из видео</Action>
+    <Action disabled={!video||busy} onClick={()=>void run(async()=>{const result=await videoFrames(video);attachMedia(result.frames);})}>Добавить кадры из видео</Action>
     {!data?.screenshots.length&&!data?.videos.length&&<p className="dai-muted">Сделайте скриншот в игре: Steam + R1. Он появится здесь.</p>}
    </div></GameScroll>:<>
     <Focusable className="dai-toolbar" flow-children="horizontal">
@@ -486,14 +495,16 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
    </>}
   </div></div>}
   {tab==="history"&&filesOpen&&<GameScroll className="dai-scroll dai-stack"><div className="dai-stack-content">
-   <Action onClick={()=>{if(file)setFile(null);else setFilesOpen(false);}}>← {file?"К папке":"Назад"}</Action>
+   <Action disabled={busy} onClick={()=>{if(file)setFile(null);else setFilesOpen(false);}}>← {file?"К папке":"Назад"}</Action>
    <h3>{file?file.path.split("/").pop():folder}</h3>
-   {!file&&<><Action onClick={()=>openFolder(parentPath(folder))}>⬑ Вверх</Action>
-    {entries.map(name=><Action key={name} disabled={busy} onClick={()=>isFolder(name)?openFolder(joinPath(folder,name)):openFile(joinPath(folder,name))}>{isFolder(name)?"📁 ":"📄 "}{name}</Action>)}
+   <p className="dai-muted">Устройство · {(file?.host??folderHost)||"Steam Deck"}</p>
+   {filesStale&&<p role="status">Выбрано другое устройство. Вернитесь к исходному устройству, чтобы сохранить правки или продолжить просмотр папки.</p>}
+   {!file&&<><Action disabled={busy||filesStale} onClick={()=>openFolder(parentPath(folder))}>⬑ Вверх</Action>
+    {entries.map(name=><Action key={name} disabled={busy||filesStale} onClick={()=>isFolder(name)?openFolder(joinPath(folder,name)):openFile(joinPath(folder,name))}>{isFolder(name)?"📁 ":"📄 "}{name}</Action>)}
     {!entries.length&&<p className="dai-muted">Папка пуста. Доступна только домашняя папка; ключи и секреты скрыты.</p>}</>}
    {file&&<><textarea className="dai-textarea" value={fileText} spellCheck={false} onChange={e=>setFileText(e.target.value)}/>
     <p className="dai-muted">{fileText===file.text?"Без изменений":"Есть несохранённые правки"} · до 64 КБ · перед записью создаётся копия .deckai.bak</p>
-    <Action primary disabled={busy||ro||fileText===file.text} onClick={saveFile}>Сохранить на устройстве</Action>
+    <Action primary disabled={busy||ro||filesStale||fileText===file.text} onClick={saveFile}>Сохранить на устройстве</Action>
     <Action disabled={busy||fileText===file.text} onClick={()=>setFileText(file.text)}>Отменить правки</Action></>}
   </div></GameScroll>}
   {tab==="history"&&!filesOpen&&<GameScroll className="dai-scroll dai-stack"><div className="dai-stack-content">

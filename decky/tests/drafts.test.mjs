@@ -49,3 +49,14 @@ test('two views share one pending snapshot and invalidate it on navigation',asyn
  pending[2]('updated');
  assert.equal(await expired,'updated');
 });
+
+test('attachment limits include video frames without discarding existing selections',async()=>{
+ const {appendAttachments}=await import('../src/drafts.ts');
+ const existing=[{path:'a'},{path:'b'},{path:'c'}];
+ const result=appendAttachments(existing,[{path:'a'},{path:'d'},{path:'e'},{path:'f'}]);
+ assert.deepEqual(result.images.map(image=>image.path),['a','b','c','d','e']);
+ assert.equal(result.added,2);
+ assert.equal(result.omitted,1);
+ const legacy=[...existing,{path:'d'},{path:'e'},{path:'f'}];
+ assert.deepEqual(appendAttachments(legacy,[{path:'g'}]).images,legacy);
+});
