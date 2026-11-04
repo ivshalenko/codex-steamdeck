@@ -61,6 +61,12 @@ try:
  fill(QAM,test_draft)
  print('PASS clear button clears input; redundant game button removed',flush=True)
  expected_images=evaluate(QAM,"document.querySelectorAll('.dai-attachments .dai-button').length")
+ click(QAM,"[...document.querySelectorAll('.dai-toolbar .dai-button')].find(e=>e.innerText==='Вложения')")
+ wait(QAM,"[...document.querySelectorAll('.dai-root h3')].some(e=>e.innerText==='Другие вложения')")
+ click(QAM,"[...document.querySelectorAll('.dai-root .dai-button')].find(e=>e.innerText==='← К сообщению')")
+ wait(QAM,"document.querySelector('.dai-composer input')?.value==="+json.dumps(test_draft))
+ assert evaluate(QAM,"document.querySelectorAll('.dai-attachments .dai-button').length")==expected_images
+ print('PASS attachments are reachable from chat and return preserves the draft',flush=True)
  select_tab(QAM,"Настройки")
  wait(FULL,"!!document.querySelector('.dai-fullscreen .dai-settings-grid')")
  assert evaluate(FULL,"document.querySelector('.dai-tab[aria-selected=true]').innerText")=='Настройки'

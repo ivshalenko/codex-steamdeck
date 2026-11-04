@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode, type ComponentType, type HTMLAttributes, type RefAttributes } from "react";
 import { callable, definePlugin, routerHook, toaster } from "@decky/api";
 import { DialogButton, Dropdown, Focusable, TextField, ConfirmModal, showModal, ScrollPanel, Navigation, Router } from "@decky/ui";
-import { FaMicrophone, FaComment, FaHistory, FaCog, FaExpand, FaCompress, FaArrowLeft, FaGamepad, FaCopy, FaPlus, FaFolderOpen, FaListUl, FaSyncAlt } from "react-icons/fa";
+import { FaMicrophone, FaComment, FaHistory, FaCog, FaExpand, FaCompress, FaArrowLeft, FaGamepad, FaCopy, FaPlus, FaFolderOpen, FaPaperclip, FaListUl, FaSyncAlt } from "react-icons/fa";
 import logo from "../deck-ai.png";
 import css from "./style.css";
 import { appendAttachments, createDraftStore, createSnapshotReader, createViewGate, draftOwner } from "./drafts";
@@ -461,6 +461,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     <Focusable className="dai-toolbar" flow-children="horizontal">
      <Action disabled={busy||disconnect||ro||data?.active} onClick={startChat}><FaPlus/><span>Новый</span></Action>
      <Action disabled={busy||disconnect} onClick={openFiles}><FaFolderOpen/><span>Файлы</span></Action>
+     <Action disabled={busy} onClick={()=>{setMediaOpen(true);setQuickOpen(false);}}><FaPaperclip/><span>Вложения</span></Action>
      <Action onClick={()=>setQueueOpen(true)}><FaListUl/><span>Очередь{(data?.queueTotal||data?.outbox.length)?" · "+(data?.queueTotal??data?.outbox.length):""}</span></Action>
      <Action disabled={busy} onClick={()=>void run(async()=>{accept(await refresh());setNotice("Обновлено");})}><FaSyncAlt/><span>Обновить</span></Action>
     </Focusable>
