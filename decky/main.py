@@ -120,6 +120,9 @@ class Plugin:
     async def repair_command(self, account, case_id, verb, fields):
         params = {"account": account, "caseId": case_id, "verb": verb, "fields": fields}
         return await self._rpc("repair_command", params, timeout=10)
+    async def library_status(self):return await self._rpc('library_status',timeout=10)
+    async def library_apply(self):return await self._rpc('library_apply',timeout=90)
+    async def library_restore(self):return await self._rpc('library_restore',timeout=90)
     async def unload_models(self):return await self._rpc("unload_models",timeout=10)
     async def set_provider_key(self,key):return await self._rpc("provider_key",{"key":key},timeout=20)
     def stop_bridge(self):

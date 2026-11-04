@@ -37,10 +37,15 @@ def build(output):
     setup=output/'Install-Deck-AI.desktop'
     setup.write_text(launcher_text(version));setup.chmod(0o755)
     lgpl=module('lgpl_sources','build-lgpl-sources.py').build(ROOT,output,version,source)
+    steam_artwork=output/f'deck-ai-{version}-steam-artwork.zip'
+    with zipfile.ZipFile(steam_artwork,'w',zipfile.ZIP_DEFLATED) as archive:
+        for name in ('capsule.png','header.png','hero.png','logo.png','icon.png'):
+            info=zipfile.ZipInfo('Deck-AI-Steam/'+name,(2020,1,1,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.external_attr=0o100644<<16;archive.writestr(info,(ROOT/'decky/artwork'/name).read_bytes())
+        info=zipfile.ZipInfo('Deck-AI-Steam/README.md',(2020,1,1,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.external_attr=0o100644<<16;archive.writestr(info,('# Deck AI Steam library artwork\n\nUse capsule.png for the vertical tile, header.png for the wide tile, hero.png for the details background, logo.png for the transparent title and icon.png for the shortcut icon.\n\nIn Deck AI, Settings > Deck AI in your Steam library > Add or refresh Deck AI in Steam applies the set and saves the previous artwork. Restore previous artwork returns the saved set.\n\nFull illustrated instructions: https://github.com/ivshalenko/codex-steamdeck/blob/main/docs/GAMING-ART.md\n').encode())
     update_manifest=output/'UPDATE-MANIFEST.json'
     app_files={str(rel):hashlib.sha256((ROOT/rel).read_bytes()).hexdigest() for rel in manager.source_files(ROOT)}
     update_manifest.write_text(json.dumps({'protocol':1,'version':version,'minimumPython':[3,9],'packages':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (desktop,plugin)},'appFiles':app_files,'pluginFiles':{str(rel):hashlib.sha256(path.read_bytes()).hexdigest() for rel,path in runtime.items()},'dependency':{'name':'websockets','path':'decky/vendor/'+plugin_package.WHEEL,'version':plugin_package.WHEEL.split('-')[1]}},indent=2)+'\n')
-    checksums=output/'SHA256SUMS.txt';checksums.write_text(''.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name+'\n' for path in (desktop,plugin,remote,setup,lgpl,update_manifest)))
+    checksums=output/'SHA256SUMS.txt';checksums.write_text(''.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name+'\n' for path in (desktop,plugin,remote,setup,lgpl,update_manifest,steam_artwork)))
     report={'version':version,'sourceFiles':len(source),'pluginFiles':len(runtime),'licenseSelected':(ROOT/'LICENSE').is_file(),'published':False,'checks':'compile, shell syntax, TypeScript, frontend logic, Python regression tests, package allowlist','manualChecksRequired':['Second Steam Deck/SteamOS installation','SteamOS suspend/resume during a task','Live optional providers with owner accounts','Human microphone accuracy in a running game']}
     (output/'BUILD-REPORT.json').write_text(json.dumps(report,indent=2)+'\n');return output
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.0-rc.18
+
+- Bring the cover identity into Gaming Mode: outline controls, branded headings, an accurate empty-chat illustration and branded completion/update toasts.
+- Match the default Ocean colors to the midnight/ice-blue palette while retaining other theme choices.
+- Add or refresh only the managed Deck AI Steam shortcut with a full library-artwork set; back up and restore previous art and logo placement without restarting Steam.
+- Protect unrelated shortcuts, duplicate names, independent artwork changes and concurrent operations.
+- Use a single title and CHAT / FIX / CONTROL footer on the vertical cover; compose the hero for the actual Steam crop.
+- Deliver requested workspace tabs across mounted views and frontend reloads.
+
 ## 1.0.0-rc.17
 
 - Unify English/Russian covers, installer artwork, remote-control diagrams and application/plugin icons around the approved Steam Deck illustration and midnight/ice-blue palette.

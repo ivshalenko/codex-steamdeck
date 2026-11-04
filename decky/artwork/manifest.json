@@ -1,0 +1,39 @@
+{
+  "files": {
+    "capsule.png": {
+      "size": [
+        600,
+        900
+      ],
+      "sha256": "09fb754e755fc47d5584866ec900aebe344b1a1e4ff4c470707083af853c84d9"
+    },
+    "header.png": {
+      "size": [
+        920,
+        430
+      ],
+      "sha256": "c0f33026d109bbadc143de1af33ed88ed06d92442538434f4fc4a8976381609d"
+    },
+    "hero.png": {
+      "size": [
+        3840,
+        1240
+      ],
+      "sha256": "f45c8f72fb205696f545920d74ec7f67eb04c45439643411e76d4aa2caa4725f"
+    },
+    "logo.png": {
+      "size": [
+        1280,
+        360
+      ],
+      "sha256": "44453e507b7d0b0cb778b4097e7baa4220ff34c9babfcbf78759e681e263c49a"
+    },
+    "icon.png": {
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "9080b49e6e5a3185805a293f616c52c16796df48592c1d72bf5f929b62a52182"
+    }
+  }
+}
