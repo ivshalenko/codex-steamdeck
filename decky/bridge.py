@@ -18,6 +18,7 @@ from chat_media import attachments,archive_image,display_text
 import backend as device
 from backend import Backend, ssh_command, CODEX
 import providers
+import updates
 from speech_accuracy import multilingual_ready
 from launch_repair import LaunchRepair, screenshot_dirs, valid_account
 from repair_remote import RepairRemote
@@ -40,6 +41,17 @@ current_model=''; status='Подключаюсь к Codex…'
 provider='codex';provider_active=False;provider_status='Готов';provider_model_cache={'claude':[],'deepseek':[],'tokenharbor':[]};provider_model_cache_time={}
 provider_chats={'claude':{},'deepseek':{},'tokenharbor':{}};provider_thread_ids={'claude':'','deepseek':'','tokenharbor':''}
 voice_id='';voice_state='idle';voice_text='';voice_error='';voice_stop=None;voice_thread=None;voice_language='en'
+update_controller=None
+maintenance_lock=threading.RLock();maintenance_inflight=0
+UPDATE_BLOCKED=READ_ONLY_BLOCKED|{'provider','remote_host','watch','voice','open_window','repair_command'}
+def get_updater():
+    global update_controller
+    if update_controller is None:update_controller=updates.Controller(ROOT,PLUGIN_DIR,STATE)
+    return update_controller
+
+def update_busy():
+    return bool(maintenance_inflight or active or provider_active or approvals or voice_state in ('recording','stopping','processing') or any(j.get('status') in ('queued','sending','recovering','editing') for j in outbox) or any(t.get('running') for t in all_tasks()))
+
 def write(value):
     with lock:
         sys.stdout.write(json.dumps(value,ensure_ascii=False,separators=(',',':'))+'\n');sys.stdout.flush()
@@ -908,6 +920,15 @@ def launch_repair_call(method, params):
 
 
 def _call(method,params):
+    if method=='update_health':return {'version':json.loads((PLUGIN_DIR/'package.json').read_text())['version'],'protocol':updates.PROTOCOL}
+    if method=='update_status':return {**get_updater().status(),'uiLanguage':interface_language(),'workBusy':update_busy()}
+    if method=='update_check':return get_updater().check_async()
+    if method=='update_preferences':return get_updater().configure(params.get('automatic'),params.get('channel'))
+    if method=='update_ack':get_updater().acknowledge(params.get('version'));return {'ok':True}
+    if method=='update_begin':
+        if params.get('workspaceClean') is not True:raise ValueError('Save file edits and send or remove attachments before updating.')
+        return get_updater().begin(params.get('version'),guard=update_busy)
+
     global thread_id,cache_time,status,active,remote_host,bridge,model_cache_time,account_cache_time,cache_media_time,model_catalog,account_cache,provider,provider_active,provider_status
     params=params or {}
     if read_only and method in READ_ONLY_BLOCKED:raise ValueError('Включён режим только чтения: действия запрещены. Отключите его в настройках.')
@@ -1012,6 +1033,18 @@ def _call(method,params):
     raise ValueError('Неизвестная команда.')
 VIEW_COMMANDS={'send','retry','stop','settings','older_messages','snapshot','refresh','select_thread','new_thread','remote_host','provider'}
 def call(method,params):
+    global maintenance_inflight
+    if method=='update_begin':
+        with maintenance_lock:return _call(method,params)
+    if method in UPDATE_BLOCKED:
+        with maintenance_lock:
+            if updates.updating(STATE):raise ValueError('Deck AI is updating. Your draft is saved; wait for completion.')
+            maintenance_inflight+=1
+        try:return call_view(method,params)
+        finally:
+            with maintenance_lock:maintenance_inflight-=1
+    return call_view(method,params)
+def call_view(method,params):
     if method in VIEW_COMMANDS:
         with snapshot_lock:return _call(method,params)
     return _call(method,params)
@@ -1026,13 +1059,17 @@ def pump():
             if provider=='codex':
                 connected();failures=0;retry_at=0.0
                 if int(time.monotonic())%10==0:recover_outbox()
-                dispatch();release_idle_models();time.sleep(1)
+                if not updates.updating(STATE):dispatch()
+                release_idle_models();time.sleep(1)
             else:release_idle_models();time.sleep(2)
         except Exception:
             # Exponential backoff (5s..30s); the UI shows the countdown.
             failures+=1;delay=min(30,5*failures);retry_at=time.time()+delay;time.sleep(delay)
 def main():
-    load_state();reconcile_watchers();threading.Thread(target=pump,daemon=True).start()
+    load_state();reconcile_watchers()
+    try:get_updater().start()
+    except Exception:pass
+    threading.Thread(target=pump,daemon=True).start()
     for raw in sys.stdin:
         try:msg=json.loads(raw)
         except Exception:continue

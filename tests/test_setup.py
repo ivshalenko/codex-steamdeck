@@ -101,3 +101,12 @@ class SetupTests(unittest.TestCase):
  def test_repository_launcher_matches_release_and_embeds_graphical_brand(self):
   version=(ROOT/'VERSION').read_text().strip();text=(ROOT/'Install-Deck-AI.desktop').read_text()
   self.assertEqual(text,builder.launcher_text(version));self.assertIn('Terminal=false',text);self.assertIn('Name[ru]',text)
+
+ def test_full_installer_cannot_race_an_active_one_click_transaction(self):
+  import fcntl,os
+  folder=setup.resolve_state_dir(self.home)/'updates';folder.mkdir(parents=True);fd=os.open(folder/'install.lock',os.O_CREAT|os.O_RDWR,0o600)
+  try:
+   fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+   with self.assertRaisesRegex(RuntimeError,'update is running'):setup.run_install(setup.Options(mode='custom',codex=False,decky=False),ROOT,self.execute,self.progress,self.home)
+   self.assertEqual(self.calls,[])
+  finally:os.close(fd)

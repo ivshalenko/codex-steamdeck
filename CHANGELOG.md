@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0-rc.16
+
+- Check published GitHub releases once every seven days, persist the schedule and expose Check now and channel controls.
+- Notify on Steam Deck and open the update card; install the plugin and installed companion with one Update action.
+- Verify release/package digests, an update manifest, archive paths, installed files and plugin startup.
+- Apply updates in a detached worker, preserve drafts and personal state, block active work and restore previous code on installation/startup failure.
+- Recover interrupted transactions, retain bounded code backups, invalidate stale bytecode and share the installation lock with the graphical wizard.
+
 ## 1.0.0-rc.15
 
 - Add an illustrated graphical download shell and installer with automatic/custom plans, stage progress, retry and completion actions. Include the release launcher in the repository ZIP.

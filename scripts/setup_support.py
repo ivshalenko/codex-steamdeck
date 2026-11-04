@@ -1,6 +1,6 @@
 """Installer decisions and preference persistence, independent of GTK."""
 from dataclasses import dataclass
-import json,os,shutil,sys,tempfile
+import fcntl,json,os,shutil,sys,tempfile
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'decky'))
 from runtime_paths import resolve_app_dir,resolve_state_dir
@@ -56,7 +56,7 @@ def save_preferences(options,home=None):
  atomic_text(state/'setup-choices.json',json.dumps(receipt,indent=2)+'\n')
  return state
 
-def run_install(options,root,execute,progress,home=None):
+def _run_install(options,root,execute,progress,home=None):
  """Execute only selected steps. Failed admin children cannot report success."""
  root=Path(root);home=Path(home) if home is not None else Path.home()
  if sys.platform!='linux':raise RuntimeError('Run this installer on Steam Deck in Desktop Mode.')
@@ -87,6 +87,26 @@ def run_install(options,root,execute,progress,home=None):
    if result.get('ok') is not True:raise RuntimeError(result.get('error') or 'Administrator setup failed. Click Retry to continue.')
  progress('ready',1.0)
  return resolve_app_dir(home)
+
+
+def run_install(options,root,execute,progress,home=None):
+ if sys.platform!='linux':raise RuntimeError('Run this installer on Steam Deck in Desktop Mode.')
+ selected_home=Path(home) if home is not None else Path.home();folder=resolve_state_dir(selected_home)/'updates';folder.mkdir(parents=True,exist_ok=True,mode=0o700)
+ fd=os.open(folder/'install.lock',os.O_CREAT|os.O_RDWR,0o600)
+ try:
+  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:raise RuntimeError('An update is running. Wait for it to finish before installing.')
+  app=_run_install(options,root,execute,progress,selected_home)
+  # A successful full installer can repair a failed background transaction.
+  import updates
+  job=updates.active_job(resolve_state_dir(selected_home))
+  if job:
+   complete=(not job.get('plugin') or options.decky) and (Path(app)/'VERSION').is_file()
+   if complete:
+    job.update(phase='completed',progress=1,error='',requiresInstaller=False,version=(Path(app)/'VERSION').read_text().strip(),note='Installed with the full installer.')
+    updates.atomic_json(folder/'job.json',job)
+  return app
+ finally:os.close(fd)
 
 
 def plugin_destination(home=None):

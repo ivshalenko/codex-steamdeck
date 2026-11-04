@@ -51,7 +51,7 @@ class GamingModeTests(unittest.TestCase):
     def test_working_label_is_app_name_for_every_provider(self):
         for provider in ('codex','claude','deepseek','tokenharbor'):
             with self.subTest(provider=provider):
-                panel=SimpleNamespace(provider=provider,stop_button=Mock(),turn_id=None,spinner=Mock(),activity=Mock(),busy=False,message=Mock())
+                panel=SimpleNamespace(publish_update_activity=lambda:None,provider=provider,stop_button=Mock(),turn_id=None,spinner=Mock(),activity=Mock(),busy=False,message=Mock())
                 method('set_working')(panel,True)
                 panel.activity.set_text.assert_called_once_with('Deck AI работает…')
 

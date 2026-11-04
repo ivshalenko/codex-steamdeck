@@ -95,6 +95,7 @@ try:
  assert all(size<=13 for size in density['fontSizes']),density
  reachable=evaluate(FULL,"(()=>{const root=document.querySelector('.dai-settings');const cards=[...root.querySelectorAll('.dai-section')];const ok=cards.every(c=>{c.scrollIntoView({block:'nearest'});const r=root.getBoundingClientRect(),q=c.getBoundingClientRect();return q.bottom>r.top&&q.top<r.bottom;});root.scrollTop=0;return ok;})()")
  assert reachable,'A settings card is unreachable by scrolling'
+ if language=='en':assert evaluate(FULL,"!/[А-Яа-яЁё]/.test(document.querySelector('.dai-connection-bar').innerText)"),'Untranslated connection status'
  print('PASS compact fonts and every settings card reachable by scrolling',flush=True)
  shot=command(FULL,'Page.captureScreenshot',{'format':'png','captureBeyondViewport':False})
  open('/tmp/deck-ai-settings-wide-final.png','wb').write(base64.b64decode(shot['data']))

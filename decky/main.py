@@ -71,6 +71,12 @@ class Plugin:
         response=future["response"]
         if "error" in response:raise RuntimeError(str(response["error"]))
         return response.get("result")
+    async def update_health(self):return await self._rpc('update_health',timeout=10)
+    async def update_status(self):return await self._rpc('update_status',timeout=10)
+    async def update_check(self):return await self._rpc('update_check',timeout=10)
+    async def update_preferences(self,automatic,channel):return await self._rpc('update_preferences',{'automatic':automatic,'channel':channel},timeout=10)
+    async def update_ack(self,version):return await self._rpc('update_ack',{'version':version},timeout=10)
+    async def update_begin(self,version,workspace_clean):return await self._rpc('update_begin',{'version':version,'workspaceClean':workspace_clean},timeout=15)
     async def older_messages(self):return await self._rpc("older_messages",timeout=60)
     async def get_snapshot(self):return await self._rpc("snapshot",timeout=60)
     async def set_interface_language(self,language):return await self._rpc("interface_language",{"language":language})

@@ -2,7 +2,7 @@
 """One explicit file map for ZIP releases and local Decky installation."""
 import hashlib
 from pathlib import Path
-RUNTIME=('backend.py','chat_media.py','providers.py','speech_accuracy.py','deck_share.py','speech-languages.json')
+RUNTIME=('backend.py','chat_media.py','providers.py','speech_accuracy.py','deck_share.py','speech-languages.json','updates.py')
 REPAIR_FILES=('launch_repair.py','repair_remote.py','repair-web/index.html','repair-web/app.js','repair-web/style.css')
 WHEEL='websockets-15.0.1-py3-none-any.whl'
 WHEEL_SHA='f7a866fbc1e97b5c617ee4116daaa09b722101d4a3c170c787450ba409f9736f'
