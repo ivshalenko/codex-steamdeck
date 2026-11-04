@@ -346,12 +346,56 @@ _SH_READ = _SH_GUARD + r'''
 [ "$(wc -c < "$f")" -le 65536 ] || exit 6
 cat -- "$f"
 '''
-_SH_WRITE = _SH_GUARD + r'''
+_SH_WRITE_BODY = _SH_GUARD + r'''
+set -e
 [ -f "$f" ] || exit 5
-cp -p -- "$f" "$f.deckai.bak" && cat > "$f.deckai.tmp" && mv -- "$f.deckai.tmp" "$f"
+[ ! -L "$f.deckai.bak" ] || exit 4
+[ "$(wc -c < "$f")" -le 65536 ] || exit 6
+if command -v sha256sum >/dev/null 2>&1; then
+    checksum() { sha256sum < "$1"; }
+elif command -v shasum >/dev/null 2>&1; then
+    checksum() { shasum -a 256 < "$1"; }
+else
+    exit 10
+fi
+sum=$(checksum "$f")
+[ "${sum%% *}" = "$2" ] || exit 8
+new=$(mktemp "$p/.deckai-write.XXXXXX")
+saved=""
+trap 'rm -f -- "$new" "$saved"' 0
+trap 'exit 1' 1 2 15
+saved=$(mktemp "$p/.deckai-backup.XXXXXX")
+cp -p -- "$f" "$new"
+cat > "$new"
+sum=$(checksum "$new")
+[ "${sum%% *}" = "$3" ] || exit 9
+sum=$(checksum "$f")
+[ "${sum%% *}" = "$2" ] || exit 8
+cp -p -- "$f" "$saved"
+mv -f -- "$saved" "$f.deckai.bak"
+mv -f -- "$new" "$f"
 '''
+_SH_WRITE = _SH_GUARD + r'''
+umask 077
+lock="$p/.$b.deckai.lock"
+[ ! -L "$lock" ] || exit 4
+[ ! -e "$lock" ] || [ -f "$lock" ] || exit 4
+if command -v flock >/dev/null 2>&1; then
+    exec flock -n -E 7 "$lock" sh -c ''' + shlex.quote(_SH_WRITE_BODY) + r''' sh "$f" "$2" "$3"
+elif command -v lockf >/dev/null 2>&1; then
+    exec lockf -k -s -t 0 "$lock" sh -c ''' + shlex.quote(_SH_WRITE_BODY) + r''' sh "$f" "$2" "$3"
+else
+    exit 10
+fi
+'''
+
 _FILE_ERRORS = {3: 'Папка или файл не найдены.', 4: 'Доступ закрыт: только домашняя папка, без ключей и секретов.',
-                5: 'Это не обычный файл.', 6: 'Файл больше 64 КБ.'}
+                5: 'Это не обычный файл.', 6: 'Файл больше 64 КБ.',
+                7: 'Файл сейчас сохраняется. Дождитесь завершения и откройте его заново.',
+                75: 'Файл сейчас сохраняется. Дождитесь завершения и откройте его заново.',
+                8: 'Файл изменился на устройстве. Откройте его заново, чтобы не потерять чужие правки.',
+                9: 'Передача файла не завершилась. Повторите сохранение.',
+                10: 'Для сохранения на этом устройстве нужны flock или lockf и SHA-256.'}
 
 
 def _check_name(path):
@@ -363,8 +407,11 @@ def _check_name(path):
         raise RpcError(_FILE_ERRORS[4])
 
 
-def _remote_sh(host, script, path, data=None, timeout=30):
+def _remote_sh(host, script, path, data=None, timeout=30, expected_sha256=None):
     command = 'sh -c ' + shlex.quote(script) + ' sh ' + shlex.quote(path)
+    if expected_sha256 is not None:
+        import hashlib
+        command += ' ' + shlex.quote(expected_sha256) + ' ' + shlex.quote(hashlib.sha256(data).hexdigest())
     result = subprocess.run(ssh_command(host, command), input=data, capture_output=True, timeout=timeout)
     if result.returncode:
         raise RpcError(_FILE_ERRORS.get(result.returncode) or (result.stderr.decode(errors='replace')[-300:] or 'Не удалось выполнить операцию на устройстве.'))
@@ -419,21 +466,59 @@ def read_file(host, path):
 
 
 def write_file(host, path, text, expected_sha256):
-    """Overwrite an existing small text file; keeps `<file>.deckai.bak` of the previous version."""
+    """Save a small text file after checking its version under an exclusive lock."""
     import hashlib
     _check_name(path)
     data = text.encode('utf-8')
     if len(data) > MAX_FILE_BYTES:
         raise RpcError(_FILE_ERRORS[6])
-    current = read_file(host, path)
-    if hashlib.sha256(current.encode('utf-8')).hexdigest() != expected_sha256:
-        raise RpcError('Файл изменился на устройстве. Откройте его заново, чтобы не потерять чужие правки.')
     if host:
-        _remote_sh(host, _SH_WRITE, path, data=data)
+        current = read_file(host, path)
+        if hashlib.sha256(current.encode('utf-8')).hexdigest() != expected_sha256:
+            raise RpcError(_FILE_ERRORS[8])
+        _remote_sh(host, _SH_WRITE, path, data=data, expected_sha256=expected_sha256)
     else:
-        target = _local_checked(path)
-        shutil.copy2(target, str(target) + '.deckai.bak')
-        temp = target.with_name(target.name + '.deckai.tmp')
-        temp.write_bytes(data)
-        os.replace(temp, target)
+        _write_local_file(path, data, expected_sha256)
     return {'saved': True, 'sha256': hashlib.sha256(data).hexdigest()}
+
+
+def _write_local_file(path, data, expected_sha256):
+    import fcntl
+    import hashlib
+    import stat
+    import tempfile
+
+    target = _local_checked(path)
+    backup = target.with_name(target.name+'.deckai.bak')
+    lock_path = target.with_name('.'+target.name+'.deckai.lock')
+    if backup.is_symlink() or lock_path.is_symlink():
+        raise RpcError(_FILE_ERRORS[4])
+    lock_fd = os.open(lock_path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
+    if not stat.S_ISREG(os.fstat(lock_fd).st_mode):
+        os.close(lock_fd)
+        raise RpcError(_FILE_ERRORS[4])
+    with os.fdopen(lock_fd, 'r+b') as lock_file:
+        try:
+            fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise RpcError(_FILE_ERRORS[7]) from None
+        current = read_file('', str(target)).encode('utf-8')
+        if hashlib.sha256(current).hexdigest() != expected_sha256:
+            raise RpcError(_FILE_ERRORS[8])
+        mode = stat.S_IMODE(target.stat().st_mode)
+        temporary = []
+        try:
+            for payload in (current, data):
+                with tempfile.NamedTemporaryFile(prefix='.deckai-write-', dir=target.parent, delete=False) as staged:
+                    temporary.append(Path(staged.name))
+                    os.fchmod(staged.fileno(), mode)
+                    staged.write(payload)
+                    staged.flush()
+                    os.fsync(staged.fileno())
+            if read_file('', str(target)).encode('utf-8') != current:
+                raise RpcError(_FILE_ERRORS[8])
+            os.replace(temporary[0], backup)
+            os.replace(temporary[1], target)
+        finally:
+            for staged in temporary:
+                staged.unlink(missing_ok=True)

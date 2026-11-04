@@ -183,9 +183,9 @@ class DeckyBridgeTests(unittest.TestCase):
         recognizer.PartialResult.return_value='{"partial":"первая"}'
         recognizer.Result.return_value='{"text":"первая фраза"}'
         recognizer.FinalResult.return_value='{"text":"готово"}'
-        recorder=Mock();recorder.stdout.read.side_effect=[b'a',b'b',b'']
+        recorder=Mock()
         vosk=SimpleNamespace(Model=Mock(),KaldiRecognizer=Mock(return_value=recognizer),SetLogLevel=Mock())
-        with patch.dict(sys.modules,{'vosk':vosk}),patch('speech_accuracy.refine_dictation',side_effect=lambda pcm,lang,text,root:text),patch.object(bridge.subprocess,'check_output',return_value='microphone'),patch.object(bridge.subprocess,'Popen',return_value=recorder):
+        with patch.dict(sys.modules,{'vosk':vosk}),patch('speech_accuracy.refine_dictation',side_effect=lambda pcm,lang,text,root:text),patch.object(bridge.subprocess,'check_output',return_value='microphone'),patch.object(bridge.subprocess,'Popen',return_value=recorder),patch.object(bridge.select,'select',return_value=([recorder.stdout],[],[])),patch.object(bridge.os,'read',side_effect=[b'a',b'b',b'']):
             bridge.voice_capture('ru')
         self.assertEqual(bridge.voice_text,'первая фраза готово')
         self.assertEqual(bridge.voice_state,'done')
