@@ -352,9 +352,9 @@ set -e
 [ ! -L "$f.deckai.bak" ] || exit 4
 [ "$(wc -c < "$f")" -le 65536 ] || exit 6
 if command -v sha256sum >/dev/null 2>&1; then
-    checksum() { sha256sum -- "$f"; }
+    checksum() { sha256sum < "$f"; }
 elif command -v shasum >/dev/null 2>&1; then
-    checksum() { shasum -a 256 -- "$f"; }
+    checksum() { shasum -a 256 < "$f"; }
 else
     exit 10
 fi

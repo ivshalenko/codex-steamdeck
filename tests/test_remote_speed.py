@@ -343,7 +343,7 @@ class DeviceFilesTests(unittest.TestCase):
 
     def test_writes_preserve_mode_unicode_and_crlf(self):
         import hashlib, stat
-        path = self.home/'proj/скрипт с пробелами.sh'
+        path = self.home/'proj'/r'скрипт с пробелами\версия.sh'
         for host in ('desk', ''):
             path.write_bytes(b'first\r\n');path.chmod(0o750)
             backend.write_file(host,str(path),'вторая\r\n',hashlib.sha256(b'first\r\n').hexdigest())
