@@ -19,7 +19,7 @@ python3 "$SOURCE/scripts/manage-install.py" validate "$SOURCE"
 if [[ ! -x "$APP_DIR/venv/bin/python" ]]; then
   python3 -m venv --system-site-packages "$APP_DIR/venv"
 fi
-"$APP_DIR/venv/bin/python" -m pip install websockets==15.0.1
+"$APP_DIR/venv/bin/python" -m pip install --no-index "$SOURCE/decky/vendor/websockets-15.0.1-py3-none-any.whl"
 python3 "$SOURCE/scripts/backup-state.py" || echo "State backup skipped." >&2
 python3 "$SOURCE/scripts/manage-install.py" install "$SOURCE"
 echo "Installed Deck AI in $APP_DIR"

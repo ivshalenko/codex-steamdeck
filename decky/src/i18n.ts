@@ -552,10 +552,10 @@ export const english:Readonly<Record<string,string>> = {
 export type UILanguage="ru"|"en";
 export const languageKey="deck-ai-language";
 const listeners=new Set<(language:UILanguage)=>void>();
-// Keep the existing Russian default. The explicit preference is shared by
+// English on a fresh installation. The explicit preference is shared by
 // the compact panel, full-screen workspace and background notifications.
-let language:UILanguage="ru";
-try{if(localStorage.getItem(languageKey)==="en")language="en";}catch{}
+let language:UILanguage="en";
+try{if(localStorage.getItem(languageKey)==="ru")language="ru";}catch{}
 export function getUILanguage(){return language;}
 export function subscribeUILanguage(listener:(language:UILanguage)=>void){
  listeners.add(listener);return()=>{listeners.delete(listener);};

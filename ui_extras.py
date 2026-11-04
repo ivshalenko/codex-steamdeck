@@ -41,6 +41,9 @@ EN.update({'Поиск по названию или коду': 'Search by name o
 EN.update({'Claude Code · свой доступ':'Claude Code · your access','Настроить Claude Code':'Set up Claude Code','Подключить Claude Code':'Connect Claude Code','Войти через Anthropic Console (API)':'Sign in with Anthropic Console (API)'})
 
 EN.update({'ВЫ':'YOU','ИИ-помощник':'AI assistant','Модель и режим':'Model and mode','обычная':'standard','авто':'auto','Очередь':'Queue','Fast · приоритет':'Fast · priority'})
+EN['Нет ожидающих сообщений']='No pending messages'
+
+EN['Только что']='Just now'
 
 class Translator:
     def __init__(self):

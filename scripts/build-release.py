@@ -7,6 +7,12 @@ def module(name,file):
     spec=importlib.util.spec_from_file_location(name,ROOT/'scripts'/file);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
 package=module('release_package','check-package.py');manager=module('release_manager','manage-install.py');plugin_package=module('plugin_package','package-plugin.py')
 
+def launcher_text(version):
+    banner=base64.b64encode((ROOT/'docs/brand/installer.svg').read_bytes()).decode()
+    source=(ROOT/'scripts/bootstrap.py').read_text().replace('@VERSION@',version).replace('@INSTALLER_BANNER@',banner)
+    encoded=base64.b64encode(source.encode()).decode()
+    return '[Desktop Entry]\nType=Application\nName=Install Deck AI\nName[ru]=Установить Deck AI\nComment=Guided automatic or custom setup for Steam Deck\nExec=python3 -c "import base64;exec(base64.b64decode(\''+encoded+'\'))"\nIcon=system-software-install\nTerminal=false\nCategories=Utility;\n'
+
 def build(output):
     subprocess.run(['bash',str(ROOT/'scripts/check-release.sh')],cwd=ROOT,check=True,env={**os.environ,'DECK_AI_TEST_PYTHON':sys.executable})
     version,source=package.check();output=Path(output);output.mkdir(parents=True,exist_ok=True)
@@ -29,8 +35,7 @@ def build(output):
         for name,content in {'Connect-Steam-Deck.command':'#!/bin/sh\ncd -- "$(dirname -- "$0")"\nexec python3 scripts/connect-deck.py\n','Connect-Steam-Deck.cmd':'@echo off\r\ncd /d "%~dp0"\r\nwhere py >nul 2>&1\r\nif %errorlevel%==0 (py -3 scripts\\connect-deck.py) else (python scripts\\connect-deck.py)\r\npause\r\n'}.items():
             info=zipfile.ZipInfo('Deck-AI-Remote/'+name,(2020,1,1,0,0,0));info.external_attr=(0o100755 if name.endswith('.command') else 0o100644)<<16;archive.writestr(info,content)
     setup=output/'Install-Deck-AI.desktop'
-    encoded=base64.b64encode((ROOT/'scripts/bootstrap.py').read_text().replace('@VERSION@',version).encode()).decode()
-    setup.write_text('[Desktop Entry]\nType=Application\nName=Install Deck AI\nComment=Install or update Deck AI on Steam Deck\nExec=python3 -c "import base64;exec(base64.b64decode(\''+encoded+'\'))"\nIcon=system-software-install\nTerminal=true\nCategories=Utility;\n');setup.chmod(0o755)
+    setup.write_text(launcher_text(version));setup.chmod(0o755)
     lgpl=module('lgpl_sources','build-lgpl-sources.py').build(ROOT,output,version,source)
     checksums=output/'SHA256SUMS.txt';checksums.write_text(''.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name+'\n' for path in (desktop,plugin,remote,setup,lgpl)))
     report={'version':version,'sourceFiles':len(source),'pluginFiles':len(runtime),'licenseSelected':(ROOT/'LICENSE').is_file(),'published':False,'checks':'compile, shell syntax, TypeScript, frontend logic, Python regression tests, package allowlist','manualChecksRequired':['Second Steam Deck/SteamOS installation','SteamOS suspend/resume during a task','Live optional providers with owner accounts','Human microphone accuracy in a running game']}

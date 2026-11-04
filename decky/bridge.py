@@ -67,12 +67,13 @@ def cleanup_generated_images(images):
             path=Path(image).resolve(strict=True)
             if path.is_file() and path.is_relative_to(generated):path.unlink()
         except (OSError,ValueError):pass
+def default_thread_name():return 'Новый чат' if interface_language()=='ru' else 'New chat'
 def thread_title(tid,host=None):
     threads=cache if host is None or host==remote_host else thread_caches.get(host,[])
     for t in threads:
-        if t.get('id')==tid:return t.get('name') or t.get('preview') or 'Новый чат'
+        if t.get('id')==tid:return t.get('name') or t.get('preview') or default_thread_name()
     job=next((j for j in reversed(outbox) if j.get('threadId')==tid and j.get('host','')==(remote_host if host is None else host)),None)
-    return (job.get('text','').strip().split('\n')[0][:120] if job else '') or 'Задача'
+    return (job.get('text','').strip().split('\n')[0][:120] if job else '') or ('Задача' if interface_language()=='ru' else 'Task')
 def notify(kind,tid,host=None,**extra):
     """Queue a notification for the Decky plugin; it polls them while the panel is closed."""
     global notify_seq
@@ -253,7 +254,7 @@ def thread_running(thread,selected=False,selected_active=False):
     return state in ('active','inProgress','running')
 def thread_summary(thread):
     running=thread_running(thread,thread.get('id')==thread_id,active)
-    return {'id':thread['id'],'name':thread.get('name') or thread.get('preview') or 'Новый чат','updatedAt':thread.get('updatedAt') or thread.get('createdAt') or 0,'running':running}
+    return {'id':thread['id'],'name':thread.get('name') or thread.get('preview') or default_thread_name(),'updatedAt':thread.get('updatedAt') or thread.get('createdAt') or 0,'running':running}
 def subscribe_running(client,host,threads):
     """Resume running chats once so their events (completion, approvals) reach us."""
     for t in threads:
@@ -506,7 +507,7 @@ def all_tasks():
     for host,threads in thread_caches.items():
         for index,t in enumerate(threads):
             running=thread_running(t,host==remote_host and t.get('id')==thread_id,active)
-            if running or index<5:found.append({'host':host,'id':t['id'],'name':t.get('name') or t.get('preview') or 'Новый чат','updatedAt':t.get('updatedAt') or t.get('createdAt') or 0,'running':running})
+            if running or index<5:found.append({'host':host,'id':t['id'],'name':t.get('name') or t.get('preview') or default_thread_name(),'updatedAt':t.get('updatedAt') or t.get('createdAt') or 0,'running':running})
     return sorted(found,key=lambda x:(not x['running'],-x['updatedAt']))[:40]
 def snapshot_extras():
     return {'approvals':[a for a in approvals.values() if a['host']==remote_host],'retryIn':max(0,int(retry_at-time.time())) if retry_at else 0,'allTasks':all_tasks(),'loadedModels':len(vosk_models),'readOnly':read_only,'customProviders':[{'id':c['id'],'name':c['name'],'baseUrl':c['baseUrl']} for c in custom_entries],'presets':[{'name':n,'url':u} for n,u in providers.CUSTOM_PRESETS],'watchHosts':watch_hosts,'watchStatus':dict(watch_status),'recentEvents':list(reversed(notifications[-15:]))}
@@ -540,7 +541,7 @@ def get_snapshot():
 
 def interface_language():
     try:value=(STATE/'language').read_text().strip()
-    except OSError:return 'ru'
+    except OSError:return 'en'
     return 'ru' if value=='ru' else 'en'
 
 def set_interface_language(value):
@@ -642,7 +643,7 @@ def save_settings(model,effort,tier):
         chat=provider_chats[provider].get(provider_thread_ids.get(provider,''))
         if not chat:
             ident=str(uuid.uuid4());now=int(time.time())
-            chat={'id':ident,'provider':provider,'name':'Новый чат','createdAt':now,'updatedAt':now,'messages':[]}
+            chat={'id':ident,'provider':provider,'name':default_thread_name(),'createdAt':now,'updatedAt':now,'messages':[]}
             provider_chats[provider][ident]=chat;provider_thread_ids[provider]=ident
         if model:chat['model']=model;save_provider_chats()
         return {'saved':True}
@@ -690,7 +691,7 @@ def send_message(text,images,model,effort,tier):
         atomic_text(STATE/('thread-id-remote-'+remote_host if remote_host else 'thread-id'),thread_id+'\n')
         try:
             path=STATE/'empty-chats.json';saved=json.loads(path.read_text()) if path.exists() else {}
-            saved[thread_id]={'id':thread_id,'name':'Новый чат','updatedAt':int(time.time())};atomic(path,saved)
+            saved[thread_id]={'id':thread_id,'name':default_thread_name(),'updatedAt':int(time.time())};atomic(path,saved)
         except Exception:pass
     try:selected_models.update(json.loads((STATE/'model-preferences.json').read_text()))
     except (OSError,ValueError):pass
@@ -830,8 +831,8 @@ def poll_events(since):
     """Cheap call used by the plugin while the panel is closed (no server round trip)."""
     with notify_lock:
         latest=notify_seq
-        if since is None:return {'latest':latest,'notifications':[]}
-        return {'latest':latest,'notifications':[n for n in notifications if n['id']>int(since)]}
+        if since is None:return {'latest':latest,'notifications':[],'uiLanguage':interface_language()}
+        return {'latest':latest,'notifications':[n for n in notifications if n['id']>int(since)],'uiLanguage':interface_language()}
 def decide_approval(ident,decision):
     entry=approvals.get(str(ident))
     if not entry:raise ValueError('Запрос подтверждения уже обработан.')

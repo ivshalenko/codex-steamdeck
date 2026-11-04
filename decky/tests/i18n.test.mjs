@@ -55,3 +55,13 @@ test('every static UI translation exists and keeps its interpolation fields',()=
   visit(tree);
  }
 });
+
+test('a fresh view starts in English and an explicit Russian choice survives reload',async()=>{
+ const original=Object.getOwnPropertyDescriptor(globalThis,'localStorage');
+ try{
+  Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:()=>null}});
+  const fresh=await import('../src/i18n.ts?fresh-english');assert.equal(fresh.getUILanguage(),'en');
+  Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:()=> 'ru'}});
+  const russian=await import('../src/i18n.ts?chosen-russian');assert.equal(russian.getUILanguage(),'ru');
+ }finally{if(original)Object.defineProperty(globalThis,'localStorage',original);else delete globalThis.localStorage;}
+});

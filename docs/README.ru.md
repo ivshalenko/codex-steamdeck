@@ -2,11 +2,11 @@
 
 **Русский** · [English](../README.md)
 
-[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.14-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.14) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
+[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.15-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.15) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
 
 **Попросите о помощи, разберитесь с ошибкой запуска или отправьте задачу с Mac.** Deck AI добавляет Codex в меню быстрого доступа Steam Deck: полноэкранный чат, подтверждение действий, вложения и уведомления. В комплекте — настольное приложение и удалённое управление по SSH.
 
-[![Скачать Deck AI — откройте релиз rc.14 и выберите Install-Deck-AI.desktop.](brand/install-ru.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.14)
+[![Скачать Deck AI — скачайте графический установщик.](brand/install-ru.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.15/Install-Deck-AI.desktop)
 
 **[Установка](#установка-на-steam-deck)** · **[Демонстрация](#как-это-выглядит)** · **[Связь с Mac / ПК](#компьютер-как-пульт-steam-deck-как-исполнитель)** · **[Ответы на вопросы](#ответы-на-вопросы)** · **[Все инструкции](#куда-дальше)**
 
@@ -35,17 +35,17 @@
 
 ## Установка на Steam Deck
 
-Нужны Steam Deck со SteamOS, интернет и свой аккаунт ChatGPT для Codex. Для панели быстрого доступа сначала установите [Decky Loader](https://decky.xyz). Для текстового чата не нужны голосовые модели, Node.js или сборка исходников.
+Нужны Steam Deck со SteamOS, интернет и свой аккаунт ChatGPT для Codex. Автоматический мастер установит отсутствующий Decky Loader для панели быстрого доступа. Для текстового чата не нужны голосовые модели, Node.js или сборка исходников.
 
 | Шаг | Что сделать |
 | --- | --- |
-| **01 · Скачать** | Перейдите в **Desktop Mode**. Откройте [релиз rc.14](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.14) и скачайте **Install-Deck-AI.desktop** на сам Deck. |
-| **02 · Установить и войти** | Откройте файл в Dolphin, разрешите выполнение, если потребуется. Следуйте мастеру: оставьте установку Codex, если его ещё нет, и выберите плагин при установленном Decky. Откройте Deck AI и войдите в ChatGPT. Пароль sudo вводится только в запросе терминала SteamOS. |
+| **01 · Скачать** | Перейдите в **Desktop Mode**. Откройте [релиз rc.15](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.15) и скачайте **Install-Deck-AI.desktop** на сам Deck. |
+| **02 · Установить и войти** | Откройте файл в Dolphin, разрешите выполнение, если потребуется. Выберите язык и автоматический либо ручной режим. Автоматический установит приложение, Codex и плагин, включая отсутствующий Decky Loader. Откройте Deck AI и войдите в ChatGPT. Пароль sudo вводится только в запросе терминала SteamOS. |
 | **03 · Начать** | Вернитесь в **Gaming Mode → (…) → Decky → Deck AI → Новый чат**. Попробуйте: «Покажи свободное место на Steam Deck». Перед разрешением действия прочитайте запрос. |
 
 **[Подробная инструкция с иллюстрациями →](QUICKSTART.ru.md)** · [Ручная установка ZIP](QUICKSTART.ru.md#если-установлен-только-zip-decky)
 
-![Настоящий мастер установки Deck AI на Steam Deck.](images/installation-wizard.png)
+![Настоящий мастер установки Deck AI на Steam Deck.](media/ru/installer/03-russian.png)
 
 ## Компьютер как пульт. Steam Deck как исполнитель.
 
@@ -96,9 +96,9 @@ Deck AI бесплатен по Apache-2.0. Подписка на облачны
 
 Нет. 3 ноября 2026 заявку отклонили по правилам об оболочках для LLM и коде, написанном преимущественно ИИ. Проект создан со значительным участием Claude/Codex и распространяется самостоятельно через GitHub. [Решение и статус](DECKY-SUBMISSION.md).
 
-### Что проверено в rc.14?
+### Что проверено в rc.15?
 
-Прошли 210 Python-тестов и 37 тестов интерфейсной логики. Все 14 проверок Gaming Mode прошли сначала на английском, затем на русском. Проверены настоящее исправление демо-проекта с неизменённым тестом, чат с Mac и переход из уведомления. [Проверки rc.14](RELEASE-rc.14.md). Длительные прогоны rc.13 остаются результатами предыдущей версии. Проверки физических кнопок, второго чистого устройства, сна во время задачи и Windows ещё требуются.
+Прошли 228 Python-тестов, 38 тестов интерфейсной логики и по 14 проверок Gaming Mode на английском и русском. На Deck выполнена настоящая установка приложения и официального Codex в отдельный временный профиль: первый запуск на английском, затем обновление с выбранным русским и русский первый запуск. [Проверки и ограничения](RELEASE-rc.15.md). Этот тест не переустанавливал системный Decky Loader и не включал SSH; полная установка с правами администратора на втором чистом Deck ещё требуется.
 
 ## Куда дальше
 
@@ -122,3 +122,5 @@ venv/bin/python scripts/build-release.py
 Автор — **[ivshalenko](https://github.com/ivshalenko)**. [Apache-2.0](../LICENSE) · [NOTICE](../NOTICE) · [Лицензии зависимостей](../decky/THIRD_PARTY_NOTICES.txt). В релизе есть соответствующий пакет исходников LGPL. При распространении сохраняйте авторство и уведомления. Независимый проект, не связанный с Valve, OpenAI или Anthropic.
 
 Английский комплект: [22 новых скриншота rc.14](MEDIA.en.md). Язык меню Decky: Настройки → Интерфейс и голос → Язык интерфейса. Русские чаты и материалы остаются на месте.
+
+Новый мастер rc.15: по умолчанию английский; выбранный русский сохраняется для первого запуска Deck AI. Автоматический режим устанавливает приложение, Codex и Decky-плагин, включая Decky Loader при его отсутствии. Вручную можно выбрать голос, SSH и доступ в Decky. [Как работает установка](QUICKSTART.ru.md).

@@ -1,18 +1,20 @@
 # Deck AI: первый запуск
 
-## Steam Deck — установка без сборки
+## Steam Deck — графическая установка
 
-1. Нужны интернет, свободные 800 МБ и доступ к своему ChatGPT. Для голоса потребуется дополнительное место. Перейдите в **Desktop Mode**: Steam → Power → Switch to Desktop.
-2. Откройте [последний релиз](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.14). Скачайте **Install-Deck-AI.desktop** именно на Steam Deck.
-3. В Dolphin откройте Downloads. Нажмите на установщик. Если система спрашивает, разрешите выполнение: **Execute / Trust and launch**. Если файл открылся как текст: Properties → Permissions → **Is executable**, затем откройте снова. Это обычное разрешение на запуск скачанного приложения.
-4. Мастер покажет этапы установки. Codex загружается официальным установщиком OpenAI с GitHub, закреплённым на версии 0.166.0 и проверяемым по SHA-256. Оставьте «Установить Codex», если его ещё нет. Для плагина нужен [Decky Loader](https://decky.xyz); мастер не устанавливает Decky за вас. Если Decky установлен, отметьте его пункт. Не закрывайте мастер до сообщения «Готово».
-5. При запросе sudo в отдельном терминале введите **свой пароль SteamOS**. Если он ещё не задан: откройте Konsole и выполните `passwd`. При вводе пароля символы не отображаются — это нормально. Приложение не получает и не хранит пароль.
-6. Нажмите **Открыть Deck AI и войти**. Войдите через ChatGPT в браузере. При входе по коду откройте показанный адрес на телефоне/компьютере и введите код только на официальной странице OpenAI.
-7. Вернитесь в Gaming Mode. Откройте **(…) → Decky → Deck AI**. В настройках выберите Codex. Нажмите **Новый чат**, напишите «Покажи свободное место на Steam Deck» и отправьте.
+1. Перейдите в Desktop Mode: Steam → Power → Switch to Desktop. Нужны интернет, минимум 800 МБ и собственный аккаунт ChatGPT.
+2. Скачайте **[Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.15/Install-Deck-AI.desktop)** на Deck. Если скачали Code → Download ZIP, распакуйте проект и откройте одноимённый файл внутри.
+3. В Dolphin подтвердите Execute / Trust and launch. Если файл открылся как текст: Properties → Permissions → Is executable. Этот первый запрос доверия SteamOS нужно подтвердить лично.
+4. Откроется иллюстрированная оболочка загрузки, затем полный мастер. По умолчанию выбран **English**. Выберите **Русский** — язык передастся полному мастеру и сохранится для Deck AI и Decky.
+5. **Автоматически**: приложение, отсутствующий официальный Codex и плагин Gaming Mode. Если Decky Loader отсутствует, мастер запустит его официальный установщик в видимом терминале. Уже установленный Decky используется повторно.
+6. **Вручную**: выберите Codex, плагин, разрешение установить отсутствующий Decky Loader, голосовой пакет выбранного языка, SSH и режим действий в Decky. Автоматический режим не включает новый SSH и не скачивает голосовые пакеты. Существующие настройки сохраняются.
+7. Нажмите «Установить». Если SteamOS запросит пароль администратора, введите его в отдельном терминале. Если пароль ещё не задан, выполните `passwd` в Konsole и повторите. Символы пароля скрыты; Deck AI его не получает.
+8. После завершения нажмите «Открыть Deck AI и войти». Войдите в ChatGPT через браузер. Вход в личный аккаунт выполняется самостоятельно.
+9. Вернитесь в Gaming Mode → (…) → Decky → Deck AI → Новый чат. Настройки и меню уже будут на выбранном языке. Попробуйте «Покажи свободное место на Steam Deck» и прочитайте предложенное действие перед подтверждением.
 
-Нужен ручной способ: скачайте **steamdeck.tar.gz**, распакуйте, откройте Konsole в полученной папке и выполните `python3 scripts/setup.py`. Для установки без мастера: `bash install.sh --decky`. Этот способ не устанавливает Codex автоматически; сначала установите [официальный CLI](https://github.com/openai/codex#quickstart).
+![Настоящий русский мастер на Steam Deck](media/ru/installer/03-russian.png)
 
-![Мастер установки Deck AI на Steam Deck](images/installation-wizard.png)
+В терминале вручную: распакуйте steamdeck.tar.gz, откройте Konsole в папке и выполните `python3 scripts/setup.py --language ru`. Команда `bash install.sh --decky` — упрощённый путь без мастера; она не устанавливает автоматически Codex и отсутствующий Decky Loader.
 
 ## Если установлен только ZIP Decky
 
@@ -50,4 +52,4 @@
 
 ## English
 
-Switch to Desktop Mode. Download **Install-Deck-AI.desktop** from [Releases](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.14), mark it executable/trusted in Dolphin if prompted, and open it. The wizard installs the app, offers the official Codex CLI if missing, and optionally installs the Decky plugin (Decky must already be installed). A terminal shows any SteamOS sudo password prompt. Click **Open Deck AI**, sign into ChatGPT, return to Gaming Mode, then **(…) → Decky → Deck AI → New chat**. Voice is optional and configured later in the desktop app's language settings. The ZIP plugin bundles its own core runtime, but still needs Codex installed and signed in. Follow the [remote-control guide](REMOTE-CONTROL.ru.md) for computer pairing. This is a release candidate; suspend/resume, independent fresh-device installation and physical controller testing are still listed in the release report.
+Switch to Desktop Mode. Download **Install-Deck-AI.desktop** from [Releases](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.15), mark it executable/trusted in Dolphin if prompted, and open it. The wizard installs the app, offers the official Codex CLI if missing, and optionally installs the Decky plugin (Decky must already be installed). A terminal shows any SteamOS sudo password prompt. Click **Open Deck AI**, sign into ChatGPT, return to Gaming Mode, then **(…) → Decky → Deck AI → New chat**. Voice is optional and configured later in the desktop app's language settings. The ZIP plugin bundles its own core runtime, but still needs Codex installed and signed in. Follow the [remote-control guide](REMOTE-CONTROL.ru.md) for computer pairing. This is a release candidate; suspend/resume, independent fresh-device installation and physical controller testing are still listed in the release report.

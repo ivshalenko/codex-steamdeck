@@ -549,12 +549,12 @@ const english = {
 };
 const languageKey = "deck-ai-language";
 const listeners$1 = new Set();
-// Keep the existing Russian default. The explicit preference is shared by
+// English on a fresh installation. The explicit preference is shared by
 // the compact panel, full-screen workspace and background notifications.
-let language = "ru";
+let language = "en";
 try {
-    if (localStorage.getItem(languageKey) === "en")
-        language = "en";
+    if (localStorage.getItem(languageKey) === "ru")
+        language = "ru";
 }
 catch { }
 function getUILanguage() { return language; }
@@ -4230,6 +4230,8 @@ let lastEvent = null;
 async function showNotifications() {
     try {
         const result = await pollEvents(lastEvent);
+        if (result.uiLanguage && result.uiLanguage !== getUILanguage())
+            setUILanguage(result.uiLanguage);
         const first = lastEvent === null;
         lastEvent = result.latest;
         // The open panel already shows approvals and results; do not toast on top.
