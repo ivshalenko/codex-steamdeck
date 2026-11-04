@@ -105,10 +105,14 @@ def status(plugin,home,state):
 def apply(plugin,home,state,restore=False,adapter=None):
  from updates import DeckyAdapter,atomic_json
  plugin=Path(plugin);home=Path(home);root=Path(state)/'library-artwork';root.mkdir(parents=True,exist_ok=True,mode=0o700)
- fd=os.open(root/'operation.lock',os.O_CREAT|os.O_RDWR,0o600)
+ fd=os.open(root/'operation.lock',os.O_CREAT|os.O_RDWR,0o600);installation=None
  try:
   try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
   except BlockingIOError:raise ValueError('Library artwork is already being changed.')
+  shared=Path(state)/'updates';shared.mkdir(parents=True,exist_ok=True,mode=0o700)
+  installation=os.open(shared/'install.lock',os.O_CREAT|os.O_RDWR,0o600)
+  try:fcntl.flock(installation,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:raise ValueError('An installation or update is running. Wait before changing artwork.')
   data=payload(plugin,home)
   if not data['available']:raise ValueError('Install the desktop companion before adding Deck AI to Steam.')
   adapter=adapter or DeckyAdapter(plugin/'vendor')
@@ -159,4 +163,6 @@ def apply(plugin,home,state,restore=False,adapter=None):
     set_images(adapter,appid,rollback,record['oldIcon'],old_position);raise
    atomic_json(root/'latest.json',record)
   return {**status(plugin,home,state),'restored':restore}
- finally:os.close(fd)
+ finally:
+  if installation is not None:os.close(installation)
+  os.close(fd)

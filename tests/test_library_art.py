@@ -69,6 +69,11 @@ class LibraryArtworkTests(unittest.TestCase):
   try:
    with self.assertRaisesRegex(ValueError,'already'):self.apply()
   finally:os.close(fd)
+  shared=self.state/'updates/install.lock';shared.parent.mkdir(exist_ok=True);fd=os.open(shared,os.O_CREAT|os.O_RDWR,0o600);fcntl.flock(fd,fcntl.LOCK_EX);before=len(self.adapter.calls)
+  try:
+   with self.assertRaisesRegex(ValueError,'installation or update'):self.apply()
+   self.assertEqual(len(self.adapter.calls),before)
+  finally:os.close(fd)
  def test_native_target_guard_rejects_namesakes_duplicates_and_avoids_duplicate_creation(self):
   program='''const vm=require('node:vm');const code=CODE;
 async function check(entries,create){let added=0;const apps={RegisterForAppDetails:(id,cb)=>{queueMicrotask(()=>cb({unAppID:id,strShortcutExe:entries.find(e=>e.appid===id).exe}));return {unregister(){}}},AddShortcut:async()=>{added++;return 99}};let result,error;try{result=await vm.runInNewContext(code.replace('CREATE',String(create)).replace('PAYLOAD',JSON.stringify({launchers:['/managed/deck-ai-steam'],exe:'/managed/deck-ai-steam',directory:'/managed'})),{appStore:{allApps:entries},SteamClient:{Apps:apps},window:{friendStore:{currentUserSteamID:'76561197960265851'}},setTimeout,clearTimeout,queueMicrotask});}catch(e){error=e.message}return {result,error,added};}
