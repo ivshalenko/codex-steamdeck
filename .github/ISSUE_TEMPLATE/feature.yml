@@ -1,0 +1,22 @@
+name: Feature idea / Предложение
+description: Tell us what would make Deck AI more useful. Можно писать по-русски.
+title: "[Idea]: "
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: What are you trying to do? / Что хотите сделать?
+      description: Describe a real task and where the current flow gets in the way.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Suggested experience / Как это должно работать?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives / Другие способы
+      description: Optional. What have you tried already?

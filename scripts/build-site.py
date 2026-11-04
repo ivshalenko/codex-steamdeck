@@ -18,8 +18,15 @@ def inline(text):
     text = html.escape(text, quote=False)
     text = re.sub(r'`([^`]+)`', r'<code>\1</code>', text)
     text = re.sub(r'\*\*([^*]+)\*\*', r'<strong>\1</strong>', text)
+    def image(match):
+        alt = html.escape(html.unescape(match.group(1)), quote=True)
+        url = html.unescape(match.group(2))
+        if not re.match(r'https?://', url) and (url.startswith('/') or '..' in Path(url).parts or ':' in url):
+            return match.group(0)
+        return f'<img src="{html.escape(url, quote=True)}" alt="{alt}" loading="lazy">'
+    text = re.sub(r'!\[([^\]]*)\]\(([^)\s]+)\)', image, text)
     def link(match):
-        url = match.group(2)
+        url = html.unescape(match.group(2))
         if not re.match(r'(https?://|#|mailto:)', url):
             url = f'{REPO}/blob/main/{url}'  # relative repo links work from the web page too
         return f'<a href="{html.escape(url, quote=True)}">{match.group(1)}</a>'
@@ -32,8 +39,21 @@ def slug(text):
 
 
 def markdown(source, shift=0):
-    """Small subset: headings, paragraphs, bullet/numbered lists, fenced code, inline code, bold, links."""
+    """Small Markdown subset with escaped source HTML, images and pipe tables."""
     out, paragraph, items, kind, lines = [], [], [], None, iter(source.splitlines())
+    table = []
+    def flush_table():
+        if not table:
+            return
+        rows = [[cell.strip() for cell in row.strip().strip('|').split('|')] for row in table]
+        head = '<thead><tr>' + ''.join(f'<th>{inline(cell)}</th>' for cell in rows[0]) + '</tr></thead>'
+        body = []
+        for row in rows[1:]:
+            if all(re.fullmatch(r':?-{3,}:?', cell) for cell in row):
+                continue
+            body.append('<tr>' + ''.join(f'<td>{inline(cell)}</td>' for cell in row) + '</tr>')
+        out.append('<table>' + head + '<tbody>' + ''.join(body) + '</tbody></table>')
+        table.clear()
     def flush():
         nonlocal paragraph, items, kind
         if paragraph:
@@ -41,6 +61,12 @@ def markdown(source, shift=0):
         if items:
             out.append(f'<{kind}>' + ''.join(f'<li>{inline(item)}</li>' for item in items) + f'</{kind}>'); items = []
     for line in lines:
+        if line.startswith('|'):
+            if not table:
+                flush()
+            table.append(line)
+            continue
+        flush_table()
         if line.startswith('```'):
             flush(); block = []
             for code in lines:
@@ -69,6 +95,7 @@ def markdown(source, shift=0):
             if items:
                 flush()
             paragraph.append(line.strip())
+    flush_table()
     flush()
     return '\n'.join(out)
 
@@ -96,18 +123,20 @@ header img{{width:96px;height:96px}}h1{{font-size:2rem;margin:12px 0 4px}}.tag{{
 h2{{margin:24px 0 8px;font-size:1.35rem}}h3{{font-size:1.1rem}}a{{color:var(--accent)}}
 pre{{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto;font-size:.9rem}}
 code{{background:var(--code);border-radius:4px;padding:1px 5px;font-size:.92em}}pre code{{background:none;padding:0}}
+img{{max-width:100%;height:auto}}table{{display:block;width:100%;border-collapse:collapse;overflow-x:auto;margin:20px 0}}th,td{{padding:12px;border:1px solid var(--line);text-align:left;vertical-align:top}}th{{background:var(--code)}}td img{{min-width:160px}}
 nav{{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:8px 0 0;font-size:.95rem}}footer{{text-align:center;color:var(--muted);font-size:.9rem;margin-top:40px}}
 </style></head><body><main>
 <header><img src="deck-ai.png" alt="Deck AI"><h1>Deck AI for Steam Deck</h1>
 <p class="tag">Chat with Codex, Claude, DeepSeek or any OpenAI-compatible AI — in Gaming Mode and on the desktop · version {version}</p>
-<div class="buttons"><a class="button primary" href="{repo}/archive/refs/heads/main.zip">Download ZIP</a><a class="button" href="{repo}">GitHub</a></div>
+<div class="buttons"><a class="button primary" href="{repo}/releases/tag/v{version}">Get the installer</a><a class="button" href="{repo}">GitHub</a></div>
 <nav><a href="#quick-start">Quick start</a><a href="#documentation">Documentation</a><a href="#whats-new">What's new</a></nav></header>
 <section class="card" id="quick-start"><h2>Quick start</h2>
-<p>On the Steam Deck, in Desktop Mode, open a terminal (Konsole):</p>
+<p>On Steam Deck, switch to Desktop Mode, download <strong>Install-Deck-AI.desktop</strong> from the release above, and open it in Dolphin. Allow execution if asked, follow the wizard and sign into your own ChatGPT account. For Gaming Mode, Decky Loader must already be installed.</p>
+<p>Advanced manual installation from a source checkout:</p>
 <pre><code>git clone {repo}.git
 cd codex-steamdeck
 ./install.sh --decky</code></pre>
-<p>This installs the desktop app and the Decky Loader plugin (it asks for your password once, because Decky's folder belongs to root). Then add your AI under <strong>Settings → Custom AI</strong>, or sign in to Codex / Claude Code.</p>
+<p>The manual script installs the desktop app and plugin; install and sign into Codex separately first. <a href="{repo}/blob/main/docs/QUICKSTART.md">Full setup guide</a>.</p>
 <p>Control the Deck from a Mac or PC: <code>python3 scripts/deck-remote.py steamdeck setup DECK_ADDRESS</code> — see "Notifications, remote tasks and files" below.</p></section>
 <section class="card" id="documentation"><h2>Documentation</h2>{readme}</section>
 <section class="card" id="whats-new"><h2>What's new — {changelog_title}</h2>{changelog}</section>
@@ -127,6 +156,10 @@ def build(root=ROOT, out_dir=None):
                        changelog_title=html.escape(title), changelog=markdown(changes))
     (out/'index.html').write_text(page)
     shutil.copy(root/'deck-ai.png', out/'deck-ai.png')
+    for folder in ('brand', 'images', 'media/screenshots'):
+        source = root/'docs'/folder
+        if source.is_dir():
+            shutil.copytree(source, out/'docs'/folder, dirs_exist_ok=True)
     (out/'.nojekyll').write_text('')
     return out/'index.html'
 

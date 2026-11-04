@@ -1,0 +1,47 @@
+name: Bug report / Ошибка
+description: Something did not work as expected. Можно писать по-русски.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for helping improve Deck AI. Do not include tokens, private keys, account files or private chats. For a security issue, follow SECURITY.md."
+  - type: input
+    id: versions
+    attributes:
+      label: Versions / Версии
+      description: Deck AI, SteamOS, Decky Loader. Add Mac/Windows/Linux version if relevant.
+      placeholder: "Deck AI rc.13; SteamOS …; Decky …"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where? / Где?
+      options:
+        - Installation / Установка
+        - Gaming Mode / Decky
+        - Desktop app / Настольное приложение
+        - Remote connection / Удалённое подключение
+        - Voice or attachments / Голос или вложения
+        - Other / Другое
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / Как повторить
+      description: Include the installation method and input method when relevant.
+      placeholder: "1. Open…\n2. Select…\n3. …"
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual result / Ожидание и результат
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Error or screenshot / Ошибка или скриншот
+      description: Optional. Remove personal details and secrets before sharing.
