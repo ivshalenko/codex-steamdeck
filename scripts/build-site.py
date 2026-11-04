@@ -110,15 +110,17 @@ PAGE = '''<!doctype html>
 <title>Deck AI for Steam Deck</title>
 <meta name="description" content="Multi-provider AI chat for Steam Deck: desktop app and Decky Loader plugin.">
 <link rel="icon" href="deck-ai.png">
+<meta property="og:title" content="Deck AI — Your AI. Right on Deck.">
+<meta property="og:image" content="https://raw.githubusercontent.com/ivshalenko/codex-steamdeck/main/docs/brand/social.png">
+<meta name="twitter:card" content="summary_large_image">
 <style>
-:root{{--bg:#f6f8fa;--fg:#1c2733;--muted:#5b6b7b;--card:#fff;--line:#d9e0e7;--accent:#1a77b9;--code:#eef2f6}}
-@media (prefers-color-scheme:dark){{:root{{--bg:#10161d;--fg:#e5edf4;--muted:#93a4b5;--card:#17202a;--line:#2a3745;--accent:#66b5ef;--code:#0c1218}}}}
+:root{{color-scheme:dark;--bg:#0b1119;--fg:#f1f7fb;--muted:#a8bdce;--card:#162330;--line:#304252;--accent:#a8e1fa;--code:#101c28}}
 *{{box-sizing:border-box}}body{{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif}}
 main{{max-width:880px;margin:0 auto;padding:0 16px 64px}}header{{text-align:center;padding:48px 0 24px}}
-header img{{width:96px;height:96px}}h1{{font-size:2rem;margin:12px 0 4px}}.tag{{color:var(--muted);margin:0 0 20px}}
+header img{{width:100%;height:auto}}.sr-only{{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}}h1{{font-size:2rem;margin:12px 0 4px}}.tag{{color:var(--muted);margin:0 0 20px}}
 .buttons{{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}}
 .button{{display:inline-block;padding:10px 18px;border-radius:6px;border:1px solid var(--line);color:var(--fg);text-decoration:none;background:var(--card)}}
-.button.primary{{background:var(--accent);border-color:var(--accent);color:#fff}}
+.button.primary{{background:var(--accent);border-color:var(--accent);color:#0b1119}}
 .card{{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 20px 14px;margin:20px 0}}
 h2{{margin:24px 0 8px;font-size:1.35rem}}h3{{font-size:1.1rem}}a{{color:var(--accent)}}
 pre{{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto;font-size:.9rem}}
@@ -126,12 +128,12 @@ code{{background:var(--code);border-radius:4px;padding:1px 5px;font-size:.92em}}
 img{{max-width:100%;height:auto}}table{{display:block;width:100%;border-collapse:collapse;overflow-x:auto;margin:20px 0}}th,td{{padding:12px;border:1px solid var(--line);text-align:left;vertical-align:top}}th{{background:var(--code)}}td img{{min-width:160px}}
 nav{{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:8px 0 0;font-size:.95rem}}footer{{text-align:center;color:var(--muted);font-size:.9rem;margin-top:40px}}
 </style></head><body><main>
-<header><img src="deck-ai.png" alt="Deck AI"><h1>Deck AI for Steam Deck</h1>
+<header><img src="docs/brand/hero.svg" alt="Deck AI — Your AI. Right on Deck."><h1 class="sr-only">Deck AI for Steam Deck</h1>
 <p class="tag">Chat with Codex, Claude, DeepSeek or any OpenAI-compatible AI — in Gaming Mode and on the desktop · version {version}</p>
 <div class="buttons"><a class="button primary" href="{repo}/releases/tag/v{version}">Get the installer</a><a class="button" href="{repo}">GitHub</a></div>
 <nav><a href="#quick-start">Quick start</a><a href="#documentation">Documentation</a><a href="#whats-new">What's new</a></nav></header>
 <section class="card" id="quick-start"><h2>Quick start</h2>
-<p>On Steam Deck, switch to Desktop Mode, download <strong>Install-Deck-AI.desktop</strong> from the release above, and open it in Dolphin. Allow execution if asked, follow the wizard and sign into your own ChatGPT account. For Gaming Mode, Decky Loader must already be installed.</p>
+<p>On Steam Deck, switch to Desktop Mode, download <strong>Install-Deck-AI.desktop</strong> from the release above, and open it in Dolphin. Allow execution if asked, follow the wizard and sign into your own ChatGPT account. Automatic setup offers the official Decky Loader installation if it is missing.</p>
 <p>Advanced manual installation from a source checkout:</p>
 <pre><code>git clone {repo}.git
 cd codex-steamdeck
@@ -150,13 +152,14 @@ def build(root=ROOT, out_dir=None):
     out = Path(out_dir) if out_dir else root/'build'/'site'
     out.mkdir(parents=True, exist_ok=True)
     readme = (root/'README.md').read_text()
-    body = re.sub(r'^# .+\n', '', readme, count=1)           # the page has its own title
+    body = re.sub(r'^!\[[^\]]*\]\(docs/brand/hero\.svg\)\n', '', readme, count=1)
+    body = re.sub(r'^# .+\n', '', body, count=1)           # the page has its own title
     title, changes = first_changelog_section((root/'CHANGELOG.md').read_text())
     page = PAGE.format(version=(root/'VERSION').read_text().strip(), repo=REPO, readme=markdown(body, shift=0),
                        changelog_title=html.escape(title), changelog=markdown(changes))
     (out/'index.html').write_text(page)
     shutil.copy(root/'deck-ai.png', out/'deck-ai.png')
-    for folder in ('brand', 'images', 'media/screenshots'):
+    for folder in ('brand', 'images', 'media/screenshots', 'media/en'):
         source = root/'docs'/folder
         if source.is_dir():
             shutil.copytree(source, out/'docs'/folder, dirs_exist_ok=True)

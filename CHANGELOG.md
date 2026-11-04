@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0-rc.17
+
+- Unify English/Russian covers, installer artwork, remote-control diagrams and application/plugin icons around the approved Steam Deck illustration and midnight/ice-blue palette.
+- Keep the handheld illustration in one shared vector source and include a reusable social cover and brand guide.
+- Match the generated project page and installer colors to the cover; ship English screenshot assets with the generated page.
+- Preserve the weekly updater and all existing chats, preferences and historical screenshots.
+
 ## 1.0.0-rc.16
 
 - Check published GitHub releases once every seven days, persist the schedule and expose Check now and channel controls.

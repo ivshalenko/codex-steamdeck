@@ -8,7 +8,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def load(name,filename):
  spec=importlib.util.spec_from_file_location(name,ROOT/'scripts'/filename);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);return module
 manager=load('update_install_manager','manage-install.py');packager=load('update_plugin_package','package-plugin.py');builder=load('update_release_builder','build-release.py')
-TARGET='1.0.0-rc.16';OLD='1.0.0-rc.15'
+TARGET=(ROOT/'VERSION').read_text().strip();OLD='1.0.0-rc.15'
 class Response(io.BytesIO):
  def __init__(self,data,url):super().__init__(data);self.headers={'Content-Length':str(len(data))};self.url=url
  def geturl(self):return self.url
@@ -78,7 +78,7 @@ class UpdateTests(unittest.TestCase):
   with patch.object(updates,'request_json',side_effect=OSError('offline')),patch.object(updates.time,'time',return_value=2000):self.controller.check()
   self.assertFalse(self.controller.due(2000+3600));self.assertEqual(self.controller.status()['available']['version'],TARGET);self.assertTrue(self.controller.status()['checkError'])
  def test_channel_filters_drafts_incomplete_assets_and_untrusted_urls(self):
-  valid=self.release();bad=self.release();bad['draft']=True
+  valid=self.release();valid['prerelease']=True;bad=self.release();bad['draft']=True
   incomplete=self.release();incomplete['assets'].pop()
   untrusted=self.release();untrusted['assets'][0]['browser_download_url']='https://other.example/update'
   self.assertIsNone(updates.release_candidate([valid],{'plugin':OLD},'stable'))
@@ -206,15 +206,15 @@ class UpdateModalGuardTests(unittest.TestCase):
    program='''const vm=require('node:vm');const expression=EXPRESSION;
 const results=[];
 for(const props of [
- {artifact:'Deck AI',version:'1.0.0-rc.16',hash:'a'.repeat(64)},
- {artifact:'Another plugin',version:'1.0.0-rc.16',hash:'a'.repeat(64)},
- {artifact:'Deck AI',version:'1.0.0-rc.15',hash:'a'.repeat(64)},
- {artifact:'Deck AI',version:'1.0.0-rc.16',hash:'b'.repeat(64)}]){
+ {artifact:'Deck AI',version:TARGET_VERSION,hash:'a'.repeat(64)},
+ {artifact:'Another plugin',version:TARGET_VERSION,hash:'a'.repeat(64)},
+ {artifact:'Deck AI',version:OLD_VERSION,hash:'a'.repeat(64)},
+ {artifact:'Deck AI',version:TARGET_VERSION,hash:'b'.repeat(64)}]){
  let closed=0;props.closeModal=()=>closed++;
  const node={'__reactFiber$test':{memoizedProps:props,return:null}};
  vm.runInNewContext(expression,{document:{querySelectorAll:()=>[node]}});results.push(closed);
 }
-process.stdout.write(JSON.stringify(results));'''.replace('EXPRESSION',json.dumps(expression))
+process.stdout.write(JSON.stringify(results));'''.replace('EXPRESSION',json.dumps(expression)).replace('TARGET_VERSION',json.dumps(TARGET)).replace('OLD_VERSION',json.dumps(OLD))
    result=__import__('subprocess').run(['node','-e',program],capture_output=True,text=True,check=True)
    self.assertEqual(json.loads(result.stdout),[1,0,0,0])
   with patch.object(updates.urllib.request,'urlopen',return_value=Response(json.dumps(page).encode(),'http://127.0.0.1:8080/json/list')),patch.object(adapter,'evaluate',side_effect=evaluate):adapter.dismiss(TARGET,sha)
