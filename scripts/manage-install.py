@@ -7,7 +7,8 @@ from runtime_paths import resolve_app_dir
 ROOT_FILES=('app.py', 'install.sh', 'chat_media.py', 'backend.py', 'providers.py', 'ui_extras.py', 'speech_accuracy.py', 'deck_share.py', 'speech-languages.json', 'style.css', 'themes.json', 'deck-ai.png', 'requirements.txt', 'requirements-speech.txt', 'VERSION', 'README.md', 'CHANGELOG.md', 'SECURITY.md', 'uninstall.sh', 'message_blocks.py', 'language_support.py', 'language_settings.py', 'remote_access.py')
 PLUGIN_FILES=('THIRD_PARTY_NOTICES.txt','main.py','bridge.py','runtime_paths.py','plugin.json','package.json','deck-ai.png')
 PLUGIN_FILES+=('launch_repair.py','repair_remote.py','repair-web/index.html','repair-web/app.js','repair-web/style.css')
-SCRIPTS=('backup-state.py', 'deck-remote.py', 'download-models.sh', 'deck-ai-steam', 'check-environment.py', 'manage-install.py', 'configure-steam-input.py', 'package-plugin.py', 'install-plugin.py', 'install-decky.sh', 'setup.py', 'connect-deck.py', 'install-codex.py')
+ROOT_FILES+=('docs/brand/installer.svg',)
+SCRIPTS=('backup-state.py', 'deck-remote.py', 'download-models.sh', 'deck-ai-steam', 'check-environment.py', 'manage-install.py', 'configure-steam-input.py', 'package-plugin.py', 'install-plugin.py', 'install-decky.sh', 'setup.py', 'setup_support.py', 'setup-system.py', 'setup-voice.py', 'install-loader.py', 'connect-deck.py', 'install-codex.py')
 
 
 def source_files(source):

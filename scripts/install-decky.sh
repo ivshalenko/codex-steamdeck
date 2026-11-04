@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-DEST="${DECKY_PLUGIN_DIR:-$HOME/homebrew/plugins/Codex}"
+DEST="${DECKY_PLUGIN_DIR:-}"
+if [[ -z "$DEST" ]]; then
+ DEST="$(python3 - "$ROOT" <<'PYDEST'
+import sys
+from pathlib import Path
+sys.path.insert(0,str(Path(sys.argv[1])/'scripts'))
+from setup_support import plugin_destination
+print(plugin_destination())
+PYDEST
+)"
+fi
 [[ -d "$HOME/homebrew" || -n "${DECKY_PLUGIN_DIR:-}" ]] || { echo 'Install Decky Loader first: https://decky.xyz'; exit 1; }
 # Validate all files before asking for administrator access.
 python3 - "$ROOT" <<'PY'

@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 Corresponding source for the bundled @decky/api library and the application,
 including exact upstream source, used npm source/modules and rebuild instructions:
-https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.14/deck-ai-1.0.0-rc.14-lgpl-sources.zip
+https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.15/deck-ai-1.0.0-rc.15-lgpl-sources.zip
 Upstream source commit: d1b7f16070777a0ada939cbacd3606eeba0574f5
 
 

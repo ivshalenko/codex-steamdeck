@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0-rc.15",
+  "capturedOn": "2026-11-04",
+  "language": "English",
+  "source": "Actual native GTK windows on Steam Deck",
+  "scope": "Real desktop + pinned official Codex installation and Russian-language update in a temporary HOME. Privileged Decky and SSH installation were not performed in this fresh-profile test.",
+  "screenshots": {
+    "01-automatic.png": {
+      "caption": "The real automatic setup screen. English is selected on a fresh profile, even with a Russian system locale.",
+      "sha256": "e75ac8ab44a71318e4eaad06db29e8e81a55e4af7246aa0fb4eaeb2d9c0d47fe"
+    },
+    "02-custom.png": {
+      "caption": "The real custom setup screen with component and access choices. The plugin was unchecked for the isolated installation test.",
+      "sha256": "33aa7832adcc4c305af9f8e61e5ba0341eb483fa39326a30574d313b5f4933fc"
+    },
+    "04-installing.png": {
+      "caption": "Actual application installation in progress in a temporary profile on Steam Deck.",
+      "sha256": "76af5ebfe1cd9616279f619a001f9fb45e380a9a63a22195b6f20464efea30f4"
+    },
+    "05-ready.png": {
+      "caption": "Actual completion after the desktop app and official Codex were installed in the temporary profile. Privileged Decky/SSH steps were not selected in this test.",
+      "sha256": "2340daf484f79fe4c6974fb97c4663e5462abd6219c36f948ba2a711309603e5"
+    },
+    "06-first-launch-en.png": {
+      "caption": "The actual first desktop launch after choosing English in the installer.",
+      "sha256": "cc91b00d596bddffe6a6f9ba238471cd4baef8e03bd8726c1417152a0db04da0"
+    }
+  }
+}

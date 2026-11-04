@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.0-rc.15
+
+- Add an illustrated graphical download shell and installer with automatic/custom plans, stage progress, retry and completion actions. Include the release launcher in the repository ZIP.
+- Default fresh interfaces to English. Persist the installer language for the desktop app, Decky views, generated empty-chat labels and background notification titles.
+- Offer selected Codex, Gaming Mode plugin, missing official Decky Loader, local dictation, SSH and Decky action-mode setup. Keep system authorization and account sign-in explicit.
+- Require successful administrative receipts before showing completion. Reuse existing plugin folders and preserve duplicates for manual resolution.
+- Install the core WebSocket dependency from the packaged wheel. Preserve existing chats, models, accounts and unrelated settings.
+- Add actual Steam Deck installer screenshots and first-launch checks from a fresh temporary profile in English and Russian.
+
 ## 1.0.0-rc.14
 
 - Add a persistent English/Russian interface choice shared by Decky views and the desktop companion. Conversation and file content is preserved.

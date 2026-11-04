@@ -4,17 +4,23 @@
 
 ## Install on Steam Deck
 
-1. Have internet access, at least **800 MB free**, and your own ChatGPT account. Voice packs need extra space and are optional. Switch to **Desktop Mode**: Steam → Power → Switch to Desktop.
-2. Open the [rc.14 release](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.14). Download **Install-Deck-AI.desktop** onto the Deck.
-3. In Dolphin, open Downloads and launch the installer. If asked, choose **Execute / Trust and launch**. If it opens as text, use Properties → Permissions → **Is executable**, then open it again.
-4. Follow the wizard. Keep **Install official Codex CLI if it is missing** selected when needed. The official OpenAI installer is pinned to Codex 0.166.0 and checked by SHA-256. For Gaming Mode, install [Decky Loader](https://decky.xyz) first, then select the Decky option. This wizard does not install Decky itself.
-5. If a terminal asks for sudo, enter your **SteamOS password there**. To create one, open Konsole and run `passwd`. Password characters are not displayed while typing. Deck AI does not store this password.
-6. Wait for **Ready**, then choose **Open Deck AI and sign in**. Complete ChatGPT sign-in in the browser. For device-code sign-in, enter the displayed code only on the official OpenAI page.
-7. Return to **Gaming Mode → (…) → Decky → Deck AI**. Select Codex in Settings, then **New chat**. Try: “Show the free space on my Steam Deck.” Read any proposed action before approving it.
+1. Have internet access, at least **800 MB free** and your own ChatGPT account. Voice packs need extra space. Switch to **Desktop Mode**: Steam → Power → Switch to Desktop.
+2. Download **[Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.15/Install-Deck-AI.desktop)** onto Deck. If you downloaded the project ZIP instead, extract it and open the included file with that name.
+3. Open it in Dolphin. Confirm **Execute / Trust and launch** if asked. If it opens as text, use Properties → Permissions → **Is executable** and open it again. SteamOS requires this first authorization; the app cannot grant trust to itself.
+4. The illustrated download window verifies the release, then opens the full installer. It starts in **English** regardless of the SteamOS language. You can choose **Russian** in either window; that choice is passed to the full installer and saved for Deck AI.
+5. Choose **Automatic** for Deck AI, missing official Codex and the Gaming Mode plugin. If Decky Loader is absent, the selected automatic plan runs its official installer in a visible terminal. Existing Decky installations are reused.
+6. Or choose **Custom** to select Codex, the Gaming Mode plugin, permission to install missing Decky Loader, an optional dictation pack, optional SSH remote access, and Decky's action mode. Unchecked components are skipped. SSH is not enabled and voice packs are not downloaded by Automatic setup. Existing settings remain intact.
+7. Click **Install**. Follow the progress. Enter your SteamOS administrator password only in the separate terminal if asked. If no password exists, open Konsole and run `passwd`, then retry. Password characters are hidden; Deck AI does not collect or store the password.
+8. After **Installation complete**, choose **Open Deck AI and sign in**. Finish ChatGPT sign-in in the browser. For a device code, use only the official OpenAI page. Account sign-in is a personal step and is not automatic.
+9. Return to **Gaming Mode → (…) → Decky → Deck AI → New chat**. Try “Show the free space on my Steam Deck.” Review any requested action before allowing it.
 
-![Actual English installation wizard on Steam Deck.](media/en/screenshots/09-installation-wizard.png)
+![Actual illustrated automatic setup on Steam Deck.](media/en/installer/01-automatic.png)
 
-Manual alternative: download the release's **steamdeck.tar.gz**, extract it, open Konsole in the extracted folder and run `python3 scripts/setup.py`. `bash install.sh --decky` installs without the wizard but does not automatically install Codex; install the [official CLI](https://github.com/openai/codex#quickstart) separately in that case.
+[See Custom, progress and completion screens →](INSTALLER.md)
+
+Codex uses the pinned official OpenAI installer for version 0.166.0, checked by SHA-256. The optional missing-Decky step uses a checksum-pinned official Decky installer, which obtains the upstream stable Loader. It changes system services and can require your administrator password. [Official Decky installation](https://github.com/SteamDeckHomebrew/decky-loader#-installation).
+
+Manual source alternative: extract **steamdeck.tar.gz** and run `python3 scripts/setup.py` (or `python3 scripts/setup.py --language ru`). `bash install.sh --decky` is the lower-level installation route and does not automatically install Codex or missing Decky Loader.
 
 ## Choose your language
 
@@ -22,7 +28,7 @@ In Decky, open **Settings → Interface and voice → Interface language → Eng
 
 ![Actual interface language controls.](media/en/screenshots/28-language-settings.png)
 
-The wizard selects its initial language from SteamOS and has its own English/Russian button. To make Steam's surrounding menus English too, change Steam's language in **Steam → Settings → Interface** and apply any requested restart. This is a separate Steam setting.
+The installer defaults to English and has its own language selector. Its choice is saved for both the desktop app and Decky. To make Steam's surrounding menus English too, change Steam's language in **Steam → Settings → Interface** and apply any requested restart. This is a separate Steam setting.
 
 ## Decky ZIP only
 
@@ -60,4 +66,4 @@ Deck AI is manually distributed through GitHub Releases. It is [not in the offic
 
 Run the same wizard to update. Chats, voice models, accounts and SSH keys are retained. The installer keeps the previous plugin folder beside it as `.Codex-backup-…`. Use `~/.local/bin/deck-ai-uninstall` to remove managed desktop files while retaining user data; remove the ZIP plugin through Decky.
 
-This is a release candidate. Independent clean-device installation, suspend during an active task and physical controller checks remain outstanding. See the [release checks](RELEASE-rc.14.md).
+This is a release candidate. Independent clean-device installation, suspend during an active task and physical controller checks remain outstanding. See the [release checks](RELEASE-rc.15.md).

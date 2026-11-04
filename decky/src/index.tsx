@@ -46,7 +46,7 @@ const accountLogout=callable<[],unknown>("account_logout");
 const remoteHost=callable<[host:string],Snapshot>("remote_host");
 const setProvider=callable<[provider:string],Snapshot>("set_provider");
 const olderMessages=callable<[],Snapshot>("older_messages");
-const pollEvents=callable<[since:number|null],{latest:number;notifications:{id:number;kind:string;title:string;host:string;summary?:string;threadId?:string}[]}>("poll_events");
+const pollEvents=callable<[since:number|null],{uiLanguage?:UILanguage;latest:number;notifications:{id:number;kind:string;title:string;host:string;summary?:string;threadId?:string}[]}>("poll_events");
 const approve=callable<[id:string,decision:string],unknown>("approve");
 const diagnose=callable<[],{checks:Check[]}>("diagnose");
 const watchHosts=callable<[hosts:string[]],unknown>("watch");
@@ -603,6 +603,7 @@ let lastEvent:number|null=null;
 async function showNotifications(){
  try{
   const result=await pollEvents(lastEvent);
+  if(result.uiLanguage&&result.uiLanguage!==getUILanguage())setUILanguage(result.uiLanguage);
   const first=lastEvent===null;lastEvent=result.latest;
   // The open panel already shows approvals and results; do not toast on top.
   if(first||panelMounted>0||!flag("deck-ai-notify",true))return;

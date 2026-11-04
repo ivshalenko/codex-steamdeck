@@ -19,6 +19,10 @@ from datetime import datetime
 # Use GTK’s local input context: Steam’s IM module opens its own keyboard
 # on editor focus, while this standalone app already provides AppKeyboard.
 os.environ["GTK_IM_MODULE"] = "gtk-im-context-simple"
+# Apply the saved interface preference before GTK loads its native dialogs.
+try:_interface_language=(resolve_state_dir()/'language').read_text().strip()
+except OSError:_interface_language='en'
+if _interface_language in ('en','ru'):os.environ['LANGUAGE']=_interface_language
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, Gio, Pango, GdkPixbuf
@@ -691,7 +695,7 @@ class Panel(Gtk.Application):
         self.render_thread_list()
 
     def thread_title(self, thread):
-        return (thread.get('name') or thread.get('preview') or 'Новый чат').split('\n')[0][:120]
+        return (thread.get('name') or thread.get('preview') or translator.text('Новый чат')).split('\n')[0][:120]
 
     def render_thread_list(self):
         if not hasattr(self,'thread_list'):return
@@ -699,7 +703,7 @@ class Panel(Gtk.Application):
         previous=adjustment.get_value()
         for child in self.thread_list.get_children():child.destroy()
         search=self.chat_search.get_text().casefold().strip()
-        source_threads=self.thread_cache if self.provider=='codex' else {ident:{'id':ident,'name':chat.get('name','Новый чат'),'updatedAt':chat.get('updatedAt',0),'createdAt':chat.get('createdAt',0)} for ident,chat in self.external_threads[self.provider].items()}
+        source_threads=self.thread_cache if self.provider=='codex' else {ident:{'id':ident,'name':chat.get('name') or translator.text('Новый чат'),'updatedAt':chat.get('updatedAt',0),'createdAt':chat.get('createdAt',0)} for ident,chat in self.external_threads[self.provider].items()}
         threads=sorted(source_threads.values(),key=lambda t:t.get('updatedAt',0),reverse=True)
         for thread in threads:
             title=self.thread_title(thread)
@@ -713,7 +717,7 @@ class Panel(Gtk.Application):
             label.get_style_context().add_class('thread-name')
             stack.pack_start(label,False,False,0)
             stamp=thread.get('updatedAt') or thread.get('createdAt')
-            date=datetime.fromtimestamp(stamp).strftime('%d.%m · %H:%M') if stamp else 'Только что'
+            date=datetime.fromtimestamp(stamp).strftime('%d.%m · %H:%M') if stamp else translator.text('Только что')
             date_label=Gtk.Label(label=date,xalign=0)
             date_label.get_style_context().add_class('thread-date')
             stack.pack_start(date_label,False,False,0);row.add(stack)
@@ -795,7 +799,7 @@ class Panel(Gtk.Application):
         if not self.backend or not self.backend.connected:return
         self.save_draft(self.text.get_buffer())
         self.begin_thread_switch()
-        thread={'id':str(uuid.uuid4()),'name':'Новый чат','preview':'','turns':[],'createdAt':int(time.time()),'updatedAt':int(time.time()),'model':self.current_model}
+        thread={'id':str(uuid.uuid4()),'name':translator.text('Новый чат'),'preview':'','turns':[],'createdAt':int(time.time()),'updatedAt':int(time.time()),'model':self.current_model}
         self.empty_threads[thread['id']]=thread
         self.save_empty_threads()
         self.finish_thread_switch({'model':self.current_model},thread)
@@ -859,7 +863,7 @@ class Panel(Gtk.Application):
             else:self.reconnect()
             return
         self.thread_id=self.external_thread_ids.get(target,'')
-        self.thread_cache={ident:{'id':ident,'name':chat.get('name','Новый чат'),'updatedAt':chat.get('updatedAt',0),'createdAt':chat.get('createdAt',0)} for ident,chat in self.external_threads[target].items()}
+        self.thread_cache={ident:{'id':ident,'name':chat.get('name') or translator.text('Новый чат'),'updatedAt':chat.get('updatedAt',0),'createdAt':chat.get('createdAt',0)} for ident,chat in self.external_threads[target].items()}
         self.provider_action_button.set_visible(target=='deepseek')
         self.tokenharbor_action_button.set_visible(target=='tokenharbor')
         self.claude_action_button.set_visible(target=='claude')
@@ -1003,7 +1007,7 @@ class Panel(Gtk.Application):
 
     def create_external_chat(self):
         ident=str(uuid.uuid4());now=int(time.time())
-        chat={'id':ident,'provider':self.provider,'name':'Новый чат','createdAt':now,'updatedAt':now,'model':self.model_picker.get_active_id(),'messages':[]}
+        chat={'id':ident,'provider':self.provider,'name':translator.text('Новый чат'),'createdAt':now,'updatedAt':now,'model':self.model_picker.get_active_id(),'messages':[]}
         self.external_threads[self.provider][ident]=chat;self.external_thread_ids[self.provider]=ident;self.thread_id=ident
         self.save_provider_chats()
         self.thread_cache[ident]={'id':ident,'name':chat['name'],'createdAt':now,'updatedAt':now}
@@ -1030,7 +1034,7 @@ class Panel(Gtk.Application):
         prior=[{'role':item['role'],'content':item['text']} for item in chat.get('messages',[]) if item.get('role') in ('user','assistant')]
         user={'id':str(uuid.uuid4()),'role':'user','text':text}
         chat['messages'].append(user);chat['updatedAt']=int(time.time())
-        if chat.get('name') in ('','Новый чат'):
+        if chat.get('name') in ('','Новый чат','New chat'):
             chat['name']=text.splitlines()[0][:100]
         chat['model']=selected
         self.external_thread_ids[self.provider]=chat['id'];self.save_provider_chats()
