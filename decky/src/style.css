@@ -114,7 +114,7 @@
 
 /* Settings use four aligned cards: service and connection, then personal
    preferences and account. Card rows share their height rather than drifting. */
-.dai-fullscreen .dai-settings-grid{grid-template-areas:"model connection" "personal account";gap:12px;align-items:stretch;width:100%}
+.dai-fullscreen .dai-settings-grid{grid-template-areas:"updates updates" "model connection" "personal account";gap:12px;align-items:stretch;width:100%}
 .dai-fullscreen .dai-settings-column{display:contents}
 .dai-fullscreen .dai-model-settings{grid-area:model}
 .dai-fullscreen .dai-connection-settings{grid-area:connection}
@@ -134,7 +134,7 @@
 .dai-fullscreen .dai-account-actions{margin-top:auto}
 .dai-fullscreen .dai-field>button[role=combobox]{background:#223243!important;border-radius:4px!important}
 .dai-fullscreen .dai-settings input.DialogInput{background:#223243!important;border-radius:4px!important}
-@media(max-width:650px){.dai-fullscreen .dai-settings-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"model" "connection" "personal" "account"}.dai-fullscreen .dai-personal-fields{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:650px){.dai-fullscreen .dai-settings-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"updates" "model" "connection" "personal" "account"}.dai-fullscreen .dai-personal-fields{grid-template-columns:minmax(0,1fr)}}
 
 /* Fill Decky's actual content slot, including after reopening or resizing.
    Its generated wrappers otherwise add 16px padding and a viewport clamp. */
@@ -298,3 +298,5 @@ div:has(> .dai-root:not(.dai-fullscreen)){display:flex!important;flex-direction:
 .dai-repair-actions{display:flex;gap:8px;flex-wrap:wrap}
 .dai-root .dai-repair-actions>.dai-button.DialogButton{width:auto!important;flex:1}
 .dai-repair-error{color:#ffb9b3}
+
+.dai-fullscreen .dai-updates{grid-area:updates}

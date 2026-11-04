@@ -28,6 +28,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, Gio, Pango, GdkPixbuf
 from backend import Backend, RpcError, CODEX
 import providers
+import updates
 from chat_media import attachments,display_text
 from message_blocks import split_message
 from ui_extras import UILabel, translator, AppKeyboard, CompactPicker
@@ -139,6 +140,10 @@ class Panel(Gtk.Application):
             action=Gio.SimpleAction.new(name,None)
             action.connect('activate',callback)
             self.add_action(action)
+        self.update_controller=None;self.update_lease=updates.Lease(STATE_DIR)
+        try:self.update_controller=updates.Controller()
+        except Exception:pass
+        action=Gio.SimpleAction.new('updates',None);action.connect('activate',self.show_updates);self.add_action(action)
         action=Gio.SimpleAction.new('select-chat',GLib.VariantType.new('s'))
         action.connect('activate',lambda _,value:self.switch_thread(value.get_string()))
         self.add_action(action)
@@ -243,6 +248,7 @@ class Panel(Gtk.Application):
         self.auto_approve_item.set_active(self.auto_approve)
         self.auto_approve_item.connect('toggled',self.toggle_auto_approve)
         menu.append(self.auto_approve_item)
+        update_item=Gtk.MenuItem(label=translator.text('Обновления Deck AI'));update_item.connect('activate',self.show_updates);menu.append(update_item)
         item=Gtk.MenuItem(label=translator.text('Язык и голос'))
         item.translation_source='Язык и голос'
         item.connect('activate',self.show_language_settings)
@@ -484,6 +490,8 @@ class Panel(Gtk.Application):
         GLib.timeout_add_seconds(30,self.refresh_threads)
         GLib.timeout_add_seconds(3,self.poll_remote_history)
         GLib.timeout_add(1000,self.pump_outbox)
+        GLib.timeout_add(1000,self.poll_updates)
+        if self.update_controller:self.update_controller.start()
         Gdk.Screen.get_default().connect('monitors-changed', lambda *_: self.position())
         self.window.connect('destroy', lambda *_: self.shutdown_app() if self.gaming_mode else self.stop_event.set())
         self.closed = threading.Event()
@@ -1453,6 +1461,7 @@ class Panel(Gtk.Application):
 
     def set_working(self, working):
         self.engine_active = working
+        self.publish_update_activity()
         self.stop_button.set_sensitive(working and self.turn_id is not None)
         if working:
             self.spinner.start(); self.activity.set_text('Deck AI работает…')
@@ -1815,8 +1824,9 @@ class Panel(Gtk.Application):
             for path in paths:
                 fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
                 with os.fdopen(fd,'w') as f:f.write(text)
+            return True
         except OSError:
-            self.message('Не удалось сохранить черновик на диск.')
+            self.message('Не удалось сохранить черновик на диск.');return False
 
     def change_language(self, code):
         translator.set_language(code)
@@ -2023,6 +2033,7 @@ class Panel(Gtk.Application):
         self.message(error or ('Проверьте текст и нажмите «Отправить»' if result else 'Речь не распознана. Попробуйте ещё раз.'))
 
     def send(self, *_):
+        if updates.updating(STATE_DIR):self.message(translator.text('Deck AI обновляется. Черновик сохранён.'));return
         if self.sending:
             self.message('Сообщение уже отправляется…'); return
         if self.busy:
@@ -2172,6 +2183,7 @@ class Panel(Gtk.Application):
         self.save_outbox();self.show_outbox_job(job)
 
     def pump_outbox(self):
+        if updates.updating(STATE_DIR):return True
         self.refresh_outbox_view()
         if self.provider!='codex':return True
         if not self.backend or not self.backend.connected or not self.history_ready:return True
@@ -2259,6 +2271,40 @@ class Panel(Gtk.Application):
         self.window.hide()
         return True
 
+    def update_is_busy(self):
+        modal=any(w is not self.window and w.get_visible() and w.get_modal() and not getattr(w,'_deck_ai_update_dialog',False) for w in Gtk.Window.list_toplevels()) if hasattr(self,'window') else False
+        return bool(self.busy or self.sending or self.engine_active or modal or any(j.get('status') in ('queued','sending','recovering','editing') for j in self.outbox))
+
+    def publish_update_activity(self):
+        if not hasattr(self,'update_lease'):return
+        try:self.update_lease.publish(self.update_is_busy())
+        except OSError:pass
+
+    def show_updates(self,*_):
+        if not self.update_controller:self.message(translator.text('Проверка обновлений недоступна'));return
+        import update_ui
+        def begin(value):
+            self.publish_update_activity()
+            return self.update_controller.begin(value,restart_app=True,guard=self.update_is_busy)
+        return update_ui.show(self.window,self.update_controller,begin)
+
+    def poll_updates(self):
+        if getattr(self,'closed',None) is not None and self.closed.is_set():return False
+        self.publish_update_activity()
+        job=updates.active_job(STATE_DIR)
+        if job.get('phase')=='quiescing' and not self.update_is_busy():
+            if self.save_draft(self.text.get_buffer()) is False:
+                self.update_lease.publish(True);return True
+            self.shutdown_app();return False
+        if self.update_controller:
+            try:
+                value=self.update_controller.status()
+                if value.get('notificationPending') and value['preferences']['automatic'] and self.window.get_visible() and not self.gaming_mode:
+                    available=value['available'];notice=Gio.Notification.new(translator.text('Доступно обновление Deck AI'))
+                    notice.set_body(available['version']);notice.set_default_action('app.updates');self.send_notification('deck-ai-update',notice);self.update_controller.acknowledge(available['version'])
+            except Exception:pass
+        return True
+
     def shutdown_app(self):
         self.stop_speaking()
         if self.language_settings is not None:self.language_settings.cancel.set()
@@ -2266,6 +2312,8 @@ class Panel(Gtk.Application):
         self.stop_event.set()
         if self.recorder is not None and self.recorder.poll() is None:self.recorder.terminate()
         if self.backend:self.backend.close()
+        if hasattr(self,'update_lease'):self.update_lease.close()
+        if getattr(self,'update_controller',None):self.update_controller.close()
         self.quit()
 
 if __name__ == '__main__':

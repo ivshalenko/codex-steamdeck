@@ -8,7 +8,7 @@ SECRET_PATTERNS=[re.compile(rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----
 
 def source_files(root=ROOT):
     root=Path(root)
-    exact={'Install-Deck-AI.desktop','app.py','chat_media.py','language_support.py','language_settings.py', 'remote_access.py','message_blocks.py','backend.py','providers.py','ui_extras.py','speech_accuracy.py','deck_share.py','speech-languages.json','style.css','themes.json','deck-ai.png','requirements.txt','requirements-speech.txt','VERSION','README.md','CHANGELOG.md','SECURITY.md','LICENSE','NOTICE','install.sh','uninstall.sh','.gitignore','docs/media/en/index.html','docs/media/en/manifest.json','docs/media/en/installer/manifest.json'}
+    exact={'updates.py','update_ui.py','Install-Deck-AI.desktop','app.py','chat_media.py','language_support.py','language_settings.py', 'remote_access.py','message_blocks.py','backend.py','providers.py','ui_extras.py','speech_accuracy.py','deck_share.py','speech-languages.json','style.css','themes.json','deck-ai.png','requirements.txt','requirements-speech.txt','VERSION','README.md','CHANGELOG.md','SECURITY.md','LICENSE','NOTICE','install.sh','uninstall.sh','.gitignore','docs/media/en/index.html','docs/media/en/manifest.json','docs/media/en/installer/manifest.json'}
     directories={'scripts','tests','.github','docs'}
     plugin_root={'LICENSE','NOTICE','THIRD_PARTY_NOTICES.txt','main.py','bridge.py','runtime_paths.py','launch_repair.py','repair_remote.py','README.md','package.json','package-lock.json','plugin.json','rollup.config.mjs','tsconfig.json','deck-ai.png'}
     repair_web={'decky/repair-web/index.html','decky/repair-web/app.js','decky/repair-web/style.css'}

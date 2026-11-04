@@ -37,7 +37,10 @@ def build(output):
     setup=output/'Install-Deck-AI.desktop'
     setup.write_text(launcher_text(version));setup.chmod(0o755)
     lgpl=module('lgpl_sources','build-lgpl-sources.py').build(ROOT,output,version,source)
-    checksums=output/'SHA256SUMS.txt';checksums.write_text(''.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name+'\n' for path in (desktop,plugin,remote,setup,lgpl)))
+    update_manifest=output/'UPDATE-MANIFEST.json'
+    app_files={str(rel):hashlib.sha256((ROOT/rel).read_bytes()).hexdigest() for rel in manager.source_files(ROOT)}
+    update_manifest.write_text(json.dumps({'protocol':1,'version':version,'minimumPython':[3,9],'packages':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (desktop,plugin)},'appFiles':app_files,'pluginFiles':{str(rel):hashlib.sha256(path.read_bytes()).hexdigest() for rel,path in runtime.items()},'dependency':{'name':'websockets','path':'decky/vendor/'+plugin_package.WHEEL,'version':plugin_package.WHEEL.split('-')[1]}},indent=2)+'\n')
+    checksums=output/'SHA256SUMS.txt';checksums.write_text(''.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name+'\n' for path in (desktop,plugin,remote,setup,lgpl,update_manifest)))
     report={'version':version,'sourceFiles':len(source),'pluginFiles':len(runtime),'licenseSelected':(ROOT/'LICENSE').is_file(),'published':False,'checks':'compile, shell syntax, TypeScript, frontend logic, Python regression tests, package allowlist','manualChecksRequired':['Second Steam Deck/SteamOS installation','SteamOS suspend/resume during a task','Live optional providers with owner accounts','Human microphone accuracy in a running game']}
     (output/'BUILD-REPORT.json').write_text(json.dumps(report,indent=2)+'\n');return output
 

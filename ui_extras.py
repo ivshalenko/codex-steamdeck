@@ -45,6 +45,8 @@ EN['Нет ожидающих сообщений']='No pending messages'
 
 EN['Только что']='Just now'
 
+EN.update({'Обновления Deck AI':'Deck AI updates','Проверка обновлений недоступна':'Update checks are unavailable','Доступно обновление Deck AI':'Deck AI update available','Deck AI обновляется. Черновик сохранён.':'Deck AI is updating. Your draft is saved.'})
+
 class Translator:
     def __init__(self):
         self.language=STATE.read_text().strip() if STATE.exists() else 'en'

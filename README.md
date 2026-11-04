@@ -2,11 +2,11 @@
 
 [English](README.md) · [Russian](docs/README.ru.md)
 
-[![Build](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Release candidate](https://img.shields.io/badge/release-1.0.0--rc.15-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.15) [![Steam Deck](https://img.shields.io/badge/made_for-Steam_Deck-c5d5e2?style=flat-square&labelColor=17212d)](docs/QUICKSTART.md) [![License](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](LICENSE)
+[![Build](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Release candidate](https://img.shields.io/badge/release-1.0.0--rc.16-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.16) [![Steam Deck](https://img.shields.io/badge/made_for-Steam_Deck-c5d5e2?style=flat-square&labelColor=17212d)](docs/QUICKSTART.md) [![License](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](LICENSE)
 
 **Ask for help, investigate a launch error, or send a task from your Mac.** Deck AI puts Codex in your Steam Deck's Quick Access menu, with full-screen chat, action confirmations, attachments and completion notifications. A desktop companion and SSH remote control are included.
 
-[![Download the illustrated Deck AI installer.](docs/brand/install.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.15/Install-Deck-AI.desktop)
+[![Download the illustrated Deck AI installer.](docs/brand/install.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.16/Install-Deck-AI.desktop)
 
 **[Installation](#install-on-your-steam-deck)** · **[See it in action](#see-it-in-action)** · **[Mac / PC connection](#your-computer-your-deck-one-conversation)** · **[Questions](#questions)** · **[All documentation](#find-your-next-step)**
 
@@ -39,7 +39,7 @@ You need a Steam Deck running SteamOS, internet access and your own ChatGPT acco
 
 | Step | What to do |
 | --- | --- |
-| **01 · Download** | Switch to **Desktop Mode**. Download **[Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.15/Install-Deck-AI.desktop)** onto the Deck. |
+| **01 · Download** | Switch to **Desktop Mode**. Download **[Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.16/Install-Deck-AI.desktop)** onto the Deck. |
 | **02 · Install & sign in** | Open the file in Dolphin; allow execution/trust if asked. Choose **English** or **Russian**, then **Automatic** or **Custom** setup. Automatic installs Deck AI, missing Codex and the Gaming Mode plugin, including Decky Loader if missing. Enter any sudo password only in the SteamOS terminal; then sign into ChatGPT. |
 | **03 · Open & ask** | Return to **Gaming Mode → (…) → Decky → Deck AI → New chat**. Try: “Show the free space on my Steam Deck.” Review any requested action before approving it. |
 
@@ -50,6 +50,10 @@ You need a Steam Deck running SteamOS, internet access and your own ChatGPT acco
 If you used **Code → Download ZIP**, extract the project and open the included **Install-Deck-AI.desktop**. It downloads the checked release; no Node.js or source build is needed. The first SteamOS execution/trust prompt still needs your confirmation.
 
 The installer starts in **English**. Choose **Russian** there and Deck AI starts in Russian too, including Decky menus and notification titles. Existing conversation text stays unchanged.
+
+## Stay up to date
+
+Deck AI checks GitHub **once a week**. Open the Steam notification and press **Update now** to update the plugin and installed desktop companion together. Downloads and installed files are checked; drafts, chats, settings and models are kept. Active work must finish first. **[Weekly checks and one-click updates →](docs/UPDATES.md)**
 
 ## Your computer. Your Deck. One conversation.
 
@@ -102,9 +106,11 @@ Check the queue and the existing conversation first. After sleep or a network ch
 
 No. The store submission was declined on 3 November 2026 under its rules on LLM-access plugins and code written mostly by LLMs. This project used substantial Claude/Codex assistance and is distributed independently through GitHub. [Decision and status](docs/DECKY-SUBMISSION.md).
 
-### How thoroughly has rc.15 been checked?
+### How thoroughly has rc.16 been checked?
 
-228 Python tests and 38 frontend logic tests passed. All 14 device UI checks passed in English and again in Russian. A real temporary-profile installation on Steam Deck installed the desktop app and pinned official Codex. Its first launch was English; updating with Russian selected produced a Russian first launch. Custom choices survived a language switch. [Installer checks and limits](docs/RELEASE-rc.15.md).
+253 Python tests and 42 frontend logic tests passed. Real Steam Deck trials exercised the update toast, one-button installation, plugin reload, startup verification and preserved state. Failure tests cover invalid downloads, interrupted transactions and rollback of both components. [Update checks and scope](docs/RELEASE-rc.16.md).
+
+The earlier [rc.15 checks](docs/RELEASE-rc.15.md) cover illustrated setup and English/Russian first launches.
 
 The earlier [rc.14 checks](docs/RELEASE-rc.14.md) cover actual English Codex repair, Mac-to-Deck chat and completion-toast navigation. Their screenshots retain their original version labels.
 

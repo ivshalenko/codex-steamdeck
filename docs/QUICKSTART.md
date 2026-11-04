@@ -5,7 +5,7 @@
 ## Install on Steam Deck
 
 1. Have internet access, at least **800 MB free** and your own ChatGPT account. Voice packs need extra space. Switch to **Desktop Mode**: Steam → Power → Switch to Desktop.
-2. Download **[Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.15/Install-Deck-AI.desktop)** onto Deck. If you downloaded the project ZIP instead, extract it and open the included file with that name.
+2. Download **[Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.16/Install-Deck-AI.desktop)** onto Deck. If you downloaded the project ZIP instead, extract it and open the included file with that name.
 3. Open it in Dolphin. Confirm **Execute / Trust and launch** if asked. If it opens as text, use Properties → Permissions → **Is executable** and open it again. SteamOS requires this first authorization; the app cannot grant trust to itself.
 4. The illustrated download window verifies the release, then opens the full installer. It starts in **English** regardless of the SteamOS language. You can choose **Russian** in either window; that choice is passed to the full installer and saved for Deck AI.
 5. Choose **Automatic** for Deck AI, missing official Codex and the Gaming Mode plugin. If Decky Loader is absent, the selected automatic plan runs its official installer in a visible terminal. Existing Decky installations are reused.
@@ -64,6 +64,6 @@ Deck AI is manually distributed through GitHub Releases. It is [not in the offic
 | API key will not save | Unlock KWallet in Desktop Mode. Do not paste API keys into messages or GitHub issues. |
 | Decky error | Open Deck AI's Diagnostics. Update the plugin ZIP and restart Decky if needed. Report the version and error text in an [issue](https://github.com/ivshalenko/codex-steamdeck/issues). |
 
-Run the same wizard to update. Chats, voice models, accounts and SSH keys are retained. The installer keeps the previous plugin folder beside it as `.Codex-backup-…`. Use `~/.local/bin/deck-ai-uninstall` to remove managed desktop files while retaining user data; remove the ZIP plugin through Decky.
+Starting with rc.16, open **Deck AI → Settings → Deck AI updates** to check manually or install a compatible published release with one click. Automatic checks run once a week. [Update and recovery guide](UPDATES.md). The same wizard remains available for installation or repair. Chats, voice models, accounts and SSH keys are retained. The installer keeps the previous plugin folder beside it as `.Codex-backup-…`. Use `~/.local/bin/deck-ai-uninstall` to remove managed desktop files while retaining user data; remove the ZIP plugin through Decky.
 
 This is a release candidate. Independent clean-device installation, suspend during an active task and physical controller checks remain outstanding. See the [release checks](RELEASE-rc.15.md).

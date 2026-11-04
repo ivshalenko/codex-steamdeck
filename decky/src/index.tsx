@@ -1,3 +1,5 @@
+import { UpdatesPanel } from './updates-panel';
+import { updateStore, startUpdatePolling, type UpdateState } from './updates';
 import { t, systemText, getUILanguage, setUILanguage, subscribeUILanguage, speechLanguageName, type UILanguage } from "./i18n";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode, type ComponentType, type HTMLAttributes, type RefAttributes } from "react";
 import { callable, definePlugin, routerHook, toaster } from "@decky/api";
@@ -46,6 +48,12 @@ const accountLogout=callable<[],unknown>("account_logout");
 const remoteHost=callable<[host:string],Snapshot>("remote_host");
 const setProvider=callable<[provider:string],Snapshot>("set_provider");
 const olderMessages=callable<[],Snapshot>("older_messages");
+const updateClient={
+ status:callable<[],UpdateState>('update_status'),check:callable<[],UpdateState>('update_check'),
+ configure:callable<[automatic:boolean,channel:string],UpdateState>('update_preferences'),
+ begin:callable<[version:string,workspaceClean:boolean],UpdateState>('update_begin'),
+ acknowledge:callable<[version:string],unknown>('update_ack')
+};
 const pollEvents=callable<[since:number|null],{uiLanguage?:UILanguage;latest:number;notifications:{id:number;kind:string;title:string;host:string;summary?:string;threadId?:string}[]}>("poll_events");
 const approve=callable<[id:string,decision:string],unknown>("approve");
 const diagnose=callable<[],{checks:Check[]}>("diagnose");
@@ -218,6 +226,10 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const [entries,setEntries]=useState<string[]>([]);
  const [file,setFile]=useState<{path:string;text:string;sha256:string;host:string}|null>(null);
  const [fileText,setFileText]=useState("");
+ const updateView=useRef(Symbol('deck-ai-view'));
+ const updateDirty=!!file&&fileText!==file.text||images.length>0||countdown!==null;
+ useEffect(()=>{const id=updateView.current;updateStore.block(id,updateDirty);return()=>updateStore.block(id,false);},[updateDirty]);
+
  const [speaking,setSpeaking]=useState("");
  const touchAnchor=useRef<HTMLSpanElement>(null);
  useEffect(()=>{
@@ -524,7 +536,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
    {!data?.threads.length&&<p className="dai-muted">{t("Ваши разговоры появятся здесь.")}</p>}
    {data?.threads.filter(x=>x.name.toLocaleLowerCase().includes(historyQuery.toLocaleLowerCase())).sort((a,b)=>Number(!!b.running)-Number(!!a.running)).map(thread=><div className={"dai-history-item "+(thread.id===data.threadId?"selected":"")+(thread.running?" running":"")} key={thread.id}><Action disabled={busy||(data.active&&thread.id!==data.threadId&&!data.remoteHost)} onClick={()=>chooseThread(thread.id)}><span>{thread.running&&<span className="dai-dot working" aria-label={t("Выполняется")}/>}{thread.name||t("Новый чат")}</span>{thread.id===data.threadId&&<small>{t("Текущий")}</small>}</Action></div>)}
   </div></GameScroll>}
-  {tab==="settings"&&<GameScroll className="dai-scroll dai-stack dai-settings"><div className="dai-settings-grid"><div className="dai-settings-column">
+  {tab==="settings"&&<GameScroll className="dai-scroll dai-stack dai-settings"><div className="dai-settings-grid"><div className="dai-settings-column"><UpdatesPanel client={updateClient} busy={busy}/>
    <section className="dai-section dai-model-settings"><h3>{t("Модель и ответ")}</h3><div className="dai-model-fields">
     <Choice label={t("Сервис")} value={data?.provider||"codex"} options={Object.entries(names).map(([data,label])=>({data,label:data.startsWith("custom:")?label:t(label)}))} disabled={busy||data?.active} onChange={value=>void run(async()=>{accept(await setProvider(value));setKey("");})}/>
     <Choice label={t("Модель")} value={model?.id||""} options={(data?.models||[]).map(x=>({data:x.id,label:x.name}))} disabled={busy} onChange={id=>{const next=data?.models.find(x=>x.id===id);settings(id,next?.defaultEffort||next?.efforts[0]?.id||"","default");}}/>
@@ -568,7 +580,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     <Action disabled={busy||!data?.loadedModels} onClick={()=>void run(async()=>{await unloadModels();accept(await snapshot());setNotice(t("Модели распознавания выгружены из памяти"));})}>{t("Освободить память")}{data?.loadedModels?t(" · загружено моделей: {0}",data.loadedModels):""}</Action></section>
    </div><div className="dai-settings-column">
    <section className="dai-section dai-connection-settings"><h3>{t("Подключение Codex")}</h3><div className="dai-connection-bar">
-    <p className="dai-muted">{(data?.active?t("Deck AI работает…"):data?.status)||t("Сервер пока недоступен. Можно повторить подключение.")}</p>
+    <p className="dai-muted">{(data?.active?t("Deck AI работает…"):systemText(data?.status||""))||t("Сервер пока недоступен. Можно повторить подключение.")}</p>
     <Action disabled={busy} onClick={()=>void run(async()=>{accept(await refresh());setNotice(t("Соединение обновлено"));})}>{busy?t("Подключение…"):t("Переподключиться")}</Action></div>
     {(!data||data.provider==="codex")&&<><Choice label={t("Устройство")} value={data?.remoteHost||""} options={[{data:"",label:t("Этот Steam Deck")},...(data?.sshHosts||[]).map(x=>({data:x,label:x}))]} disabled={busy||data?.active} onChange={value=>void run(async()=>accept(await remoteHost(value)))}/><div className="dai-host-entry"><TextField value={host} placeholder={t("Другой SSH-алиас")} onChange={e=>setHost(e.target.value)}/><Action disabled={busy||!host.trim()||data?.active} onClick={()=>void run(async()=>{accept(await remoteHost(host.trim()));setHost("");})}>{t("Подключить")}</Action></div></>}
    </section>
@@ -626,11 +638,29 @@ export default definePlugin(()=>{
  routerHook.addRoute(FULLSCREEN_PATH,FullscreenPage,{exact:true});
  void showNotifications();
  const notifier=setInterval(()=>void showNotifications(),2000);
+ const stopUpdates=startUpdatePolling(updateClient,async state=>{
+  if(state.uiLanguage&&state.uiLanguage!==getUILanguage())setUILanguage(state.uiLanguage);
+  const offer=state.available;
+  if(offer&&state.notificationPending&&state.preferences.automatic){
+   const key='deck-ai-update-notified',token=offer.version+':'+(state.notificationId||'');
+   if(localStorage.getItem(key)!==token){
+    toaster.toast({title:t('Доступно обновление Deck AI'),body:t('Версия {0}. Нажмите, чтобы открыть обновление.',offer.version),duration:10000,onClick:()=>openFullscreen('settings')});
+    localStorage.setItem(key,token);
+   }
+   await updateClient.acknowledge(offer.version);
+  }
+  const job=state.job;
+  if(job&&['completed','failed'].includes(job.phase)&&localStorage.getItem('deck-ai-update-result')!==job.id){
+   toaster.toast({title:job.phase==='completed'?t('Deck AI обновлён'):t('Обновление Deck AI не завершено'),body:job.phase==='completed'?job.version:t('Откройте настройки обновлений, чтобы посмотреть подробности.'),duration:10000,onClick:()=>openFullscreen('settings')});
+   localStorage.setItem('deck-ai-update-result',job.id);
+  }
+ });
  const stopRepairPolling=startRepairPolling();
  return {name:"Deck AI",titleView:<span>Deck AI</span>,content:<Panel/>,icon:<img src={logo} alt="Deck AI" style={{width:20,height:20,objectFit:"contain"}}/>,onDismount(){
   if(returnToPanel)clearTimeout(returnToPanel);
   clearInterval(notifier);
   stopRepairPolling();
+  stopUpdates();
   routerHook.removeRoute(FULLSCREEN_PATH);
  }};
 });
