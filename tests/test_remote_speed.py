@@ -191,8 +191,8 @@ class NotificationTests(unittest.TestCase):
             bridge.decide_approval(77, 'accept')
             fake.respond.assert_called_once_with(77, {'decision': 'accept'})
             self.assertNotIn('77', bridge.approvals)
-            with self.assertRaises(ValueError):
-                bridge.decide_approval(77, 'accept')
+            self.assertEqual(bridge.decide_approval(77, 'accept'),{'decided':False,'alreadyResolved':True})
+            fake.respond.assert_called_once()
         finally:
             bridge.bridge = saved
 
@@ -426,11 +426,12 @@ class WatchAndModeTests(unittest.TestCase):
         handler = bridge.watch_event('laptop')
         handler({'id': 'x1', 'method': 'item/fileChange/requestApproval', 'params': {'threadId': 'r1', 'reason': 'edit'}})
         handler({'method': 'turn/completed', 'params': {'threadId': 'r1', 'turn': {'status': 'completed'}}})
-        self.assertIn('laptop|x1', bridge.approvals)
+        self.assertNotIn('laptop|x1', bridge.approvals)
         self.assertEqual({n['host'] for n in bridge.notifications}, {'laptop'})
+        handler({'id': 'x2', 'method': 'item/fileChange/requestApproval', 'params': {'threadId': 'r1', 'reason': 'edit'}})
         fake = MagicMock(); fake.connected = True; bridge.watch_backends['laptop'] = fake
-        bridge.decide_approval('laptop|x1', 'decline')
-        fake.respond.assert_called_once_with('x1', {'decision': 'decline'})
+        bridge.decide_approval('laptop|x2', 'decline')
+        fake.respond.assert_called_once_with('x2', {'decision': 'decline'})
         bridge.watch_backends.clear()
 
     def test_history_survives_restart(self):

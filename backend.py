@@ -67,10 +67,10 @@ with unix_connect(str(home/'app-server-control/app-server-control.sock'), uri='w
 '''
 _REMOTE_SERVER = _REMOTE_CODEX + r'''
 # Reuse a remote companion's Python environment when it is installed.
-if codex app-server proxy --help >/dev/null 2>&1 &&
-   codex app-server daemon start >/dev/null 2>&1; then
+if codex app-server proxy --help </dev/null >/dev/null 2>&1 &&
+   codex app-server daemon start </dev/null >/dev/null 2>&1; then
     for python in "$HOME/.local/share/deck-ai/venv/bin/python" "$HOME/.local/share/deck-voice/venv/bin/python" python3; do
-        if "$python" -c 'from websockets.sync.client import unix_connect' >/dev/null 2>&1; then
+        if "$python" -c 'from websockets.sync.client import unix_connect' </dev/null >/dev/null 2>&1; then
             exec "$python" -u -c ''' + shlex.quote(_REMOTE_JSONL_PROXY) + r'''
         fi
     done
@@ -143,7 +143,9 @@ class Backend:
         self.stderr_tail = ''
         try:
             if self.remote_host:
-                probe = subprocess.run(ssh_command(self.remote_host, 'pwd'), capture_output=True,
+                # A probe must never inherit the bridge's JSONL control pipe:
+                # ssh can consume commands and set its shared fd nonblocking.
+                probe = subprocess.run(ssh_command(self.remote_host, 'pwd'), stdin=subprocess.DEVNULL,capture_output=True,
                                        text=True, encoding='utf-8', timeout=12)
                 if probe.returncode:
                     raise RpcError('SSH не подключился. Проверьте алиас, ключ и known_hosts в ~/.ssh. '
@@ -162,7 +164,7 @@ class Backend:
                     try:
                         self.ws = unix_connect(path, uri='ws://localhost/', open_timeout=5, max_size=32*1024*1024)
                     except (OSError, TimeoutError):
-                        subprocess.run([CODEX, 'app-server', 'daemon', 'start'], check=True,
+                        subprocess.run([CODEX, 'app-server', 'daemon', 'start'], stdin=subprocess.DEVNULL,check=True,
                                        capture_output=True, timeout=40, env=clean_subprocess_environment())
                         self.ws = unix_connect(path, uri='ws://localhost/', open_timeout=10, max_size=32*1024*1024)
                 except (ImportError, OSError, TimeoutError, subprocess.SubprocessError):
@@ -225,7 +227,7 @@ class Backend:
         if effort:command += ['-c',f'model_reasoning_effort={effort}']
         if tier=='priority':command += ['-c','service_tier="priority"']
         remote_command=_REMOTE_CODEX + '\n' + ' '.join(shlex.quote(part) for part in command)
-        result=subprocess.run(ssh_command(self.remote_host,remote_command),capture_output=True,text=True,timeout=45)
+        result=subprocess.run(ssh_command(self.remote_host,remote_command),stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=45)
         if result.returncode:
             raise RpcError((result.stderr or result.stdout or 'Не удалось поставить запрос в очередь Codex на удалённом компьютере.')[-1200:])
         return {'queued':True,'output':result.stdout.strip()}
@@ -233,7 +235,7 @@ class Backend:
     def cleanup_uploads(self, days=7):
         """Best effort: remove screenshots sent to the remote computer a week ago."""
         try:
-            subprocess.run(ssh_command(self.remote_host, f'find "$HOME/.cache/deck-ai-uploads" -type f -mtime +{int(days)} -delete 2>/dev/null; true'), capture_output=True, timeout=30)
+            subprocess.run(ssh_command(self.remote_host, f'find "$HOME/.cache/deck-ai-uploads" -type f -mtime +{int(days)} -delete 2>/dev/null; true'), stdin=subprocess.DEVNULL,capture_output=True, timeout=30)
         except (OSError, subprocess.SubprocessError):
             pass
 
@@ -412,7 +414,8 @@ def _remote_sh(host, script, path, data=None, timeout=30, expected_sha256=None):
     if expected_sha256 is not None:
         import hashlib
         command += ' ' + shlex.quote(expected_sha256) + ' ' + shlex.quote(hashlib.sha256(data).hexdigest())
-    result = subprocess.run(ssh_command(host, command), input=data, capture_output=True, timeout=timeout)
+    # Empty input is still an explicit, separate pipe. Only writes receive data.
+    result = subprocess.run(ssh_command(host, command), input=data if data is not None else b'', capture_output=True, timeout=timeout)
     if result.returncode:
         raise RpcError(_FILE_ERRORS.get(result.returncode) or (result.stderr.decode(errors='replace')[-300:] or 'Не удалось выполнить операцию на устройстве.'))
     return result.stdout
