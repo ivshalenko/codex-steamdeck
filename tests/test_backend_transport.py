@@ -17,6 +17,35 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class TransportTests(unittest.TestCase):
+    def test_ssh_helpers_cannot_read_or_change_the_parent_control_pipe(self):
+        # OpenSSH makes inherited stdin nonblocking and can read ahead. Model
+        # both effects in a real subprocess while a JSONL control line waits.
+        harness=r'''
+import json,os,sys
+from pathlib import Path
+import backend
+root=Path(sys.argv[1]);operation=sys.argv[2]
+probe="import os;os.set_blocking(0,False);os.read(0,65536);print(os.getcwd())"
+def command(host,*remote,**kwargs):
+    if remote==(backend._REMOTE_SERVER,):return [sys.executable,'-u',str(root/'tests/fake_app_server.py')]
+    return [sys.executable,'-c',probe]
+backend.ssh_command=command
+client=backend.Backend(lambda e:None,lambda:None,'desk')
+if operation=='connect':client.connect();client.close()
+elif operation=='queue':client.queue_message('chat','fixture')
+elif operation=='cleanup':client.cleanup_uploads()
+else:backend._remote_sh('desk','printf fixture','~')
+print(json.dumps({'blocking':os.get_blocking(0),'control':sys.stdin.readline()}))
+'''
+        for operation in ('connect','queue','cleanup','files'):
+            with self.subTest(operation=operation):
+                result=subprocess.run([sys.executable,'-c',harness,str(ROOT),operation],
+                    input='CONTROL_SENTINEL\n',capture_output=True,text=True,timeout=12,
+                    env={**os.environ,'PYTHONPATH':str(ROOT)})
+                self.assertEqual(result.returncode,0,result.stderr)
+                import json
+                self.assertEqual(json.loads(result.stdout),{'blocking':True,'control':'CONTROL_SENTINEL\n'})
+
     def open_backend(self, *flags, event=None):
         fake = str(ROOT/'tests/fake_app_server.py')
         def command(host, *remote, **kwargs):
@@ -96,6 +125,17 @@ class TransportTests(unittest.TestCase):
 
 
 class RemoteLauncherTests(unittest.TestCase):
+    def test_remote_bootstrap_probes_cannot_consume_the_first_rpc_frame(self):
+        with tempfile.TemporaryDirectory() as directory:
+            home=Path(directory);binary=home/'.local/bin/codex';binary.parent.mkdir(parents=True)
+            binary.write_text('#!/bin/sh\nread -r ignored || true\nexit 0\n');binary.chmod(0o755)
+            python=home/'.local/share/deck-ai/venv/bin/python';python.parent.mkdir(parents=True)
+            python.write_text('#!/bin/sh\nif [ "$1" = "-c" ]; then read -r ignored || true; exit 0; fi\ncat\n');python.chmod(0o755)
+            frame='{"id":1,"method":"initialize","params":{}}\n'
+            result=subprocess.run(['/bin/sh','-c',backend._REMOTE_SERVER],input=frame,
+                capture_output=True,text=True,timeout=5,env={**os.environ,'HOME':str(home),'PATH':'/usr/bin:/bin'})
+            self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stdout,frame)
+
     def test_noninteractive_path_and_shared_daemon_with_legacy_fallback(self):
         for shared in (True,False):
             with self.subTest(shared=shared), tempfile.TemporaryDirectory() as directory:

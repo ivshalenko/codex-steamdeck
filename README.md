@@ -2,11 +2,11 @@
 
 [English](README.md) · [Russian](docs/README.ru.md)
 
-[![Build](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Release candidate](https://img.shields.io/badge/release-1.0.0--rc.18-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.18) [![Steam Deck](https://img.shields.io/badge/made_for-Steam_Deck-c5d5e2?style=flat-square&labelColor=17212d)](docs/QUICKSTART.md) [![License](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](LICENSE)
+[![Build](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Release candidate](https://img.shields.io/badge/release-1.0.0--rc.19-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.19) [![Steam Deck](https://img.shields.io/badge/made_for-Steam_Deck-c5d5e2?style=flat-square&labelColor=17212d)](docs/QUICKSTART.md) [![License](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](LICENSE)
 
 **Ask for help, investigate a launch error, or send a task from your Mac.** Deck AI puts Codex in your Steam Deck's Quick Access menu, with full-screen chat, action confirmations, attachments and completion notifications. A desktop companion and SSH remote control are included.
 
-[![Download the illustrated Deck AI installer.](docs/brand/install.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.18/Install-Deck-AI.desktop)
+[![Download the illustrated Deck AI installer.](docs/brand/install.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.19/Install-Deck-AI.desktop)
 
 **[Installation](#install-on-your-steam-deck)** · **[See it in action](#see-it-in-action)** · **[Mac / PC connection](#your-computer-your-deck-one-conversation)** · **[Questions](#questions)** · **[All documentation](#find-your-next-step)**
 
@@ -39,7 +39,7 @@ You need a Steam Deck running SteamOS, internet access and your own ChatGPT acco
 
 | Step | What to do |
 | --- | --- |
-| **01 · Download** | Switch to **Desktop Mode**. Download **[Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.18/Install-Deck-AI.desktop)** onto the Deck. |
+| **01 · Download** | Switch to **Desktop Mode**. Download **[Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.19/Install-Deck-AI.desktop)** onto the Deck. |
 | **02 · Install & sign in** | Open the file in Dolphin; allow execution/trust if asked. Choose **English** or **Russian**, then **Automatic** or **Custom** setup. Automatic installs Deck AI, missing Codex and the Gaming Mode plugin, including Decky Loader if missing. Enter any sudo password only in the SteamOS terminal; then sign into ChatGPT. |
 | **03 · Open & ask** | Return to **Gaming Mode → (…) → Decky → Deck AI → New chat**. Try: “Show the free space on my Steam Deck.” Review any requested action before approving it. |
 

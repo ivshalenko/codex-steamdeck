@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0-rc.19
+
+- Isolate SSH probes, queue calls, cleanup and file reads from the parent control pipe; retain dedicated input only for RPC streaming and file uploads. Switching devices must not let a probe consume Decky commands or close the bridge's input.
+- Remove approval cards when another Codex client resolves the request; scope cleanup to the matching device, conversation, item and turn.
+- Ignore late duplicate approval clicks without sending a second decision, and clean up completed/interrupted turns on older servers.
+- Drain admitted bridge requests before Python exits and reject new background work during shutdown, preventing executor errors during plugin restarts.
+- Record non-sensitive bridge exit information for troubleshooting; preserve chats, queued messages and device preferences.
+
 ## 1.0.0-rc.18
 
 - Bring the cover identity into Gaming Mode: outline controls, branded headings, an accurate empty-chat illustration and branded completion/update toasts.

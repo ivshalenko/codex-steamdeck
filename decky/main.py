@@ -1,4 +1,4 @@
-import asyncio, json, os, subprocess, threading, time, sys, shutil
+import asyncio, json, os, subprocess, threading, time, sys, shutil, logging
 from pathlib import Path
 import decky
 sys.path.insert(0,str(Path(__file__).resolve().parent))
@@ -32,12 +32,14 @@ class Plugin:
             env=clean_subprocess_environment();env.update({"HOME":str(self.home),"XDG_RUNTIME_DIR":f"/run/user/{os.getuid()}","PYTHONNOUSERSITE":"1"})
             self.child=subprocess.Popen([self.python,"-u",str(self.base/"bridge.py")],
                 cwd=str(self.base),env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,bufsize=1)
-            self.stderr_tail=""
+            self.stderr_tail="";self.lifecycle_note=""
             self.error_reader=threading.Thread(target=self.read_errors,args=(self.child,),daemon=True);self.error_reader.start()
             self.reader=threading.Thread(target=self.read_bridge,args=(self.child,),daemon=True);self.reader.start()
     def read_errors(self,child):
         for line in child.stderr:
-            if self.child is child:self.stderr_tail=(self.stderr_tail+line)[-1600:]
+            if self.child is child:
+                self.stderr_tail=(self.stderr_tail+line)[-1600:]
+                if line.startswith('Deck AI bridge lifecycle:'):self.lifecycle_note=line.strip()
     def read_bridge(self,child):
         try:
             for line in child.stdout:
@@ -51,6 +53,8 @@ class Plugin:
                 if future:future["response"]=message;future["event"].set()
         except Exception:pass
         finally:
+            if getattr(self,'child',None) is child and not getattr(self,'stopping',False):
+                logging.getLogger('Deck AI').warning('Bridge connection closed (exit=%s; %s)',child.poll(),getattr(self,'lifecycle_note','not reported'))
             with self.lock:
                 for ident,future in list(self.pending.items()):
                     if future.get("child") is child:

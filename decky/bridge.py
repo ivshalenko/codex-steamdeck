@@ -30,10 +30,12 @@ READ_ONLY_BLOCKED={'send','retry','stop','new_thread','approve','file_write','sh
 WATCH_INTERVAL=12
 THREAD_LIST_TTL=6;HISTORY_TTL_ACTIVE=4;HISTORY_TTL_IDLE=12;VOSK_IDLE_SECONDS=180
 notify_lock=threading.Lock();notifications=[];notify_seq=0;approvals={};retry_at=0.0
+approval_lock=threading.RLock()
 custom_entries=[];read_only=False;watch_hosts=[];watch_stops={};watch_backends={};watch_status={};resumed=set()
 history_limits={}
 snapshot_lock=threading.RLock()
 lock=threading.RLock(); connect_lock=threading.Lock(); preference_lock=threading.Lock(); jobs=ThreadPoolExecutor(max_workers=8)
+submission_lock=threading.Lock();stopping=threading.Event()
 bridge=None; thread_id=''; preferences={}; selected_models={}; cache=[]; cache_time=0; active=False; outbox=[]; remote_host=''
 thread_caches={}; thread_cache_times={}; history_caches={}; history_cache_times={}; model_caches={}; account_caches={}
 account_cache={'account':None};account_cache_time=0;account_login_id=''
@@ -55,6 +57,12 @@ def update_busy():
 def write(value):
     with lock:
         sys.stdout.write(json.dumps(value,ensure_ascii=False,separators=(',',':'))+'\n');sys.stdout.flush()
+def submit_job(function,*args):
+    # Keep the interpreter alive until admitted requests finish. In particular,
+    # a late snapshot must not submit subscriptions during executor teardown.
+    with submission_lock:
+        if stopping.is_set():raise RuntimeError('Deck AI перезапускается. Откройте панель снова через несколько секунд.')
+        return jobs.submit(function,*args)
 def atomic(path,obj):
     atomic_text(path,json.dumps(obj,ensure_ascii=False))
 def atomic_text(path,text):
@@ -100,13 +108,32 @@ def register_approval(message,host):
     p=message.get('params',{});method=message.get('method')
     tid=p.get('threadId') or p.get('thread',{}).get('id')
     key=(host+'|' if host else '')+str(message['id'])
-    approvals[key]={'key':key,'id':message['id'],'threadId':tid,'host':host,'kind':method,'summary':approval_summary(p),'title':thread_title(tid,host)}
-    notify('approval',tid,host=host,summary=approvals[key]['summary'])
+    entry={'key':key,'id':message['id'],'threadId':tid,'turnId':p.get('turnId'),'itemId':p.get('itemId'),'host':host,'kind':method,'summary':approval_summary(p),'title':thread_title(tid,host)}
+    with approval_lock:approvals[key]=entry
+    notify('approval',tid,host=host,summary=entry['summary'])
+def resolve_approvals(method,params,host):
+    """Another client can answer an approval; never replay its decision here."""
+    tid=params.get('threadId') or (params.get('thread') or {}).get('id')
+    if not tid:return
+    turn_id=(params.get('turn') or {}).get('id') or params.get('turnId')
+    item_id=(params.get('item') or {}).get('id') or params.get('itemId')
+    with approval_lock:
+        for key,entry in list(approvals.items()):
+            if entry['host']!=host or entry['threadId']!=tid:continue
+            resolved=(method=='serverRequest/resolved' and params.get('requestId') is not None and str(entry['id'])==str(params['requestId']))
+            # Older app servers may omit serverRequest/resolved. Item/turn end
+            # is also authoritative, but an old turn must not clear a new one.
+            if method=='item/completed' and item_id and entry.get('itemId')==item_id:resolved=True
+            if method in ('turn/completed','turn/failed') and (not entry.get('turnId') or turn_id==entry['turnId']):resolved=True
+            if resolved:approvals.pop(key,None)
+def pending_approvals(host):
+    with approval_lock:return [dict(a) for a in approvals.values() if a['host']==host]
 def watch_event(host):
     """Event handler for a secondary (watched) device connection."""
     def handler(message):
         method=message.get('method');p=message.get('params',{})
         if 'id' in message and method and method.endswith('requestApproval'):register_approval(message,host);return
+        resolve_approvals(method,p,host)
         if method=='turn/completed':
             tid=p.get('threadId') or p.get('thread',{}).get('id')
             notify('failed' if (p.get('turn') or {}).get('status')=='failed' else 'done',tid,host=host)
@@ -123,6 +150,7 @@ def event(message):
     if 'id' in message and method:
         if bridge:bridge.respond(message['id'],error={'code':-32601,'message':'Deck AI does not support '+method})
         return
+    resolve_approvals(method,p,remote_host)
     if method in ('account/updated','account/login/completed'):
         account_cache_time=0
         if method=='account/login/completed':
@@ -257,7 +285,7 @@ def refresh_threads(force=False):
         if time.time()-cache_time<THREAD_LIST_TTL:return
     response=bridge.request('thread/list',{'limit':50,'sortKey':'updated_at','archived':False},timeout=22)
     cache=response.get('data',[]);cache_time=time.time();thread_caches[key]=cache;thread_cache_times[key]=cache_time
-    jobs.submit(subscribe_running,bridge,key,list(cache))
+    if not stopping.is_set():submit_job(subscribe_running,bridge,key,list(cache))
 def thread_running(thread,selected=False,selected_active=False):
     """True when the server reports the thread as executing a turn."""
     if selected and selected_active:return True
@@ -353,7 +381,7 @@ def video_frames(path):
     args=[shutil.which('ffmpeg') or '/usr/bin/ffmpeg','-nostdin','-hide_banner','-loglevel','error','-protocol_whitelist','file,crypto,data','-i',str(source),'-vf','fps=1/30:start_time=0:round=up,scale=960:-2,format=yuvj420p','-threads','2','-frames:v','4','-q:v','3',str(dest/'frame-%02d.jpg')]
     frames=[]
     try:
-        subprocess.run(args,timeout=90,check=True,capture_output=True,text=True)
+        subprocess.run(args,stdin=subprocess.DEVNULL,timeout=90,check=True,capture_output=True,text=True)
         frames=sorted(dest.glob('frame-*.jpg'))
         if not frames:raise RuntimeError('В выбранной записи не удалось найти кадры.')
     except subprocess.CalledProcessError as exc:
@@ -522,7 +550,7 @@ def all_tasks():
             if running or index<5:found.append({'host':host,'id':t['id'],'name':t.get('name') or t.get('preview') or default_thread_name(),'updatedAt':t.get('updatedAt') or t.get('createdAt') or 0,'running':running})
     return sorted(found,key=lambda x:(not x['running'],-x['updatedAt']))[:40]
 def snapshot_extras():
-    return {'approvals':[a for a in approvals.values() if a['host']==remote_host],'retryIn':max(0,int(retry_at-time.time())) if retry_at else 0,'allTasks':all_tasks(),'loadedModels':len(vosk_models),'readOnly':read_only,'customProviders':[{'id':c['id'],'name':c['name'],'baseUrl':c['baseUrl']} for c in custom_entries],'presets':[{'name':n,'url':u} for n,u in providers.CUSTOM_PRESETS],'watchHosts':watch_hosts,'watchStatus':dict(watch_status),'recentEvents':list(reversed(notifications[-15:]))}
+    return {'approvals':pending_approvals(remote_host),'retryIn':max(0,int(retry_at-time.time())) if retry_at else 0,'allTasks':all_tasks(),'loadedModels':len(vosk_models),'readOnly':read_only,'customProviders':[{'id':c['id'],'name':c['name'],'baseUrl':c['baseUrl']} for c in custom_entries],'presets':[{'name':n,'url':u} for n,u in providers.CUSTOM_PRESETS],'watchHosts':watch_hosts,'watchStatus':dict(watch_status),'recentEvents':list(reversed(notifications[-15:]))}
 def _safe_snapshot():
     # A failed backend must not remove settings, provider selection, drafts or
     # the reconnect action from the Game Mode UI.
@@ -588,9 +616,9 @@ def voice_capture(language,silence=0.0):
         model_path=APP_DIR/'models'/('vosk-model-small-en-us-0.15' if language in ('en','en-fast') else 'vosk-model-small-ru-0.22')
         runtime=f"/run/user/{os.getuid()}"
         env=dict(os.environ);env.update({'HOME':str(ROOT),'XDG_RUNTIME_DIR':runtime,'PULSE_SERVER':f'unix:{runtime}/pulse/native','PULSE_COOKIE':str(ROOT/'.config/pulse/cookie')})
-        source=subprocess.check_output(['/usr/bin/pactl','get-default-source'],env=env,text=True,timeout=5).strip()
+        source=subprocess.check_output(['/usr/bin/pactl','get-default-source'],stdin=subprocess.DEVNULL,env=env,text=True,timeout=5).strip()
         if not source or source.endswith('.monitor'):raise RuntimeError('Выбран звук игры вместо микрофона. Выберите микрофон в настройках звука Steam.')
-        recorder=subprocess.Popen(['/usr/bin/ffmpeg','-nostdin','-hide_banner','-loglevel','error','-thread_queue_size','1024','-f','pulse','-i',source,'-ac','1','-ar','16000','-f','s16le','pipe:1'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=env)
+        recorder=subprocess.Popen(['/usr/bin/ffmpeg','-nostdin','-hide_banner','-loglevel','error','-thread_queue_size','1024','-f','pulse','-i',source,'-ac','1','-ar','16000','-f','s16le','pipe:1'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=env)
         recognizer=KaldiRecognizer(vosk_model(model_path),16000) if language in ('ru','en','ru-fast','en-fast') else None
         refiner=prewarm_worker(language,APP_DIR)
         result=[];pcm=[]
@@ -694,7 +722,7 @@ def send_message(text,images,model,effort,tier):
         job={'provider':provider,'threadId':ident,'model':chat['model'],'text':message,'prior':prior,'images':[str(x) for x in selected],'resume':bool(chat.get('claudeStarted'))}
         provider_active=True;provider_status='Deck AI работает…'
         if provider=='claude':chat['claudeStarted']=True;save_provider_chats()
-        jobs.submit(dispatch_provider_job,job)
+        submit_job(dispatch_provider_job,job)
         return {'queued':True,'threadId':ident}
     if not bridge or not bridge.connected:connected()
     fresh_thread=not bool(thread_id)
@@ -769,7 +797,7 @@ def dispatch():
     global active
     if active or any(j.get('host','')==remote_host and j['status'] in ('sending','recovering') for j in outbox):return
     job=next((j for j in outbox if j['status']=='queued' and j.get('host','')==remote_host),None)
-    if job:job['status']='sending';active=True;atomic(STATE/'decky-outbox.json',outbox);jobs.submit(dispatch_job,job)
+    if job:job['status']='sending';active=True;atomic(STATE/'decky-outbox.json',outbox);submit_job(dispatch_job,job)
 def watch_loop(host,stop):
     """Keep a second connection to `host` so its tasks, results and approvals are tracked in the background."""
     client=None
@@ -846,12 +874,13 @@ def poll_events(since):
         if since is None:return {'latest':latest,'notifications':[],'uiLanguage':interface_language()}
         return {'latest':latest,'notifications':[n for n in notifications if n['id']>int(since)],'uiLanguage':interface_language()}
 def decide_approval(ident,decision):
-    entry=approvals.get(str(ident))
-    if not entry:raise ValueError('Запрос подтверждения уже обработан.')
     if decision not in ('accept','acceptForSession','decline'):raise ValueError('Неизвестное решение.')
-    target=bridge if entry['host']==remote_host else watch_backends.get(entry['host'])
-    if not target or not target.connected:raise RuntimeError('Нет соединения с Codex.')
-    target.respond(entry['id'],{'decision':decision});approvals.pop(str(ident),None)
+    with approval_lock:
+        entry=approvals.get(str(ident))
+        if not entry:return {'decided':False,'alreadyResolved':True}
+        target=bridge if entry['host']==remote_host else watch_backends.get(entry['host'])
+        if not target or not target.connected:raise RuntimeError('Нет соединения с Codex.')
+        target.respond(entry['id'],{'decision':decision});approvals.pop(str(ident),None)
     return {'decided':True}
 def unload_models():
     with vosk_lock:vosk_models.clear()
@@ -861,7 +890,7 @@ def diagnose():
     checks=[];host=remote_host
     def add(name,ok,detail=''):checks.append({'name':name,'ok':bool(ok),'detail':str(detail)[:200]})
     def remote(command,timeout=15):
-        return subprocess.run(ssh_command(host,command),capture_output=True,text=True,timeout=timeout)
+        return subprocess.run(ssh_command(host,command),stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=timeout)
     if host:
         for name,command in (('SSH-доступ без пароля','true'),('Codex установлен',device._REMOTE_CODEX+'command -v codex'),('Версия Codex',device._REMOTE_CODEX+'codex --version'),('Папка для скриншотов доступна','mkdir -p "$HOME/.cache/deck-ai-uploads" && test -w "$HOME/.cache/deck-ai-uploads"')):
             try:
@@ -1033,11 +1062,12 @@ def _call(method,params):
     if method=='open_window':
         launcher=Path.home()/'.local/bin/deck-voice'
         if not launcher.exists():launcher=Path.home()/'.local/bin/codex-steamdeck'
-        subprocess.Popen([str(launcher)],start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);return {'opened':True}
+        subprocess.Popen([str(launcher)],stdin=subprocess.DEVNULL,start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);return {'opened':True}
     raise ValueError('Неизвестная команда.')
 VIEW_COMMANDS={'send','retry','stop','settings','older_messages','snapshot','refresh','select_thread','new_thread','remote_host','provider'}
 def call(method,params):
     global maintenance_inflight
+    if stopping.is_set():raise RuntimeError('Deck AI перезапускается. Откройте панель снова через несколько секунд.')
     if method=='update_begin':
         with maintenance_lock:return _call(method,params)
     if method in UPDATE_BLOCKED:
@@ -1058,25 +1088,38 @@ def handle(msg):
 def pump():
     global retry_at
     failures=0
-    while True:
+    while not stopping.is_set():
         try:
             if provider=='codex':
                 connected();failures=0;retry_at=0.0
                 if int(time.monotonic())%10==0:recover_outbox()
                 if not updates.updating(STATE):dispatch()
-                release_idle_models();time.sleep(1)
-            else:release_idle_models();time.sleep(2)
+                release_idle_models();stopping.wait(1)
+            else:release_idle_models();stopping.wait(2)
         except Exception:
             # Exponential backoff (5s..30s); the UI shows the countdown.
-            failures+=1;delay=min(30,5*failures);retry_at=time.time()+delay;time.sleep(delay)
+            failures+=1;delay=min(30,5*failures);retry_at=time.time()+delay;stopping.wait(delay)
 def main():
     load_state();reconcile_watchers()
     try:get_updater().start()
     except Exception:pass
     threading.Thread(target=pump,daemon=True).start()
-    for raw in sys.stdin:
-        try:msg=json.loads(raw)
-        except Exception:continue
-        if msg.get('method')=='shutdown':break
-        jobs.submit(handle,msg)
+    reason='input closed'
+    try:
+        for raw in sys.stdin:
+            try:msg=json.loads(raw)
+            except Exception:continue
+            if msg.get('method')=='shutdown':reason='shutdown requested';break
+            submit_job(handle,msg)
+    finally:
+        with submission_lock:stopping.set()
+        print('Deck AI bridge lifecycle: '+reason,file=sys.stderr,flush=True)
+        for stop in list(watch_stops.values()):stop.set()
+        # Do this before returning from main: Python's interpreter-exit hook
+        # otherwise shuts down the pool while a snapshot still uses it.
+        jobs.shutdown(wait=True)
+        for client in [bridge,*list(watch_backends.values())]:
+            if client:
+                try:client.close()
+                except Exception:pass
 if __name__=='__main__':main()

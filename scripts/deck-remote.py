@@ -110,7 +110,7 @@ def setup(alias, address, user='deck', assume_yes=False, home=None, ask=input, o
         out(f"  test ! -f ~/.local/share/{directory}/deck_share.py || python3 ~/.local/share/{directory}/deck_share.py add-key '{public}'")
     out('(или вставьте этот ключ в Deck AI → Настройки → «Доступ с другого компьютера»)\n')
     if assume_yes or ask('Нажмите Enter, когда сделаете это (или n, чтобы проверить позже): ').strip().lower() != 'n':
-        result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', alias, 'echo ok'], capture_output=True, text=True)
+        result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', alias, 'echo ok'], stdin=subprocess.DEVNULL,capture_output=True, text=True)
         out('Подключение работает.' if result.returncode == 0 and 'ok' in result.stdout else 'Пока не подключается: проверьте, что sshd включён и ключ добавлен.')
     return 0
 
