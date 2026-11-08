@@ -243,13 +243,51 @@ class Controller:
    job.update(phase='failed',requiresInstaller=True,error='Recovery could not start: '+str(exc));atomic_json(self.root/'job.json',job)
   finally:os.close(fd)
 
+def release_response(url,timeout=25):
+ """Use the same published GitHub asset API when its browser/CDN route fails.
+
+ This function is also embedded in the standalone desktop installer. Keep its
+ imports local and never accept a repository, API URL or credential from input.
+ """
+ import json,re,ssl,urllib.error,urllib.parse,urllib.request
+ prefix='https://github.com/ivshalenko/codex-steamdeck/releases/download/v'
+ match=re.fullmatch(re.escape(prefix)+r'(\d+\.\d+\.\d+(?:-(?:alpha|beta|rc)\.\d+)?)/([A-Za-z0-9][A-Za-z0-9_.-]{0,180})',url)
+ if not match:raise ValueError('Unexpected release download URL.')
+ try:
+  response=urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'Deck-AI-Downloader/1'}),timeout=timeout)
+ except (urllib.error.URLError,TimeoutError,ConnectionError) as error:
+  if isinstance(error,urllib.error.HTTPError) and error.code not in (408,429,500,502,503,504):raise
+  if isinstance(error,urllib.error.URLError) and isinstance(error.reason,ssl.SSLCertVerificationError):raise
+  if isinstance(error,urllib.error.HTTPError) and error.fp is not None:error.close()
+  value,name=match.groups();api='https://api.github.com/repos/ivshalenko/codex-steamdeck'
+  request=urllib.request.Request(api+'/releases/tags/v'+value,headers={'Accept':'application/vnd.github+json','User-Agent':'Deck-AI-Downloader/1'})
+  with urllib.request.urlopen(request,timeout=timeout) as metadata:
+   if urllib.parse.urlsplit(metadata.geturl()).scheme!='https':raise ValueError('Release metadata redirected outside HTTPS.')
+   raw=metadata.read(2_000_001)
+  if len(raw)>2_000_000:raise ValueError('Unexpected release metadata size.')
+  release=json.loads(raw)
+  if not isinstance(release,dict) or release.get('tag_name')!='v'+value or release.get('draft') or not release.get('published_at'):
+   raise ValueError('The requested release is not published.')
+  assets=[a for a in release.get('assets',[]) if isinstance(a,dict) and a.get('name')==name]
+  if len(assets)!=1:raise ValueError('Release asset is missing or duplicated.')
+  asset=assets[0];ident=asset.get('id');size=asset.get('size');digest=asset.get('digest','')
+  if type(ident) is not int or ident<=0 or type(size) is not int or not 0<size<=100_000_000 or not re.fullmatch(r'sha256:[0-9a-f]{64}',digest):
+   raise ValueError('Invalid release asset metadata.')
+  endpoint=api+'/releases/assets/'+str(ident)
+  if asset.get('url')!=endpoint or asset.get('browser_download_url')!=url or asset.get('state')!='uploaded':
+   raise ValueError('Unexpected release asset origin.')
+  response=urllib.request.urlopen(urllib.request.Request(endpoint,headers={'Accept':'application/octet-stream','User-Agent':'Deck-AI-Downloader/1'}),timeout=timeout)
+  response.deck_asset_digest=digest[7:]
+ if urllib.parse.urlsplit(response.geturl()).scheme!='https':
+  response.close();raise ValueError('Release download redirected outside HTTPS.')
+ return response
+
 def download(url,path,limit,expected=None,progress=None):
  path=Path(path);temporary=path.with_name(path.name+'.part')
  try:
   for attempt in range(3):
    try:
-    request=urllib.request.Request(url,headers={'User-Agent':'Deck-AI-Updater/1'})
-    with urllib.request.urlopen(request,timeout=25) as response,temporary.open('wb') as out:
+    with release_response(url,timeout=25) as response,temporary.open('wb') as out:
      if urllib.parse.urlsplit(response.geturl()).scheme!='https':raise ValueError('An update download redirected outside HTTPS.')
      total=response.headers.get('Content-Length');total=int(total) if total and total.isdecimal() else None
      if total is not None and total>limit:raise ValueError('Update download exceeds its size limit.')
@@ -261,6 +299,7 @@ def download(url,path,limit,expected=None,progress=None):
       if progress:progress(size,total)
      if total is not None and size!=total:raise http.client.IncompleteRead(b'',total-size)
      if expected and checksum.hexdigest()!=expected:raise ValueError('Update checksum mismatch. Nothing was installed.')
+     if getattr(response,'deck_asset_digest',None) and checksum.hexdigest()!=response.deck_asset_digest:raise ValueError('GitHub asset checksum mismatch. Nothing was installed.')
     os.replace(temporary,path);return
    except (urllib.error.URLError,TimeoutError,ConnectionError,http.client.IncompleteRead) as exc:
     if isinstance(exc,urllib.error.HTTPError) and exc.code not in (408,429,500,502,503,504):raise

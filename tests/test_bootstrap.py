@@ -3,11 +3,14 @@ from pathlib import Path
 from unittest.mock import patch
 p=Path(__file__).resolve().parents[1]/'scripts/bootstrap.py';s=importlib.util.spec_from_file_location('bootstrap_test',p);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
 class BootstrapTests(unittest.TestCase):
+ def setUp(self):
+  patcher=patch.object(m,'BASE','https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.21/');patcher.start();self.addCleanup(patcher.stop)
  def test_interrupted_transfer_retries_and_exposes_only_complete_file(self):
   with tempfile.TemporaryDirectory() as folder:
    path=Path(folder)/'asset.zip'
    short=io.BytesIO(b'partial');short.headers={'Content-Length':'9'}
    good=io.BytesIO(b'complete!');good.headers={'Content-Length':'9'}
+   short.geturl=good.geturl=lambda:m.BASE+path.name
    with patch.object(m.urllib.request,'urlopen',side_effect=[short,good]) as fetch,patch.object(m.time,'sleep'):
     m.download(path.name,path,20)
    self.assertEqual(fetch.call_count,2)
@@ -17,6 +20,7 @@ class BootstrapTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as folder:
    path=Path(folder)/'asset.zip';path.write_bytes(b'previous')
    response=io.BytesIO(b'too large');response.headers={'Content-Length':'9'}
+   response.geturl=lambda:m.BASE+path.name
    with patch.object(m.urllib.request,'urlopen',return_value=response) as fetch:
     with self.assertRaisesRegex(ValueError,'size'):m.download(path.name,path,4)
    fetch.assert_called_once()

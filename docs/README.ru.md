@@ -2,11 +2,11 @@
 
 **Русский** · [English](../README.md)
 
-[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.20-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.20) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
+[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.21-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.21) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
 
 **Попросите о помощи, разберитесь с ошибкой запуска или отправьте задачу с Mac.** Deck AI добавляет Codex в меню быстрого доступа Steam Deck: полноэкранный чат, подтверждение действий, вложения и уведомления. В комплекте — настольное приложение и удалённое управление по SSH.
 
-[![Скачать Deck AI — скачайте графический установщик.](brand/install-ru.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.20/Install-Deck-AI.desktop)
+[![Скачать Deck AI — скачайте графический установщик.](brand/install-ru.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.21/Install-Deck-AI.desktop)
 
 **[Установка](#установка-на-steam-deck)** · **[Демонстрация](#как-это-выглядит)** · **[Связь с Mac / ПК](#компьютер-как-пульт-steam-deck-как-исполнитель)** · **[Ответы на вопросы](#ответы-на-вопросы)** · **[Все инструкции](#куда-дальше)**
 
@@ -39,7 +39,7 @@
 
 | Шаг | Что сделать |
 | --- | --- |
-| **01 · Скачать** | Перейдите в **Desktop Mode**. Откройте [релиз rc.18](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.20) и скачайте **Install-Deck-AI.desktop** на сам Deck. |
+| **01 · Скачать** | Перейдите в **Desktop Mode**. Откройте [релиз rc.18](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.21) и скачайте **Install-Deck-AI.desktop** на сам Deck. |
 | **02 · Установить и войти** | Откройте файл в Dolphin, разрешите выполнение, если потребуется. Выберите язык и автоматический либо ручной режим. Автоматический установит приложение, Codex и плагин, включая отсутствующий Decky Loader. Откройте Deck AI и войдите в ChatGPT. Пароль sudo вводится только в запросе терминала SteamOS. |
 | **03 · Начать** | Вернитесь в **Gaming Mode → (…) → Decky → Deck AI → Новый чат**. Попробуйте: «Покажи свободное место на Steam Deck». Перед разрешением действия прочитайте запрос. |
 
@@ -122,6 +122,8 @@ venv/bin/python scripts/build-release.py
 Автор — **[ivshalenko](https://github.com/ivshalenko)**. [Apache-2.0](../LICENSE) · [NOTICE](../NOTICE) · [Лицензии зависимостей](../decky/THIRD_PARTY_NOTICES.txt). В релизе есть соответствующий пакет исходников LGPL. При распространении сохраняйте авторство и уведомления. Независимый проект, не связанный с Valve, OpenAI или Anthropic.
 
 Английский комплект: [22 новых скриншота rc.14](MEDIA.en.md). Язык меню Decky: Настройки → Интерфейс и голос → Язык интерфейса. Русские чаты и материалы остаются на месте.
+
+**Ошибка 504 при скачивании установщика:** нажмите правой кнопкой на [резервную ссылку](https://raw.githubusercontent.com/ivshalenko/codex-steamdeck/main/Install-Deck-AI.desktop), выберите «Сохранить ссылку как…» и оставьте имя `Install-Deck-AI.desktop`. Откройте файл в Dolphin. Начиная с rc.21, загрузка компонентов и обновлений автоматически использует официальный GitHub asset API при сбое обычной ссылки, с проверкой контрольных сумм. Если старый клиент не может обновиться из-за 504, запустите новый установщик один раз.
 
 **Физическая клавиатура в Gaming Mode:** Настройки → Физическая клавиатура → Включить EN/RU. Сохраните игру и заново войдите в Gaming Mode; затем **Alt+Shift** переключает английский и русский. [Инструкция и отмена настройки](KEYBOARD.ru.md).
 
