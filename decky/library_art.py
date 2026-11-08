@@ -1,5 +1,5 @@
 """Apply/restore only Deck AI shortcut art through Steam's own native API."""
-import base64,fcntl,hashlib,json,os,re,shutil,struct,time,uuid
+import base64,fcntl,hashlib,json,os,re,shutil,struct,threading,time,uuid
 from pathlib import Path
 KINDS={0:('capsule','p'),1:('hero','_hero'),2:('logo','_logo'),3:('header','')}
 STEAM_ID_BASE=76561197960265728
@@ -40,10 +40,15 @@ def payload(plugin,home):
  launchers=[home/'.local/bin'/name for name in ('deck-ai-steam','deck-ai','codex-steamdeck')]
  from runtime_paths import resolve_app_dir
  app=resolve_app_dir(home)
- return {'images':images,'launchers':[str(p) for p in launchers],'exe':str(launchers[0]),'directory':str(app),'icon':str(app/'deck-ai.png'),'available':launchers[0].is_file() and (app/'app.py').is_file()}
+ profiles=home/'.local/share/Steam/userdata'
+ accounts=[str(STEAM_ID_BASE+int(p.name)) for p in profiles.glob('*') if p.name.isdecimal() and 0<int(p.name)<2**32 and (p/'config').is_dir() and not p.is_symlink()]
+ return {'accounts':accounts,'images':images,'launchers':[str(p) for p in launchers],'exe':str(launchers[0]),'directory':str(app),'icon':str(app/'deck-ai.png'),'available':launchers[0].is_file() and (app/'app.py').is_file()}
 
 TARGET_JS='''(async()=>{
  const p=PAYLOAD,apps=SteamClient.Apps;
+ const accountValue=window.friendStore?.currentUserSteamID||window.uiStore?.currentUserSteamID;
+ const account=typeof accountValue==='string'?accountValue:accountValue?.ConvertTo64BitString();
+ if(!p.accounts?.includes(account))throw Error('Sign into Steam under this Linux account before adding Deck AI.');
  const candidates=appStore.allApps.filter(a=>a.app_type===1073741824&&String(a.display_name||'').toLowerCase()==='deck ai');
  const ids=[];
  for(const app of candidates){
@@ -59,8 +64,7 @@ TARGET_JS='''(async()=>{
  let id=ids[0],created=false;
  if(!id&&CREATE){id=await apps.AddShortcut('Deck AI','"'+p.exe+'"','"'+p.directory+'"','');created=true;}
  if(!Number.isInteger(id)||id<=0)throw Error('Deck AI shortcut was not found.');
- const account=window.friendStore?.currentUserSteamID||window.uiStore?.currentUserSteamID;
- return {appid:id,created,account:typeof account==='string'?account:account?.ConvertTo64BitString()};
+ return {appid:id,created,account};
 })()'''
 
 def grid_for(home,target):
@@ -102,7 +106,7 @@ def status(plugin,home,state):
  root=Path(state)/'library-artwork';record=read_json(root/'latest.json')
  return {'available':(Path(home)/'.local/bin/deck-ai-steam').is_file(),'hasBackup':bool(record.get('id') and not record.get('restored')),'appId':record.get('appid'),'version':read_json(Path(plugin)/'package.json').get('version','')}
 
-def apply(plugin,home,state,restore=False,adapter=None):
+def apply(plugin,home,state,restore=False,adapter=None,automatic=False):
  from updates import DeckyAdapter,atomic_json
  plugin=Path(plugin);home=Path(home);root=Path(state)/'library-artwork';root.mkdir(parents=True,exist_ok=True,mode=0o700)
  fd=os.open(root/'operation.lock',os.O_CREAT|os.O_RDWR,0o600);installation=None
@@ -121,6 +125,8 @@ def apply(plugin,home,state,restore=False,adapter=None):
   grid=grid_for(home,target);appid=target['appid'];current=images_at(grid,appid);record=read_json(root/'latest.json');position_file=grid/(str(appid)+'.json')
   if position_file.is_symlink() or (position_file.exists() and position_file.stat().st_size>32000):raise ValueError('Invalid custom logo position.')
   old_position=read_json(position_file).get('logoPosition')
+  if automatic and record.get('appid')==appid and record.get('account')==target['account'] and (record.get('restored') or {str(k):sha(p) for k,p in current.items()}!=record.get('installed')):
+   return {**status(plugin,home,state),'preservedCustomArtwork':True}
   if restore:
    if not record or record.get('appid')!=appid or record.get('account')!=target['account'] or record.get('restored'):raise ValueError('No matching artwork backup is available.')
    if {str(k):sha(p) for k,p in current.items()}!=record.get('installed') or (sha(position_file) if position_file.is_file() else None)!=record.get('positionInstalled'):raise ValueError('Artwork changed after installation. Your newer images were preserved.')
@@ -166,3 +172,49 @@ def apply(plugin,home,state,restore=False,adapter=None):
  finally:
   if installation is not None:os.close(installation)
   os.close(fd)
+
+def request_setup(state,enabled=True):
+ from updates import atomic_json
+ root=Path(state)/'library-artwork';root.mkdir(parents=True,exist_ok=True,mode=0o700)
+ atomic_json(root/'setup.json',{'pending':bool(enabled),'enabled':bool(enabled),'error':'','requestedAt':time.time()})
+
+def attempt_setup(plugin,home,state,adapter=None):
+ """Retry after Steam/Decky starts; never turn a working installation into failure."""
+ from updates import DeckyAdapter,atomic_json
+ root=Path(state)/'library-artwork';record=read_json(root/'setup.json')
+ if not record.get('pending'):return record
+ try:fd=os.open(root/'setup.lock',os.O_CREAT|os.O_RDWR,0o600)
+ except OSError:return record
+ try:
+  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:return record
+  record=read_json(root/'setup.json')
+  if not record.get('pending'):return record
+  class SetupAdapter(DeckyAdapter):
+   def evaluate(self,expression,timeout=10,page_id=None):return super().evaluate(expression,min(timeout,10),page_id)
+  try:
+   result=apply(plugin,home,state,adapter=adapter or SetupAdapter(Path(plugin)/'vendor'),automatic=True)
+   record.update(pending=False,error='',completedAt=time.time(),result=result)
+  except Exception as error:record.update(error=str(error)[:250],lastAttemptAt=time.time())
+  atomic_json(root/'setup.json',record);return record
+ finally:os.close(fd)
+
+_SETUP_WORKERS=set();_SETUP_WORKER_LOCK=threading.Lock()
+def start_setup_worker(plugin,home,state):
+ key=str(Path(state).resolve())
+ path=Path(state)/'library-artwork/setup.json'
+ if not path.exists():
+  choices=read_json(Path(state)/'setup-choices.json')
+  if choices.get('mode')=='automatic' and choices.get('components',{}).get('steam',True):request_setup(state)
+ if not read_json(path).get('pending'):return
+ with _SETUP_WORKER_LOCK:
+  if key in _SETUP_WORKERS:return
+  _SETUP_WORKERS.add(key)
+ def work():
+  try:
+   for _ in range(60):
+    if not attempt_setup(plugin,home,state).get('pending'):break
+    time.sleep(5)
+  finally:
+   with _SETUP_WORKER_LOCK:_SETUP_WORKERS.discard(key)
+ threading.Thread(target=work,name='Deck AI Steam setup',daemon=True).start()

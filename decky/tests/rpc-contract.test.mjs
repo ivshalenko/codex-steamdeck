@@ -44,3 +44,20 @@ print(json.dumps(methods))
   }
   assert.ok(checked > 0, 'No callable declarations were checked');
 });
+test('new chat recovery controls stay available after a backend or history failure', () => {
+  const source = ts.createSourceFile('index.tsx', readFileSync(new URL('../src/index.tsx', import.meta.url), 'utf8'), ts.ScriptTarget.Latest, true);
+  let checked = 0;
+  function visit(node) {
+    if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) && node.tagName.getText(source) === 'Action') {
+      const attributes = node.attributes.properties.filter(ts.isJsxAttribute);
+      const click = attributes.find(attribute => attribute.name.getText(source) === 'onClick')?.initializer?.getText(source) || '';
+      if (/startChat|newThread/.test(click)) {
+        const disabled = attributes.find(attribute => attribute.name.getText(source) === 'disabled')?.initializer?.getText(source) || '';
+        assert.doesNotMatch(disabled, /ready|disconnect/, 'Recovering the current chat must not require a successful history read');
+        assert.match(disabled, /busy/); assert.match(disabled, /ro/); checked++;
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(source); assert.equal(checked, 3);
+});

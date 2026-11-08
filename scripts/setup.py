@@ -16,13 +16,14 @@ STAGES={
  'codex':('Preparing official Codex CLI','Подготовка официального Codex CLI'),
  'voice':('Preparing local dictation','Подготовка локальной диктовки'),
  'system':('Waiting for SteamOS authorization','Ожидание разрешения SteamOS'),
+ 'library':('Adding Deck AI to Steam','Добавление Deck AI в Steam'),
  'ready':('Installation complete','Установка завершена')}
 
 class Setup(Gtk.Window):
  def __init__(self,language=None):
   super().__init__(title='Deck AI · Setup')
   candidate=language or os.environ.get('DECK_AI_SETUP_LANGUAGE','en');self.language_code=candidate if candidate in ('en','ru') else 'en'
-  self.running=False;self.installed=None;self.choices={'mode':'automatic','codex':True,'decky':True,'loader':True,'voice':False,'ssh':False,'read_only':(resolve_state_dir()/'read-only').exists()}
+  self.running=False;self.installed=None;self.choices={'mode':'automatic','codex':True,'decky':True,'loader':True,'voice':False,'ssh':False,'steam':True,'read_only':(resolve_state_dir()/'read-only').exists()}
   self.set_default_size(900,720);self.set_position(Gtk.WindowPosition.CENTER);self.set_name('deck-ai-setup');self.connect('delete-event',self.close)
   css=Gtk.CssProvider();css.load_from_data(b'#deck-ai-setup { background: #0b1119; color: #f1f7fb; } #deck-ai-setup label { color: #f1f7fb; } #deck-ai-setup .muted { color: #a8bdce; } #deck-ai-setup .heading { font-size: 23px; font-weight: bold; } #deck-ai-setup .card { background: #162330; border-radius: 12px; padding: 12px; } #deck-ai-setup .suggested-action { background: #a8e1fa; color: #0b1119; border-radius: 8px; padding: 9px 20px; } #deck-ai-setup .suggested-action label { color: #0b1119; } #deck-ai-setup .error { color: #ffbf9e; }')
   Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(),css,Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
@@ -68,11 +69,11 @@ class Setup(Gtk.Window):
   self.custom=Gtk.RadioButton.new_with_label_from_widget(self.auto,self.t('Custom · choose components and access','Вручную · компоненты и доступ'))
   self.auto.set_active(self.choices['mode']=='automatic');self.custom.set_active(self.choices['mode']=='custom')
   card.pack_start(self.auto,False,False,0)
-  card.pack_start(self.label('Installs Deck AI, official Codex and the Decky plugin. Installs Decky Loader if missing. Keeps your chats, models and accounts.','Установит Deck AI, официальный Codex и плагин Decky. Если Decky Loader отсутствует — установит его. Сохранит чаты, модели и аккаунты.','muted'),False,False,0)
+  card.pack_start(self.label('Installs Deck AI, official Codex and the Decky plugin. Adds Deck AI to Steam with its covers and icon. Installs Decky Loader if missing. Keeps your chats, models and accounts.','Установит Deck AI, официальный Codex и плагин Decky. Добавит Deck AI в Steam с обложками и значком. Если Decky Loader отсутствует — установит его. Сохранит чаты, модели и аккаунты.','muted'),False,False,0)
   card.pack_start(self.custom,False,False,0)
   self.details=Gtk.Revealer();self.details.set_transition_type(Gtk.RevealerTransitionType.NONE);page.pack_start(self.details,False,False,0)
   detail=self.box(8);detail.get_style_context().add_class('card');self.details.add(detail);self.components={}
-  values=[('codex','Install Codex if missing','Установить Codex, если отсутствует'),('decky','Add the Gaming Mode plugin','Добавить плагин Gaming Mode'),('loader','Install Decky Loader if missing','Установить Decky Loader, если отсутствует'),('voice','Download local dictation for the selected language (optional)','Загрузить локальную диктовку для выбранного языка (необязательно)'),('ssh','Enable SSH for Mac / PC remote control (optional)','Включить SSH для управления с Mac / ПК (необязательно)')]
+  values=[('codex','Install Codex if missing','Установить Codex, если отсутствует'),('steam','Add to Steam with covers and icon','Добавить в Steam с обложками и значком'),('decky','Add the Gaming Mode plugin','Добавить плагин Gaming Mode'),('loader','Install Decky Loader if missing','Установить Decky Loader, если отсутствует'),('voice','Download local dictation for the selected language (optional)','Загрузить локальную диктовку для выбранного языка (необязательно)'),('ssh','Enable SSH for Mac / PC remote control (optional)','Включить SSH для управления с Mac / ПК (необязательно)')]
   for key,en,ru in values:
    widget=Gtk.CheckButton(label=self.t(en,ru));widget.set_active(self.choices[key]);detail.pack_start(widget,False,False,0);self.components[key]=widget
   actionrow=Gtk.Box(spacing=10);detail.pack_start(actionrow,False,False,0);actionrow.pack_start(self.label('Decky access','Доступ в Decky'),True,True,0)
@@ -105,6 +106,7 @@ class Setup(Gtk.Window):
   page.pack_start(self.label('Your Deck is ready.','Steam Deck готов.',style='heading'),False,False,0)
   self.ready_note=self.label('1. Open Deck AI and sign into ChatGPT.\n2. Return to Gaming Mode → (…) → Decky → Deck AI.\n3. Choose New chat and ask your first question.','1. Откройте Deck AI и войдите в ChatGPT.\n2. Вернитесь в Gaming Mode → (…) → Decky → Deck AI.\n3. Выберите «Новый чат» и задайте вопрос.');page.pack_start(self.ready_note,False,False,0)
   page.pack_start(self.label('Interface language: English','Язык интерфейса: русский','muted'),False,False,0)
+  self.steam_note=self.label('','',style='muted');page.pack_start(self.steam_note,False,False,0)
   self.open=self.button('Open Deck AI and sign in','Открыть Deck AI и войти',self.open_app,True);page.pack_start(self.open,False,False,0)
   page.pack_start(self.button('Connect a Mac / PC','Подключить Mac / ПК',self.open_remote),False,False,0)
   page.pack_start(self.button('Close installer','Закрыть установщик',lambda *_:self.close()),False,False,0)
@@ -133,6 +135,11 @@ class Setup(Gtk.Window):
   self.running=False;self.language.set_sensitive(True);self.status.set_text(self.t('Setup needs your attention','Нужно ваше внимание'));self.status.get_style_context().add_class('error');self.line(message);self.retry.show();return False
  def finish_success(self,installed,options):
   self.running=False;self.installed=installed;self.open.set_sensitive(True)
+  if options.steam:
+   from library_art import read_json
+   pending=read_json(resolve_state_dir()/'library-artwork/setup.json').get('pending',True)
+   self.steam_note.set_text(self.t('Steam shortcut and covers will be added automatically when Steam / Decky is ready.' if pending else 'Deck AI is in your Steam library with covers and an icon.','Ярлык и обложки добавятся автоматически, когда Steam / Decky будет готов.' if pending else 'Deck AI добавлен в библиотеку Steam с обложками и значком.'))
+  else:self.steam_note.set_text('')
   if not options.decky:self.ready_note.set_text(self.t('Open Deck AI and sign into ChatGPT.\nChoose New chat to begin. You can add the Gaming Mode plugin later.','Откройте Deck AI и войдите в ChatGPT.\nВыберите «Новый чат». Плагин Gaming Mode можно добавить позже.'))
   if not options.codex:
    from setup_support import codex_installed

@@ -14,15 +14,16 @@ class Options:
  loader:bool=True
  voice:bool=False
  ssh:bool=False
+ steam:bool=True
  read_only:object=None
  def __post_init__(self):
   if self.language not in ('en','ru'):raise ValueError('Choose English or Russian.')
   if self.mode not in ('automatic','custom'):raise ValueError('Choose automatic or custom installation.')
-  for field in ('codex','decky','loader','voice','ssh'):
+  for field in ('codex','decky','loader','voice','ssh','steam'):
    if not isinstance(getattr(self,field),bool):raise ValueError('Invalid installation choice: '+field)
   if self.read_only is not None and not isinstance(self.read_only,bool):raise ValueError('Invalid action permission.')
   if self.mode=='automatic':
-   for key,value in {'codex':True,'decky':True,'loader':True,'voice':False,'ssh':False,'read_only':None}.items():object.__setattr__(self,key,value)
+   for key,value in {'codex':True,'decky':True,'loader':True,'voice':False,'ssh':False,'steam':True,'read_only':None}.items():object.__setattr__(self,key,value)
   elif not self.decky:
    object.__setattr__(self,'loader',False);object.__setattr__(self,'read_only',None)
 
@@ -52,7 +53,7 @@ def save_preferences(options,home=None):
  if options.read_only is not None:
   if options.read_only:atomic_text(state/'read-only','on\n')
   else:(state/'read-only').unlink(missing_ok=True)
- receipt={'language':options.language,'mode':options.mode,'components':{'codex':options.codex,'decky':options.decky,'voice':options.voice,'remoteAccess':options.ssh},'actionPermissions':'preserved' if options.read_only is None else 'history-only' if options.read_only else 'confirm-in-app'}
+ receipt={'language':options.language,'mode':options.mode,'components':{'codex':options.codex,'decky':options.decky,'voice':options.voice,'remoteAccess':options.ssh,'steam':options.steam},'actionPermissions':'preserved' if options.read_only is None else 'history-only' if options.read_only else 'confirm-in-app'}
  atomic_text(state/'setup-choices.json',json.dumps(receipt,indent=2)+'\n')
  return state
 
@@ -85,7 +86,6 @@ def _run_install(options,root,execute,progress,home=None):
    try:result=json.loads(receipt.read_text())
    except (OSError,ValueError):raise RuntimeError('Administrator setup was closed or cancelled. No completion was confirmed. Click Retry to continue.')
    if result.get('ok') is not True:raise RuntimeError(result.get('error') or 'Administrator setup failed. Click Retry to continue.')
- progress('ready',1.0)
  return resolve_app_dir(home)
 
 
@@ -105,8 +105,14 @@ def run_install(options,root,execute,progress,home=None):
    if complete:
     job.update(phase='completed',progress=1,error='',requiresInstaller=False,version=(Path(app)/'VERSION').read_text().strip(),note='Installed with the full installer.')
     updates.atomic_json(folder/'job.json',job)
-  return app
  finally:os.close(fd)
+ import library_art
+ library_art.request_setup(resolve_state_dir(selected_home),options.steam)
+ if options.steam:
+  progress('library',.94)
+  library_art.attempt_setup(Path(app)/'decky',selected_home,resolve_state_dir(selected_home))
+ progress('ready',1.0)
+ return app
 
 
 def plugin_destination(home=None):

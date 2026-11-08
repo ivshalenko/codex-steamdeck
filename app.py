@@ -491,6 +491,10 @@ class Panel(Gtk.Application):
         GLib.timeout_add_seconds(3,self.poll_remote_history)
         GLib.timeout_add(1000,self.pump_outbox)
         GLib.timeout_add(1000,self.poll_updates)
+        try:
+            from decky import library_art
+            library_art.start_setup_worker(Path(__file__).resolve().parent/'decky',Path.home(),STATE_DIR)
+        except Exception:pass
         if self.update_controller:self.update_controller.start()
         Gdk.Screen.get_default().connect('monitors-changed', lambda *_: self.position())
         self.window.connect('destroy', lambda *_: self.shutdown_app() if self.gaming_mode else self.stop_event.set())
@@ -807,7 +811,7 @@ class Panel(Gtk.Application):
         if not self.backend or not self.backend.connected:return
         self.save_draft(self.text.get_buffer())
         self.begin_thread_switch()
-        thread={'id':str(uuid.uuid4()),'name':translator.text('Новый чат'),'preview':'','turns':[],'createdAt':int(time.time()),'updatedAt':int(time.time()),'model':self.current_model}
+        thread={'id':str(uuid.uuid4()),'name':translator.text('Новый чат'),'preview':'','turns':[],'createdAt':int(time.time()),'updatedAt':int(time.time()),'model':self.current_model,'localDraft':True,'host':self.remote_host}
         self.empty_threads[thread['id']]=thread
         self.save_empty_threads()
         self.finish_thread_switch({'model':self.current_model},thread)

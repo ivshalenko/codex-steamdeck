@@ -16,6 +16,8 @@ The pinned official Codex installer recovers package downloads through the offic
 
 English is the default, including on a fresh profile with a Russian system locale. Automatic setup installs the app, missing official Codex and the Gaming Mode plugin. If Decky Loader is missing, its official installer runs in a visible terminal. An existing Loader is reused; your chats, accounts and models remain.
 
+Automatic setup also adds **Deck AI** to the Steam library with all five artwork assets. If Steam is still starting, the completion screen says the step is pending and Deck AI finishes it automatically when its app or Decky panel starts. Sign into Steam under the same Linux account. Custom setup can disable this option. Existing user edits to previously installed artwork are kept.
+
 ![Actual automatic setup on Steam Deck.](media/en/branding/installer-automatic.png)
 
 ## Custom components and access
