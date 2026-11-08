@@ -3,7 +3,7 @@
 import argparse,hashlib,json,os,shlex,shutil,sys,tempfile
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'decky'))
-from runtime_paths import resolve_app_dir
+from runtime_paths import resolve_app_dir,desktop_shortcut,desktop_external_paths
 ROOT_FILES=('app.py', 'install.sh', 'chat_media.py', 'backend.py', 'providers.py', 'ui_extras.py', 'speech_accuracy.py', 'deck_share.py', 'speech-languages.json', 'style.css', 'themes.json', 'deck-ai.png', 'requirements.txt', 'requirements-speech.txt', 'VERSION', 'README.md', 'CHANGELOG.md', 'SECURITY.md', 'uninstall.sh', 'message_blocks.py', 'language_support.py', 'language_settings.py', 'remote_access.py')
 PLUGIN_FILES=('THIRD_PARTY_NOTICES.txt','main.py','bridge.py','runtime_paths.py','plugin.json','package.json','deck-ai.png')
 PLUGIN_FILES+=('library_art.py','launch_repair.py','repair_remote.py','repair-web/index.html','repair-web/app.js','repair-web/style.css')
@@ -46,6 +46,15 @@ exec "$APP_DIR/venv/bin/python" "$APP_DIR/app.py" "$@"
     executable=str(home/'.local/bin/deck-ai').replace('\\','\\\\').replace('"','\\"').replace('%','%%')
     desktop=f'[Desktop Entry]\nType=Application\nName=Deck AI\nComment=AI assistant for Steam Deck\nExec="{executable}"\nIcon=deck-ai\nTerminal=false\nCategories=Utility;Accessibility;\n'
     contents[home/'.local/share/applications/codex-steamdeck.desktop']=(desktop.encode(),0o644)
+    shortcut=desktop_shortcut(home)
+    if shortcut is not None and not shortcut.is_symlink():
+        data=(desktop+'X-Deck-AI-Managed=true\n').encode()
+        previous={}
+        try:previous=json.loads((app/'install-manifest.json').read_text()).get('files',{})
+        except (OSError,ValueError):pass
+        relative=str(shortcut.relative_to(home))
+        if not shortcut.exists() or shortcut.is_file() and (shortcut.read_bytes()==data or previous.get(relative)==digest(shortcut)):
+            contents[shortcut]=(data,0o755)
     manifest={'version':(source/'VERSION').read_text().strip(),'files':{str(path.relative_to(home)):hashlib.sha256(data).hexdigest() for path,(data,mode) in contents.items()}}
     contents[app/'install-manifest.json']=((json.dumps(manifest,indent=2)+'\n').encode(),0o600)
     applied=[]
@@ -69,13 +78,15 @@ exec "$APP_DIR/venv/bin/python" "$APP_DIR/app.py" "$@"
 def uninstall(home=None):
     home=Path(home) if home is not None else Path.home();app=resolve_app_dir(home);manifest=app/'install-manifest.json'
     if not manifest.is_file():raise ValueError('No managed installation manifest. No files were removed.')
-    entries=json.loads(manifest.read_text())['files'];allowed=[app,home/'.local/bin',home/'.local/share/applications',home/'.local/share/icons/hicolor/256x256/apps']
+    desktop_paths=desktop_external_paths(home)
+    entries=json.loads(manifest.read_text())['files'];allowed=[app,home/'.local/bin',home/'.local/share/applications',home/'.local/share/icons/hicolor/256x256/apps',*[p.parent for p in desktop_paths]]
     candidates=[]
     for relative,expected in entries.items():
         target=home/relative
         if Path(relative).is_absolute() or '..' in Path(relative).parts or not any(target.is_relative_to(root) for root in allowed):raise ValueError('Invalid installation manifest path')
         external={home/'.local/bin'/name for name in ('deck-ai','deck-ai-uninstall','codex-steamdeck','deck-ai-steam')}
         external.update([home/'.local/share/applications/codex-steamdeck.desktop',home/'.local/share/icons/hicolor/256x256/apps/deck-ai.png'])
+        external.update(desktop_paths)
         if target.is_relative_to(app):
             rel=target.relative_to(app)
             owned=str(rel) in ROOT_FILES or str(rel) in ('LICENSE','NOTICE','decky/LICENSE','decky/NOTICE') or rel in {Path('decky')/x for x in PLUGIN_FILES} or rel in {Path('scripts')/x for x in SCRIPTS} or rel.is_relative_to(Path('decky/dist')) or (rel.parent==Path('decky/vendor') and rel.name in ('websockets-15.0.1-py3-none-any.whl','LICENSE-websockets.txt'))

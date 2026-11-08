@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0-rc.26
+
+- Create an executable Deck AI shortcut on the user's actual XDG desktop during app installation and updates, in addition to the application menu and Steam library entries.
+- Support localized desktop folders such as Рабочий стол, preserve existing personal/edited shortcuts, avoid duplicates and respect a disabled or external desktop directory.
+- Track the shortcut in installation, update rollback and uninstall manifests, so only unchanged managed files are removed.
+
 ## 1.0.0-rc.25
 
 - Add Deck AI to the Steam library with its icon, capsule, header, hero and logo during automatic setup. Custom setup can opt out. Finish automatically when Steam/Decky becomes ready and report pending work on the completion screen.
