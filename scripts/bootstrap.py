@@ -15,6 +15,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+from updates import release_response
 VERSION='@VERSION@'
 BASE='https://github.com/ivshalenko/codex-steamdeck/releases/download/v'+VERSION+'/'
 BANNER_SVG='@INSTALLER_BANNER@'
@@ -25,20 +26,23 @@ def download(name, destination, limit):
     for attempt in range(3):
         print("Downloading " + name, flush=True)
         try:
-            with urllib.request.urlopen(BASE + name, timeout=25) as response, temporary.open("wb") as out:
+            with release_response(BASE + name, timeout=25) as response, temporary.open("wb") as out:
                 expected = response.headers.get("Content-Length")
                 expected = int(expected) if expected and expected.isdecimal() else None
                 if expected is not None and expected > limit:
                     raise ValueError("Unexpected download size")
                 size = 0
+                checksum = hashlib.sha256()
                 while block := response.read(256 * 1024):
                     size += len(block)
                     if size > limit:
                         raise ValueError("Unexpected download size")
-                    out.write(block)
+                    out.write(block); checksum.update(block)
                     if DOWNLOAD_PROGRESS:DOWNLOAD_PROGRESS(name,size,expected)
                 if expected is not None and size != expected:
                     raise http.client.IncompleteRead(b"", expected - size)
+                if getattr(response,'deck_asset_digest',None) and checksum.hexdigest()!=response.deck_asset_digest:
+                    raise ValueError('GitHub asset checksum mismatch. Nothing was installed.')
             temporary.replace(destination)
             return
         except urllib.error.HTTPError as error:

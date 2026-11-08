@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0-rc.21
+
+- Recover automatically when GitHub browser/CDN downloads return 504 or another transient network error: fetch the same published asset through the official GitHub API.
+- Validate the release tag, publication state, exact repository asset endpoint, file metadata and SHA-256 before accepting an API download. Preserve TLS verification, size limits, archive checks and rollback behavior.
+- Embed the same downloader in the standalone graphical installer; the downloaded desktop file needs no local Deck AI modules. The detached updater retains the same recovery behavior.
+
 ## 1.0.0-rc.20
 
 - Add opt-in English/Russian physical-keyboard support for Gaming Mode with Alt+Shift. Configure Gamescope's hardware keymap through a user service override, rather than relying on ineffective XWayland-only changes.

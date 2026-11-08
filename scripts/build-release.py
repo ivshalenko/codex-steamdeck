@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build checked, deterministic release assets without publishing anything."""
-import argparse,base64,gzip,hashlib,importlib.util,json,os,subprocess,sys,tarfile,zipfile
+import argparse,ast,base64,gzip,hashlib,importlib.util,json,os,subprocess,sys,tarfile,zipfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 def module(name,file):
@@ -10,6 +10,11 @@ package=module('release_package','check-package.py');manager=module('release_man
 def launcher_text(version):
     banner=base64.b64encode((ROOT/'docs/brand/installer.svg').read_bytes()).decode()
     source=(ROOT/'scripts/bootstrap.py').read_text().replace('@VERSION@',version).replace('@INSTALLER_BANNER@',banner)
+    # Embed the reviewed downloader: the downloaded .desktop file has no local
+    # Python-module dependency, while installer/updater share the same behavior.
+    downloader=(ROOT/'updates.py').read_text()
+    function=next(n for n in ast.parse(downloader).body if isinstance(n,ast.FunctionDef) and n.name=='release_response')
+    source=source.replace('from updates import release_response',ast.get_source_segment(downloader,function))
     encoded=base64.b64encode(source.encode()).decode()
     return '[Desktop Entry]\nType=Application\nName=Install Deck AI\nName[ru]=Установить Deck AI\nComment=Guided automatic or custom setup for Steam Deck\nExec=python3 -c "import base64;exec(base64.b64decode(\''+encoded+'\'))"\nIcon=system-software-install\nTerminal=false\nCategories=Utility;\n'
 
