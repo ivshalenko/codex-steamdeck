@@ -3,8 +3,8 @@
 ## Steam Deck — графическая установка
 
 1. Перейдите в Desktop Mode: Steam → Power → Switch to Desktop. Нужны интернет, минимум 800 МБ и собственный аккаунт ChatGPT.
-2. Скачайте **[Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.21/Install-Deck-AI.desktop)** на Deck. Если скачали Code → Download ZIP, распакуйте проект и откройте одноимённый файл внутри.
-3. В Dolphin подтвердите Execute / Trust and launch. Если файл открылся как текст: Properties → Permissions → Is executable. Этот первый запрос доверия SteamOS нужно подтвердить лично.
+2. Скачайте **[Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.22/Install-Deck-AI.desktop)** на Deck. Если скачали Code → Download ZIP, распакуйте проект и откройте одноимённый файл внутри.
+3. В Dolphin подтвердите Execute / Trust and launch. Если предлагается выбрать Kate / KWrite, закройте это окно. Нажмите правой кнопкой на файл → «Свойства» → «Права доступа» → «Исполняемый файл» → ОК, затем снова откройте файл. Этот первый запрос доверия SteamOS нужно подтвердить лично.
 4. Откроется иллюстрированная оболочка загрузки, затем полный мастер. По умолчанию выбран **English**. Выберите **Русский** — язык передастся полному мастеру и сохранится для Deck AI и Decky.
 5. **Автоматически**: приложение, отсутствующий официальный Codex и плагин Gaming Mode. Если Decky Loader отсутствует, мастер запустит его официальный установщик в видимом терминале. Уже установленный Decky используется повторно.
 6. **Вручную**: выберите Codex, плагин, разрешение установить отсутствующий Decky Loader, голосовой пакет выбранного языка, SSH и режим действий в Decky. Автоматический режим не включает новый SSH и не скачивает голосовые пакеты. Существующие настройки сохраняются.
@@ -15,6 +15,8 @@
 ![Настоящий русский мастер на Steam Deck](media/ru/installer/03-russian.png)
 
 В терминале вручную: распакуйте steamdeck.tar.gz, откройте Konsole в папке и выполните `python3 scripts/setup.py --language ru`. Команда `bash install.sh --decky` — упрощённый путь без мастера; она не устанавливает автоматически Codex и отсутствующий Decky Loader.
+
+**Старая установка остановилась на 40% с ошибкой Codex / 504?** Закройте её и запустите свежий установщик rc.22 или новее. Он повторит загрузку официального Codex через GitHub API, проверит размер и SHA-256; официальный установщик OpenAI дополнительно проверит манифест. Переустанавливать SteamOS и удалять уже установленные настройки не нужно.
 
 ## Если установлен только ZIP Decky
 
@@ -52,4 +54,4 @@
 
 ## English
 
-Switch to Desktop Mode. Download **Install-Deck-AI.desktop** from [Releases](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.21), mark it executable/trusted in Dolphin if prompted, and open it. The wizard installs the app, offers the official Codex CLI if missing, and optionally installs the Decky plugin (Decky must already be installed). A terminal shows any SteamOS sudo password prompt. Click **Open Deck AI**, sign into ChatGPT, return to Gaming Mode, then **(…) → Decky → Deck AI → New chat**. Voice is optional and configured later in the desktop app's language settings. The ZIP plugin bundles its own core runtime, but still needs Codex installed and signed in. Follow the [remote-control guide](REMOTE-CONTROL.ru.md) for computer pairing. This is a release candidate; suspend/resume, independent fresh-device installation and physical controller testing are still listed in the release report.
+Switch to Desktop Mode. Download **Install-Deck-AI.desktop** from [Releases](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.22), mark it executable/trusted in Dolphin if prompted, and open it. The wizard installs the app, offers the official Codex CLI if missing, and optionally installs the Decky plugin (Decky must already be installed). A terminal shows any SteamOS sudo password prompt. Click **Open Deck AI**, sign into ChatGPT, return to Gaming Mode, then **(…) → Decky → Deck AI → New chat**. Voice is optional and configured later in the desktop app's language settings. The ZIP plugin bundles its own core runtime, but still needs Codex installed and signed in. Follow the [remote-control guide](REMOTE-CONTROL.ru.md) for computer pairing. This is a release candidate; suspend/resume, independent fresh-device installation and physical controller testing are still listed in the release report.
