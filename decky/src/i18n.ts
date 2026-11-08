@@ -1,5 +1,16 @@
 // Static interface text only. Never translate conversation bodies or file content.
 export const english:Readonly<Record<string,string>> = {
+ "Физическая клавиатура": "Physical keyboard",
+ "Для USB- и Bluetooth-клавиатуры в Gaming Mode. Язык меню и диктовки на раскладку не влияет.": "For USB and Bluetooth keyboards in Gaming Mode. Interface and dictation languages do not change the keyboard layout.",
+ "English / Русский · Alt+Shift": "English / Russian · Alt+Shift",
+ "Раскладка SteamOS": "SteamOS keyboard layout",
+ "Сохранено. Для применения выйдите в Desktop Mode и вернитесь в Gaming Mode. Сначала сохраните игру.": "Saved. Switch to Desktop Mode, then return to Gaming Mode to apply. Save your game first.",
+ "EN/RU включатся при следующем входе в Gaming Mode.": "EN/RU will apply the next time you enter Gaming Mode.",
+ "EN/RU работают. Переключение: Alt+Shift.": "EN/RU are active. Switch with Alt+Shift.",
+ "Включить EN/RU": "Enable EN/RU",
+ "Вернуть раскладку SteamOS": "Restore SteamOS layout",
+ "Файл настройки изменён отдельно. Deck AI сохранил ваши изменения.": "The configuration was edited separately. Deck AI preserved your changes.",
+ "Системная настройка доступна на SteamOS с Gaming Mode.": "System keyboard setup is available on SteamOS with Gaming Mode.",
  "Deck AI в библиотеке Steam": "Deck AI in your Steam library",
  "Обложка, широкий баннер, прозрачный логотип и значок в одном стиле. Изменяется только ярлык Deck AI; прежние изображения сохраняются для восстановления.": "One style for the cover, wide banner, transparent logo and icon. Only the Deck AI shortcut changes; previous artwork is backed up for restore.",
  "Для ярлыка установите настольное приложение Deck AI полным установщиком.": "Install the Deck AI desktop companion with the full installer to use the library shortcut.",

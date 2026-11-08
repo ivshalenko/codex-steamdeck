@@ -19,6 +19,7 @@ import backend as device
 from backend import Backend, ssh_command, CODEX
 import providers
 import updates
+import keyboard_layout
 from speech_accuracy import multilingual_ready
 from launch_repair import LaunchRepair, screenshot_dirs, valid_account
 from repair_remote import RepairRemote
@@ -26,7 +27,7 @@ ROOT=Path.home(); STATE=resolve_state_dir()
 STEAM=ROOT/'.local/share/Steam/userdata'
 repair_services_lock = threading.Lock()
 repair_services = None
-READ_ONLY_BLOCKED={'send','retry','stop','new_thread','approve','file_write','share_add_key','custom_save','custom_remove','queue_front','queue_remove','account_login','account_logout','video_frames','settings','library_apply','library_restore'}
+READ_ONLY_BLOCKED={'send','retry','stop','new_thread','approve','file_write','share_add_key','custom_save','custom_remove','queue_front','queue_remove','account_login','account_logout','video_frames','settings','library_apply','library_restore','keyboard_configure'}
 WATCH_INTERVAL=12
 THREAD_LIST_TTL=6;HISTORY_TTL_ACTIVE=4;HISTORY_TTL_IDLE=12;VOSK_IDLE_SECONDS=180
 notify_lock=threading.Lock();notifications=[];notify_seq=0;approvals={};retry_at=0.0
@@ -968,6 +969,8 @@ def _call(method,params):
         if method=='library_status':return library_art.status(PLUGIN_DIR,ROOT,STATE)
         return library_art.apply(PLUGIN_DIR,ROOT,STATE,restore=method=='library_restore')
     if method=='snapshot':return get_snapshot()
+    if method=='keyboard_status':return keyboard_layout.status(ROOT,STATE)
+    if method=='keyboard_configure':return keyboard_layout.configure(params.get('enabled'),ROOT,STATE)
     if method=='interface_language':return set_interface_language(params.get('language'))
     if method=='older_messages':
         key=(remote_host,thread_id);history_limits[key]=history_limits.get(key,40)+80

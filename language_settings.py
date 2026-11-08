@@ -4,6 +4,7 @@ import threading
 from gi.repository import Gtk,GLib,Pango
 from ui_extras import translator,LAYOUTS,ScrollablePicker
 import language_support as support
+import keyboard_layout
 
 SAMPLES={'ru':'Проверка голоса. Всё готово.','en':'Voice check. Everything is ready.','de':'Stimmtest. Alles ist bereit.','fr':'Test de voix. Tout est prêt.','es':'Prueba de voz. Todo está listo.','ja':'音声のテストです。準備ができました。','zh':'这是语音测试。一切准备就绪。','uk':'Перевірка голосу. Усе готово.'}
 
@@ -22,6 +23,12 @@ class LanguageSettings:
             self.interface_language.append(code,support.NATIVE.get(code,name)+' ('+code+')',name)
         self.interface_language.set_active_id(translator.language)
         self.body.pack_start(self.interface_language,False,False,0)
+        self.label('Физическая клавиатура в Gaming Mode')
+        self.keyboard_status=self.label('Проверка настроек клавиатуры…')
+        self.keyboard_button=Gtk.Button()
+        self.keyboard_button.connect('clicked',self.change_keyboard)
+        self.body.pack_start(self.keyboard_button,False,False,0)
+        self.refresh_keyboard()
         self.label('Язык распознавания речи')
         self.language=ScrollablePicker()
         for code,name in sorted(support.LANGUAGES.items(),key=lambda item:support.NATIVE.get(item[0],item[1])):
@@ -64,6 +71,32 @@ class LanguageSettings:
         label.set_width_chars(1);label.set_max_width_chars(65)
         self.body.pack_start(label,False,False,0)
         return label
+
+    def refresh_keyboard(self):
+        try:
+            self.keyboard=keyboard_layout.status(Path.home(),self.panel.state_directory())
+            message=('Сохранено. Для применения выйдите в Desktop Mode и вернитесь в Gaming Mode. Сначала сохраните игру.' if self.keyboard['restartRequired'] else
+                     'EN/RU работают. Переключение: Alt+Shift.' if self.keyboard['active'] else
+                     'EN/RU включатся при следующем входе в Gaming Mode.' if self.keyboard['enabled'] else 'Раскладка SteamOS')
+            self.keyboard_status.set_text(translator.text(message))
+            self.keyboard_button.set_label(translator.text('Вернуть раскладку SteamOS' if self.keyboard['enabled'] else 'Включить EN/RU'))
+            self.keyboard_button.set_sensitive(self.keyboard['supported'] and not self.keyboard['conflict'])
+        except Exception as error:
+            self.keyboard_status.set_text(str(error)[:350]);self.keyboard_button.set_sensitive(False)
+
+    def change_keyboard(self,*_):
+        self.keyboard_button.set_sensitive(False)
+        enabled=not self.keyboard['enabled']
+        def work():
+            try:
+                keyboard_layout.configure(enabled,Path.home(),self.panel.state_directory())
+                self.post(self.refresh_keyboard)
+            except Exception as error:
+                self.post(self.keyboard_failed,str(error))
+        threading.Thread(target=work,daemon=True).start()
+
+    def keyboard_failed(self,error):
+        self.keyboard_status.set_text(error[:350]);self.keyboard_button.set_sensitive(True)
 
     def code(self):
         code=self.language.get_active_id()

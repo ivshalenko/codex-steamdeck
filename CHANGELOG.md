@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0-rc.20
+
+- Add opt-in English/Russian physical-keyboard support for Gaming Mode with Alt+Shift. Configure Gamescope's hardware keymap through a user service override, rather than relying on ineffective XWayland-only changes.
+- Add enable/restore controls and actual-session/restart status to Decky and the desktop language settings. Preserve interface, dictation and KDE keyboard preferences; keep independently edited overrides intact.
+- Bundle the keyboard helper in both companion and standalone plugin releases, with regression coverage for ownership, rollback, invalid inputs and read-only mode.
+- Add English and Russian physical-keyboard instructions. Updates retain the user's existing keyboard configuration until they explicitly choose the EN/RU preset.
+
 ## 1.0.0-rc.19
 
 - Isolate SSH probes, queue calls, cleanup and file reads from the parent control pipe; retain dedicated input only for RPC streaming and file uploads. Switching devices must not let a probe consume Decky commands or close the bridge's input.

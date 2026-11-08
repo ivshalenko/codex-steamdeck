@@ -9,6 +9,14 @@ from gi.repository import Gtk, Gdk
 
 STATE=resolve_state_dir()/'language'
 EN={
+'Физическая клавиатура в Gaming Mode':'Physical keyboard in Gaming Mode',
+'Проверка настроек клавиатуры…':'Checking keyboard settings…',
+'Сохранено. Для применения выйдите в Desktop Mode и вернитесь в Gaming Mode. Сначала сохраните игру.':'Saved. Switch to Desktop Mode, then return to Gaming Mode to apply. Save your game first.',
+'EN/RU работают. Переключение: Alt+Shift.':'EN/RU are active. Switch with Alt+Shift.',
+'EN/RU включатся при следующем входе в Gaming Mode.':'EN/RU will apply the next time you enter Gaming Mode.',
+'Раскладка SteamOS':'SteamOS keyboard layout',
+'Вернуть раскладку SteamOS':'Restore SteamOS layout',
+'Включить EN/RU':'Enable EN/RU',
 'Без рассуждений':'No reasoning','Минимальная':'Minimal','Низкая · быстрее':'Low · faster','Средняя · баланс':'Medium · balanced','Очень высокая':'Very high','Максимальная':'Maximum',
 'Модель':'Model','Чаты':'Chats','В работе':'Working','Готов':'Ready','Не удалось сохранить черновик на диск.':'Could not save your draft.',
 'Личный помощник':'Personal assistant','Готов к работе':'Ready','Светлая':'Light','Тёмная':'Dark','Клавиатура':'Keyboard',
