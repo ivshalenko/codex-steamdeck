@@ -8,7 +8,7 @@
 
 1. On Deck, open **Decky → Deck AI → Settings** and find the remote-access section. Show the connection information and note the IP address. Without Decky, use the desktop app's **+** menu to manage access from a Mac/PC; it shows the address, SSH fingerprints, server control and public-key field.
 2. If SSH is off, open Konsole in Desktop Mode. Run `passwd` to set your SteamOS password if needed, then `sudo systemctl enable --now sshd`. Enter the password only on Deck.
-3. On your computer, download and extract **remote-control.zip** from the [rc.14 release](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.19). Install Python 3.9+ from [python.org](https://www.python.org/downloads/) and OpenSSH Client if missing. On Windows, OpenSSH Client is a Windows Optional Feature.
+3. On your computer, download and extract **remote-control.zip** from the [rc.14 release](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.20). Install Python 3.9+ from [python.org](https://www.python.org/downloads/) and OpenSSH Client if missing. On Windows, OpenSSH Client is a Windows Optional Feature.
 4. **Mac/Linux:** open a terminal in the extracted folder and run `python3 scripts/connect-deck.py`. **Windows:** open **Connect-Steam-Deck.cmd**.
 5. Enter Deck's IP. The wizard creates a dedicated SSH key. Copy the displayed **public** `ssh-ed25519 …` line into Deck AI's public-key field on Deck and authorize that computer. The private key stays on your computer.
 6. Continue the wizard. Compare the SSH fingerprint with the one shown on Deck and accept only a matching fingerprint. This connection does not need your Deck password.

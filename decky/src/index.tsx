@@ -34,6 +34,9 @@ type Snapshot = {uiLanguage?:UILanguage;historyWarning?:string;hasOlderMessages?
 const snapshot=callable<[],Snapshot>("get_snapshot");
 const refresh=callable<[],Snapshot>("refresh");
 const saveInterfaceLanguage=callable<[language:UILanguage],{uiLanguage:UILanguage}>("set_interface_language");
+type KeyboardStatus={supported:boolean;enabled:boolean;active:boolean;restartRequired:boolean;conflict:boolean;sessionActive:boolean};
+const keyboardStatus=callable<[],KeyboardStatus>('keyboard_status');
+const configureKeyboard=callable<[enabled:boolean],KeyboardStatus>('keyboard_configure');
 const selectThread=callable<[id:string],Snapshot>("select_thread");
 const newThread=callable<[],Snapshot>("new_thread");
 const saveSettings=callable<[model:string,effort:string,tier:string],unknown>("save_settings");
@@ -175,6 +178,8 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const [gameContextEnabled,toggleGameContext]=useGameContextEnabled();
  const [data,setData]=useState<Snapshot|null>(session.snapshot);
  const [tab,setTab]=useState<Tab>(initialTab);
+ const [physicalKeyboard,setPhysicalKeyboard]=useState<KeyboardStatus|null>(null);
+ useEffect(()=>{let cancelled=false;void keyboardStatus().then(value=>{if(!cancelled)setPhysicalKeyboard(value);}).catch(()=>{});return()=>{cancelled=true;};},[tab]);
  useEffect(()=>{
   if(!fullscreen)return;
   const change=(next:Tab)=>{setTab(next);setMediaOpen(false);setQueueOpen(false);};
@@ -562,6 +567,17 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     <TextField value={custom.models} placeholder={t("Модели через запятую (необязательно)")} onChange={e=>setCustom({...custom,models:e.target.value})}/>
     <TextField bIsPassword value={custom.key} placeholder={t("Ключ API")} onChange={e=>setCustom({...custom,key:e.target.value})}/>
     <Action primary disabled={busy||ro||!custom.name.trim()||!custom.url.trim()||!custom.key.trim()} onClick={()=>void run(async()=>{const result=await customSave(custom.name.trim(),custom.url.trim(),custom.models,custom.key.trim());setCustom({name:"",url:"",models:"",key:""});accept(await setProvider(result.id));setNotice(t("Подключение добавлено"));})}>{t("Добавить и выбрать")}</Action></section>
+   <section className="dai-section dai-physical-keyboard"><h3>{t("Физическая клавиатура")}</h3>
+    <p className="dai-muted">{t("Для USB- и Bluetooth-клавиатуры в Gaming Mode. Язык меню и диктовки на раскладку не влияет.")}</p>
+    {physicalKeyboard?.supported?<>
+     <p role="status">{physicalKeyboard.enabled?t("English / Русский · Alt+Shift"):t("Раскладка SteamOS")}</p>
+     {physicalKeyboard.restartRequired&&<p className="dai-notice" role="status">{t("Сохранено. Для применения выйдите в Desktop Mode и вернитесь в Gaming Mode. Сначала сохраните игру.")}</p>}
+     {physicalKeyboard.enabled&&!physicalKeyboard.sessionActive&&<p className="dai-muted">{t("EN/RU включатся при следующем входе в Gaming Mode.")}</p>}
+     {physicalKeyboard.active&&<p className="dai-muted">{t("EN/RU работают. Переключение: Alt+Shift.")}</p>}
+     <Focusable className="dai-quick" flow-children="horizontal"><Action disabled={busy||ro||physicalKeyboard.enabled||physicalKeyboard.conflict} onClick={()=>void run(async()=>setPhysicalKeyboard(await configureKeyboard(true)))}>{t("Включить EN/RU")}</Action><Action disabled={busy||ro||!physicalKeyboard.enabled} onClick={()=>void run(async()=>setPhysicalKeyboard(await configureKeyboard(false)))}>{t("Вернуть раскладку SteamOS")}</Action></Focusable>
+     {physicalKeyboard.conflict&&<p className="dai-notice">{t("Файл настройки изменён отдельно. Deck AI сохранил ваши изменения.")}</p>}
+    </>:<p className="dai-muted">{t("Системная настройка доступна на SteamOS с Gaming Mode.")}</p>}
+   </section>
    <section className="dai-section dai-text-settings"><h3>{t("Интерфейс и голос")}</h3>
    <Choice label={t("Язык интерфейса")} value={uiLanguage} options={[{data:"en",label:"English"},{data:"ru",label:t("Русский")}]} onChange={value=>void run(async()=>{const result=await saveInterfaceLanguage(value as UILanguage);setUILanguage(result.uiLanguage);accept(await snapshot());})}/>
    <p className="dai-muted">{t("Язык меню не меняет текст ваших разговоров и язык диктовки.")}</p><div className="dai-personal-fields"><div className="dai-field"><span className="dai-label">{t("Масштаб чата и кнопок")}</span>

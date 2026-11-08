@@ -8,7 +8,7 @@ ROOT_FILES=('app.py', 'install.sh', 'chat_media.py', 'backend.py', 'providers.py
 PLUGIN_FILES=('THIRD_PARTY_NOTICES.txt','main.py','bridge.py','runtime_paths.py','plugin.json','package.json','deck-ai.png')
 PLUGIN_FILES+=('library_art.py','launch_repair.py','repair_remote.py','repair-web/index.html','repair-web/app.js','repair-web/style.css')
 PLUGIN_FILES+=tuple('artwork/'+name for name in ('capsule.png','header.png','hero.png','logo.png','icon.png','manifest.json'))
-ROOT_FILES+=('docs/brand/installer.svg','updates.py','update_ui.py')
+ROOT_FILES+=('docs/brand/installer.svg','updates.py','update_ui.py','keyboard_layout.py')
 SCRIPTS=('backup-state.py', 'deck-remote.py', 'download-models.sh', 'deck-ai-steam', 'check-environment.py', 'manage-install.py', 'configure-steam-input.py', 'package-plugin.py', 'install-plugin.py', 'install-decky.sh', 'setup.py', 'setup_support.py', 'setup-system.py', 'setup-voice.py', 'install-loader.py', 'connect-deck.py', 'install-codex.py')
 
 
