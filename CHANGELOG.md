@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0-rc.22
+
+- Fix fresh installations that stop at 40% when GitHub returns 504 while downloading official Codex. Recover the pinned OpenAI package and checksum manifest through the official GitHub release asset API.
+- Run the checksum-pinned OpenAI installer unchanged, with a temporary download adapter limited to its pinned package assets. Keep the official extraction, checksum, locking and command setup behavior.
+- Reject unexpected repositories, versions, asset endpoints, invalid metadata, truncated or oversized downloads and checksum mismatches. Preserve existing files and remove failed temporary downloads.
+- Document the SteamOS executable permission step when Dolphin offers text editors instead of launching the installer.
+
 ## 1.0.0-rc.21
 
 - Recover automatically when GitHub browser/CDN downloads return 504 or another transient network error: fetch the same published asset through the official GitHub API.

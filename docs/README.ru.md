@@ -2,11 +2,11 @@
 
 **Русский** · [English](../README.md)
 
-[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.21-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.21) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
+[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.22-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.22) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
 
 **Попросите о помощи, разберитесь с ошибкой запуска или отправьте задачу с Mac.** Deck AI добавляет Codex в меню быстрого доступа Steam Deck: полноэкранный чат, подтверждение действий, вложения и уведомления. В комплекте — настольное приложение и удалённое управление по SSH.
 
-[![Скачать Deck AI — скачайте графический установщик.](brand/install-ru.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.21/Install-Deck-AI.desktop)
+[![Скачать Deck AI — скачайте графический установщик.](brand/install-ru.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.22/Install-Deck-AI.desktop)
 
 **[Установка](#установка-на-steam-deck)** · **[Демонстрация](#как-это-выглядит)** · **[Связь с Mac / ПК](#компьютер-как-пульт-steam-deck-как-исполнитель)** · **[Ответы на вопросы](#ответы-на-вопросы)** · **[Все инструкции](#куда-дальше)**
 
@@ -39,7 +39,7 @@
 
 | Шаг | Что сделать |
 | --- | --- |
-| **01 · Скачать** | Перейдите в **Desktop Mode**. Откройте [релиз rc.18](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.21) и скачайте **Install-Deck-AI.desktop** на сам Deck. |
+| **01 · Скачать** | Перейдите в **Desktop Mode**. Откройте [последний предварительный релиз](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.22) и скачайте **Install-Deck-AI.desktop** на сам Deck. |
 | **02 · Установить и войти** | Откройте файл в Dolphin, разрешите выполнение, если потребуется. Выберите язык и автоматический либо ручной режим. Автоматический установит приложение, Codex и плагин, включая отсутствующий Decky Loader. Откройте Deck AI и войдите в ChatGPT. Пароль sudo вводится только в запросе терминала SteamOS. |
 | **03 · Начать** | Вернитесь в **Gaming Mode → (…) → Decky → Deck AI → Новый чат**. Попробуйте: «Покажи свободное место на Steam Deck». Перед разрешением действия прочитайте запрос. |
 
