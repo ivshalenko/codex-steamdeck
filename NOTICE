@@ -9,3 +9,8 @@ form, you must keep this NOTICE file (or an equivalent attribution) and the
 copyright notice above, and mark any files you changed.
 
 Third-party components keep their own licenses; see decky/THIRD_PARTY_NOTICES.txt.
+
+The full Steam Deck setup ZIP includes the unmodified OpenAI Codex 0.166.0
+Linux package and its official installer. Copyright OpenAI; Apache-2.0.
+Its license and upstream notices are preserved in scripts/vendor/codex-LICENSE.md
+and scripts/vendor/codex-NOTICE.md, and copied beside the bundled package.

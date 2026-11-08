@@ -271,7 +271,8 @@ def release_response(url,timeout=25):
   assets=[a for a in release.get('assets',[]) if isinstance(a,dict) and a.get('name')==name]
   if len(assets)!=1:raise ValueError('Release asset is missing or duplicated.')
   asset=assets[0];ident=asset.get('id');size=asset.get('size');digest=asset.get('digest','')
-  if type(ident) is not int or ident<=0 or type(size) is not int or not 0<size<=100_000_000 or not re.fullmatch(r'sha256:[0-9a-f]{64}',digest):
+  limit=300_000_000 if name=='Deck-AI-Setup-'+value+'.zip' else 100_000_000
+  if type(ident) is not int or ident<=0 or type(size) is not int or not 0<size<=limit or not re.fullmatch(r'sha256:[0-9a-f]{64}',digest):
    raise ValueError('Invalid release asset metadata.')
   endpoint=api+'/releases/assets/'+str(ident)
   if asset.get('url')!=endpoint or asset.get('browser_download_url')!=url or asset.get('state')!='uploaded':

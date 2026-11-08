@@ -26,8 +26,8 @@ class ReleaseTests(unittest.TestCase):
    with self.assertRaisesRegex(ValueError,'LICENSE'):package.check(root)
  def test_archives_have_fixed_metadata_correct_checksums_and_repeatable_bytes(self):
   with tempfile.TemporaryDirectory() as directory,patch.object(builder.subprocess,'run'),patch.object(builder.package,'check',return_value=('1.0.0-rc.1',[Path('VERSION')])),patch.object(builder.plugin_package,'files',return_value={Path('plugin.json'):ROOT/'decky/plugin.json'}):
-   output=builder.build(Path(directory));first={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in output.iterdir()}
-   builder.build(output);second={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in output.iterdir()};self.assertEqual(first,second)
+   output=builder.build(Path(directory),codex_files=());first={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in output.iterdir()}
+   builder.build(output,codex_files=());second={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in output.iterdir()};self.assertEqual(first,second)
    with tarfile.open(output/'deck-ai-1.0.0-rc.1-steamdeck.tar.gz') as archive:
     member=archive.getmembers()[0];self.assertEqual(member.uid,0);self.assertEqual(member.mtime,0);self.assertTrue(member.name.endswith('/VERSION'))
    with zipfile.ZipFile(output/'deck-ai-1.0.0-rc.1-decky.zip') as archive:self.assertEqual(archive.namelist(),['Deck AI/plugin.json']);self.assertIsNone(archive.testzip())

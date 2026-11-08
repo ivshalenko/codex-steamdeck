@@ -6,7 +6,7 @@
 2. Open the ZIP in Ark, choose **Extract**, and keep all files together in **Deck AI Setup**.
 3. Open **Install Deck AI** from the extracted folder in Dolphin. Confirm the SteamOS launch prompt, choose your language and **Automatic**.
 
-The ZIP includes the checked app archive and an executable launcher. The app does not need to download again before the wizard opens. Internet is still needed for missing Codex or Decky Loader. SteamOS launch trust and your own administrator password remain personal confirmations.
+The ZIP includes the checked app archive, official Codex package and an executable launcher. The app does not need to download again before the wizard opens. Internet is still needed for a missing Decky Loader and account sign-in. SteamOS launch trust and your own administrator password remain personal confirmations.
 
 If you previously downloaded a standalone `.desktop` file and Dolphin offered Kate / KWrite, close that chooser and use the ZIP route above. The setup ZIP preserves execution permissions through extraction. Do not launch the file inside the archive preview: extract all files first.
 
@@ -30,7 +30,7 @@ The two screenshots above show the rc.17 native installer, captured without star
 
 ## Visible progress and a truthful result
 
-The app's core WebSocket dependency comes from its packaged wheel. Codex and optional components need internet. Progress shows the current stage, with technical details underneath. Administrative tasks run in Konsole; enter the SteamOS password only there. A cancelled terminal, failed command or missing completion receipt does not display success. Return to the choices and retry.
+The full ZIP includes the app's WebSocket wheel, official Codex package, pinned metadata and verified upstream installer. App and Codex installation need no network after extraction. A missing Decky Loader, optional downloads and account sign-in still need internet. Progress shows the current stage, with technical details underneath. Administrative tasks run in Konsole; enter the SteamOS password only there. A cancelled terminal, failed command or missing completion receipt does not display success. Return to the choices and retry.
 
 ![Actual installation running on Deck in a temporary profile.](media/en/installer/04-installing.png)
 

@@ -2,7 +2,7 @@
 
 **Русский** · [English](../README.md)
 
-[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.23-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.23) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
+[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.24-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.24) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
 
 **Попросите о помощи, разберитесь с ошибкой запуска или отправьте задачу с Mac.** Deck AI добавляет Codex в меню быстрого доступа Steam Deck: полноэкранный чат, подтверждение действий, вложения и уведомления. В комплекте — настольное приложение и удалённое управление по SSH.
 
@@ -40,7 +40,7 @@
 | Шаг | Что сделать |
 | --- | --- |
 | **01 · Скачать** | Перейдите в **Desktop Mode**, откройте **[страницу загрузки](https://ivshalenko.github.io/codex-steamdeck/install/?lang=ru)** и нажмите **«Скачать для Steam Deck»**. Скачается ZIP-установщик. |
-| **02 · Установить и войти** | Распакуйте ZIP целиком и откройте **Install Deck AI** в папке **Deck AI Setup**. Подтвердите запуск SteamOS, выберите «Русский» и «Автоматически». Приложение уже в архиве; Codex и отсутствующий Decky Loader установит мастер. Пароль администратора вводится только в отдельном терминале. После установки войдите в ChatGPT. |
+| **02 · Установить и войти** | Распакуйте ZIP целиком и откройте **Install Deck AI** в папке **Deck AI Setup**. Подтвердите запуск SteamOS, выберите «Русский» и «Автоматически». Приложение и официальный Codex уже в архиве; отсутствующий Decky Loader установит мастер. Пароль администратора вводится только в отдельном терминале. После установки войдите в ChatGPT. |
 | **03 · Начать** | Вернитесь в **Gaming Mode → (…) → Decky → Deck AI → Новый чат**. Попробуйте: «Покажи свободное место на Steam Deck». Перед разрешением действия прочитайте запрос. |
 
 **[Подробная инструкция с иллюстрациями →](QUICKSTART.ru.md)** · [Ручная установка ZIP](QUICKSTART.ru.md#если-установлен-только-zip-decky)

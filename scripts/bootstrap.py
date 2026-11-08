@@ -175,7 +175,9 @@ if __name__=='__main__':
         if BUNDLED_ARCHIVE_SHA256 and not BUNDLED_ARCHIVE_SHA256.startswith('@'):
             with tempfile.TemporaryDirectory(prefix='deck-ai-setup-') as directory:
                 source=prepare(directory)
-                subprocess.run([sys.executable,str(source/'scripts/setup.py')],cwd=source,check=True)
+                location=urllib.parse.urlsplit(sys.argv[1]);launcher=urllib.request.url2pathname(location.path) if location.scheme=='file' else sys.argv[1]
+                bundle=Path(launcher).resolve().parent/'codex'
+                subprocess.run([sys.executable,str(source/'scripts/setup.py')],cwd=source,check=True,env={**os.environ,'DECK_AI_CODEX_BUNDLE_DIR':str(bundle)})
         else:graphical_setup()
     except Exception as exc:
         message='Setup stopped: '+str(exc)+'\nHelp: https://github.com/ivshalenko/codex-steamdeck/blob/main/docs/QUICKSTART.md'

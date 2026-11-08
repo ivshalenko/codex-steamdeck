@@ -4,7 +4,7 @@
 
 ## Install on Steam Deck
 
-1. Have internet access, at least **800 MB free** and your own ChatGPT account. Voice packs need extra space. Switch to **Desktop Mode**: Steam → Power → Switch to Desktop.
+1. Have internet access, at least **2 GB free** and your own ChatGPT account. Voice packs need extra space. Switch to **Desktop Mode**: Steam → Power → Switch to Desktop.
 2. Open the **[download page](https://ivshalenko.github.io/codex-steamdeck/install/)** and click **Download for Steam Deck**. The browser downloads a ZIP, not a page of source code.
 3. Open the downloaded ZIP in Ark and choose **Extract**. Open **Deck AI Setup** in Dolphin, then **Install Deck AI**. Confirm the SteamOS launch prompt. Keep the files together; the included app archive is checked before setup opens.
 4. The graphical wizard opens in **English**. Choose **Russian** if preferred; the app and Decky keep that selection. Choose **Automatic** or **Custom** setup.

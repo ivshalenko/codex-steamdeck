@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build checked, deterministic release assets without publishing anything."""
-import argparse,ast,base64,gzip,hashlib,importlib.util,json,os,subprocess,sys,tarfile,zipfile
+import argparse,ast,base64,gzip,hashlib,importlib.util,json,os,shutil,subprocess,sys,tarfile,zipfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 def module(name,file):
@@ -18,19 +18,24 @@ def launcher_text(version,archive_digest=''):
     encoded=base64.b64encode(source.encode()).decode()
     return '[Desktop Entry]\nType=Application\nName=Install Deck AI\nName[ru]=Установить Deck AI\nComment=Guided automatic or custom setup for Steam Deck\nExec=python3 -c "import base64;exec(base64.b64decode(\''+encoded+'\'))"'+(' %k' if archive_digest else '')+'\nIcon=system-software-install\nTerminal=false\nCategories=Utility;\n'
 
-def installer_bundle(output,version,desktop):
+def installer_bundle(output,version,desktop,codex_files=()):
     """A browser-downloadable ZIP with executable permissions and bundled app."""
     target=Path(output)/f'Deck-AI-Setup-{version}.zip'
     with zipfile.ZipFile(target,'w',zipfile.ZIP_STORED) as archive:
         contents={
             'Install Deck AI.desktop':(launcher_text(version,hashlib.sha256(desktop.read_bytes()).hexdigest()).encode(),0o100755),
             desktop.name:(desktop.read_bytes(),0o100644),
-            'README.txt':(('Deck AI '+version+'\n\nExtract this ZIP completely. Open Install Deck AI.desktop inside the extracted folder. Confirm the SteamOS launch prompt, choose your language and Automatic. The app is included; installing Codex or Decky Loader still needs internet.\n\nРаспакуйте ZIP целиком. В распакованной папке откройте Install Deck AI.desktop, подтвердите запуск, выберите Русский и Автоматически. Приложение уже в архиве; для установки Codex или Decky Loader нужен интернет.\n').encode(),0o100644)}
+            'README.txt':(('Deck AI '+version+'\n\nExtract this ZIP completely. Open Install Deck AI.desktop inside the extracted folder. Confirm the SteamOS launch prompt, choose your language and Automatic. The app and official Codex are included. Installing a missing Decky Loader and account sign-in still need internet.\n\nРаспакуйте ZIP целиком. В распакованной папке откройте Install Deck AI.desktop, подтвердите запуск, выберите Русский и Автоматически. Приложение и официальный Codex уже в архиве. Интернет нужен для отсутствующего Decky Loader и входа в аккаунт.\n').encode(),0o100644)}
         for name,(data,mode) in contents.items():
             info=zipfile.ZipInfo('Deck AI Setup/'+name,(2020,1,1,0,0,0));info.create_system=3;info.external_attr=mode<<16;archive.writestr(info,data)
+        for path in codex_files:
+            info=zipfile.ZipInfo('Deck AI Setup/codex/'+path.name,(2020,1,1,0,0,0));info.create_system=3;info.external_attr=0o100644<<16
+            with path.open('rb') as source,archive.open(info,'w') as destination:shutil.copyfileobj(source,destination)
+        for name in ('codex-LICENSE.md','codex-NOTICE.md'):
+            info=zipfile.ZipInfo('Deck AI Setup/codex/'+name,(2020,1,1,0,0,0));info.create_system=3;info.external_attr=0o100644<<16;archive.writestr(info,(ROOT/'scripts/vendor'/name).read_bytes())
     return target
 
-def build(output):
+def build(output,codex_files=None):
     subprocess.run(['bash',str(ROOT/'scripts/check-release.sh')],cwd=ROOT,check=True,env={**os.environ,'DECK_AI_TEST_PYTHON':sys.executable})
     version,source=package.check();output=Path(output);output.mkdir(parents=True,exist_ok=True)
     desktop=output/f'deck-ai-{version}-steamdeck.tar.gz';plugin=output/f'deck-ai-{version}-decky.zip'
@@ -53,8 +58,14 @@ def build(output):
             info=zipfile.ZipInfo('Deck-AI-Remote/'+name,(2020,1,1,0,0,0));info.external_attr=(0o100755 if name.endswith('.command') else 0o100644)<<16;archive.writestr(info,content)
     setup=output/'Install-Deck-AI.desktop'
     setup.write_text(launcher_text(version));setup.chmod(0o755)
-    bundle=installer_bundle(output,version,desktop)
+    if codex_files is None:
+        codex=module('bundled_official_codex','install-codex.py')
+        cache=Path(os.environ.get('DECK_AI_BUILD_CACHE',str(ROOT/'build/dependency-cache')))/'codex-0.166.0'
+        codex_files=codex.prepare_bundle(cache)
+    bundle=installer_bundle(output,version,desktop,codex_files)
     lgpl=module('lgpl_sources','build-lgpl-sources.py').build(ROOT,output,version,source)
+    if codex_files:
+        module('codex_corresponding_sources','build-codex-sources.py').append_sources(lgpl,Path(os.environ.get('DECK_AI_BUILD_CACHE',str(ROOT/'build/dependency-cache')))/'codex-sources')
     steam_artwork=output/f'deck-ai-{version}-steam-artwork.zip'
     with zipfile.ZipFile(steam_artwork,'w',zipfile.ZIP_DEFLATED) as archive:
         for name in ('capsule.png','header.png','hero.png','logo.png','icon.png'):

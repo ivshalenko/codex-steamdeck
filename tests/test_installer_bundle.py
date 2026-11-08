@@ -1,5 +1,5 @@
 """Exercise the exact launcher bytes and ZIP permissions used by new users."""
-import base64,hashlib,importlib.util,io,json,tarfile,tempfile,unittest,zipfile
+import base64,hashlib,importlib.util,io,json,sys,tarfile,tempfile,unittest,zipfile
 from pathlib import Path
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
@@ -23,7 +23,7 @@ class InstallerBundleTests(unittest.TestCase):
   return target/'Deck AI Setup/Install Deck AI.desktop'
  def test_zip_has_executable_launcher_and_the_exact_app_archive(self):
   with zipfile.ZipFile(self.bundle) as archive:
-   self.assertEqual(len(archive.namelist()),3);info=archive.getinfo('Deck AI Setup/Install Deck AI.desktop');self.assertEqual((info.external_attr>>16)&0o777,0o755);self.assertEqual(info.create_system,3)
+   self.assertEqual(len(archive.namelist()),5);info=archive.getinfo('Deck AI Setup/Install Deck AI.desktop');self.assertEqual((info.external_attr>>16)&0o777,0o755);self.assertEqual(info.create_system,3)
    self.assertEqual(archive.read('Deck AI Setup/'+self.package.name),self.package.read_bytes())
   scope,launcher=self.scope();self.assertIn(' %k\n',launcher);self.assertEqual(scope['BUNDLED_ARCHIVE_SHA256'],hashlib.sha256(self.package.read_bytes()).hexdigest())
  def test_real_embedded_prepare_uses_bundle_without_network(self):
@@ -51,3 +51,16 @@ class InstallerBundleTests(unittest.TestCase):
   with self.assertRaisesRegex(ValueError,'required'):site.build(ROOT,self.root/'no-installer')
   other=self.root/'Deck-AI-Setup-0.0.0.zip';other.write_bytes(b'old')
   with self.assertRaisesRegex(ValueError,'version'):site.build(ROOT,self.root/'wrong-version',other)
+ def test_full_bundle_includes_codex_package_and_licenses(self):
+  payload=self.root/'codex-package-x86_64-unknown-linux-musl.tar.gz';payload.write_bytes(b'pinned fixture')
+  bundle=builder.installer_bundle(self.root,self.version,self.package,[payload])
+  with zipfile.ZipFile(bundle) as archive:
+   self.assertEqual(archive.read('Deck AI Setup/codex/'+payload.name),payload.read_bytes())
+   self.assertIn('Deck AI Setup/codex/codex-LICENSE.md',archive.namelist());self.assertIn('Deck AI Setup/codex/codex-NOTICE.md',archive.namelist())
+ def test_actual_bundled_entry_passes_local_codex_folder_into_setup(self):
+  launcher=self.extracted();scope,text=self.scope();code=base64.b64decode(text.split("base64.b64decode('",1)[1].split("')",1)[0]).decode()
+  calls=[]
+  def execute(command,**options):
+   calls.append(command);self.assertEqual(options['env']['DECK_AI_CODEX_BUNDLE_DIR'],str(launcher.parent.resolve()/'codex'));self.assertTrue(Path(command[1]).parent.parent.joinpath('VERSION').is_file())
+  with patch.object(sys,'argv',[str(launcher),launcher.as_uri()]),patch.object(sys,'platform','linux'),patch('subprocess.run',side_effect=execute):exec(compile(code,'actual-zip-entry','exec'),{'__name__':'__main__'})
+  self.assertEqual(len(calls),1)
