@@ -11,6 +11,30 @@ bridge=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bridge)
 
 class DeckyBridgeTests(unittest.TestCase):
+    def test_desktop_uuid_draft_opens_in_decky_without_requesting_a_rollout(self):
+        import json,time,uuid
+        ident=str(uuid.uuid4());draft={'id':ident,'name':'New chat','turns':[],'preview':''}
+        (bridge.STATE/'empty-chats.json').write_text(json.dumps({ident:draft}));(bridge.STATE/'thread-id').write_text(ident)
+        bridge.thread_id=ident;bridge.bridge=Mock(connected=True);bridge.model_cache_time=bridge.cache_media_time=time.time();bridge.history_caches={};bridge.history_cache_times={};bridge.model_catalog=[]
+        with patch.object(bridge,'connected'),patch.object(bridge,'refresh_threads'),patch.object(bridge,'read_account',return_value={'account':None}),patch.object(bridge,'ssh_hosts',return_value=[]):result=bridge.get_snapshot()
+        self.assertTrue(result['ready']);self.assertEqual(result['threadId'],ident);self.assertEqual(result['messages'],[]);bridge.bridge.request.assert_not_called();bridge.bridge.select_thread.assert_not_called()
+    def test_first_decky_send_promotes_desktop_draft_before_queueing(self):
+        import json,uuid
+        ident=str(uuid.uuid4());draft={'id':ident,'turns':[],'preview':''};(bridge.STATE/'empty-chats.json').write_text(json.dumps({ident:draft}));bridge.thread_id=ident
+        bridge.bridge=Mock(connected=True);bridge.bridge.request.return_value={'thread':{'id':'actual-server-thread','turns':[]}}
+        with patch.object(bridge,'dispatch'),patch.object(bridge,'connected'):result=bridge.send_message('Hello from Gaming Mode',[],'test-model','','default')
+        self.assertEqual(result['threadId'],'actual-server-thread');self.assertEqual(bridge.outbox[-1]['threadId'],'actual-server-thread');self.assertTrue(bridge.outbox[-1]['freshThread']);self.assertEqual(json.loads((bridge.STATE/'empty-chats.json').read_text())[ident],draft)
+        self.assertEqual(bridge.bridge.request.call_args.args[0],'thread/start')
+    def test_local_draft_marker_is_scoped_to_its_device(self):
+        import json,uuid
+        ident=str(uuid.uuid4());draft={'id':ident,'turns':[],'localDraft':True,'host':'workstation'};(bridge.STATE/'empty-chats.json').write_text(json.dumps({ident:draft}))
+        self.assertIsNone(bridge.local_empty_thread(ident));bridge.remote_host='workstation';self.assertEqual(bridge.local_empty_thread(ident),draft)
+    def test_stale_rollout_detaches_selection_but_keeps_drafts_and_queue(self):
+        import time
+        bridge.thread_id='missing';(bridge.STATE/'thread-id').write_text('missing');saved=bridge.STATE/'draft.txt';saved.write_text('Keep this draft');bridge.outbox=[{'id':'queued','threadId':'missing','status':'error'}]
+        bridge.bridge=Mock(connected=True);bridge.bridge.select_thread.side_effect=RuntimeError('no rollout found for thread id missing');bridge.model_cache_time=bridge.cache_media_time=time.time();bridge.history_caches={};bridge.history_cache_times={};bridge.model_catalog=[]
+        with patch.object(bridge,'connected'),patch.object(bridge,'refresh_threads'),patch.object(bridge,'read_account',return_value={'account':None}),patch.object(bridge,'ssh_hosts',return_value=[]):result=bridge.get_snapshot()
+        self.assertTrue(result['ready']);self.assertEqual(result['threadId'],'');self.assertTrue(result['historyWarning']);self.assertEqual(saved.read_text(),'Keep this draft');self.assertEqual(bridge.outbox[0]['id'],'queued');self.assertEqual((bridge.STATE/'thread-id').read_text().strip(),'')
     def test_history_window_never_reads_attachments_outside_requested_tail(self):
         thread = {"turns": [{"items": [{"type": "userMessage", "id": str(i),
                   "content": [{"type": "text", "text": "Fixture"}]}]} for i in range(240)]}

@@ -2,7 +2,7 @@
 
 **Русский** · [English](../README.md)
 
-[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.24-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.24) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
+[![Проверки](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Предварительный выпуск](https://img.shields.io/badge/release-1.0.0--rc.25-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.25) [![Лицензия](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](../LICENSE)
 
 **Попросите о помощи, разберитесь с ошибкой запуска или отправьте задачу с Mac.** Deck AI добавляет Codex в меню быстрого доступа Steam Deck: полноэкранный чат, подтверждение действий, вложения и уведомления. В комплекте — настольное приложение и удалённое управление по SSH.
 

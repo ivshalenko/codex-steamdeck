@@ -389,7 +389,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
  const openFiles=()=>{setTab("history");setFilesOpen(true);openFolder("~");};
  const sortedThreads=[...(data?.threads||[])].sort((a,b)=>Number(!!b.running)-Number(!!a.running));
  const sidebar=fullscreen&&layout==="split"?<GameScroll className="dai-split-side"><div className="dai-stack-content">
-  <Action primary disabled={busy||!data?.ready||ro||data?.active} onClick={startChat}><Icon name="plus"/>{t("Новый чат")}</Action>
+  <Action primary disabled={busy||ro||data?.active} onClick={startChat}><Icon name="plus"/>{t("Новый чат")}</Action>
   {sortedThreads.map(thread=><div className={"dai-history-item "+(thread.id===data?.threadId?"selected":"")+(thread.running?" running":"")} key={thread.id}><Action disabled={busy||(data?.active&&thread.id!==data.threadId&&!data.remoteHost)} onClick={()=>chooseThread(thread.id)}><span>{thread.running&&<span className="dai-dot working" aria-label={t("Выполняется")}/>}{thread.name||t("Новый чат")}</span></Action></div>)}
  </div></GameScroll>:null;
  const speak=(id:string,text:string)=>{
@@ -482,7 +482,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     {!data?.screenshots.length&&!data?.videos.length&&<p className="dai-muted">{t("Сделайте скриншот в игре: Steam + R1. Он появится здесь.")}</p>}
    </div></GameScroll>:<>
     <Focusable className="dai-toolbar" flow-children="horizontal">
-     <Action disabled={busy||disconnect||ro||data?.active} onClick={startChat}><Icon name="plus"/><span>{t("Новый")}</span></Action>
+     <Action disabled={busy||ro||data?.active} onClick={startChat}><Icon name="plus"/><span>{t("Новый")}</span></Action>
      <Action disabled={busy||disconnect} onClick={openFiles}><Icon name="folder"/><span>{t("Файлы")}</span></Action>
      <Action disabled={busy} onClick={()=>{setMediaOpen(true);setQuickOpen(false);}}><Icon name="attachment"/><span>{t("Вложения")}</span></Action>
      <Action onClick={()=>setQueueOpen(true)}><Icon name="queue"/><span>{t("Очередь")}{(data?.queueTotal||data?.outbox.length)?" · "+(data?.queueTotal??data?.outbox.length):""}</span></Action>
@@ -532,7 +532,7 @@ function Panel({fullscreen=false,initialTab="chat"}:{fullscreen?:boolean;initial
     <Action disabled={busy||fileText===file.text} onClick={()=>setFileText(file.text)}>{t("Отменить правки")}</Action></>}
   </div></GameScroll>}
   {tab==="history"&&!filesOpen&&<GameScroll className="dai-scroll dai-stack"><div className="dai-stack-content">
-   <Action primary disabled={busy||disconnect||ro||data?.active} onClick={()=>void run(async()=>{accept(await newThread());setTab("chat");})}>{t("＋ Новый чат")}</Action>
+   <Action primary disabled={busy||ro||data?.active} onClick={()=>void run(async()=>{accept(await newThread());setTab("chat");})}>{t("＋ Новый чат")}</Action>
    <Action disabled={busy||disconnect} onClick={()=>{setFilesOpen(true);openFolder("~");}}>{t("📁 Файлы на устройстве")}{data?.remoteHost?" · "+data.remoteHost:""}</Action>
    {!!data?.recentEvents?.length&&<section className="dai-section dai-events"><h3>{t("Что произошло")}</h3>{data.recentEvents.slice(0,8).map(item=><p className="dai-muted" key={item.id}>{item.kind==="approval"?"⏸":item.kind==="failed"?"✗":"✓"} {new Date(item.at*1000).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})} · {(item.host||"Steam Deck")+" · "+item.title}</p>)}</section>}
    {(data?.provider==="codex"||!data)&&<Choice label={t("Устройство")} value={data?.remoteHost||""} options={[{data:"",label:t("Этот Steam Deck")},...(data?.sshHosts||[]).map(x=>({data:x,label:x}))]} disabled={busy||data?.active} onChange={value=>void run(async()=>accept(await remoteHost(value)))}/>}

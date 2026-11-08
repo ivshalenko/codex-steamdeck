@@ -1,6 +1,7 @@
 import sys
 import base64,fcntl,hashlib,importlib.util,json,os,struct,subprocess,tempfile,unittest
 from pathlib import Path
+from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT),str(ROOT/'decky')]
 spec=importlib.util.spec_from_file_location('library_art_tested',ROOT/'decky/library_art.py');art=importlib.util.module_from_spec(spec);spec.loader.exec_module(art)
@@ -52,6 +53,28 @@ class LibraryArtworkTests(unittest.TestCase):
   (self.plugin/'artwork/hero.png').write_bytes(b'changed')
   with self.assertRaisesRegex(ValueError,'verification'):self.apply()
   self.assertFalse(self.adapter.calls);self.assertFalse(list(self.grid.glob('*.png')))
+ def test_requested_setup_retries_then_completes_without_a_duplicate(self):
+  art.request_setup(self.state);self.adapter.evaluate_original=self.adapter.evaluate
+  with patch.object(self.adapter,'evaluate',side_effect=RuntimeError('Steam not ready')):result=art.attempt_setup(self.plugin,self.home,self.state,adapter=self.adapter)
+  self.assertTrue(result['pending']);self.assertIn('Steam not ready',result['error'])
+  result=art.attempt_setup(self.plugin,self.home,self.state,adapter=self.adapter);self.assertFalse(result['pending']);self.assertEqual(result['result']['appId'],42);before=len(self.adapter.calls)
+  art.attempt_setup(self.plugin,self.home,self.state,adapter=self.adapter);self.assertEqual(len(self.adapter.calls),before)
+ def test_automatic_setup_preserves_later_custom_artwork(self):
+  self.apply();(self.grid/'42p.png').write_bytes(b'user changed the cover');art.request_setup(self.state)
+  result=art.attempt_setup(self.plugin,self.home,self.state,adapter=self.adapter);self.assertFalse(result['pending']);self.assertTrue(result['result']['preservedCustomArtwork']);self.assertEqual((self.grid/'42p.png').read_bytes(),b'user changed the cover')
+ def test_cancelled_setup_does_not_contact_steam(self):
+  art.request_setup(self.state,False);result=art.attempt_setup(self.plugin,self.home,self.state,adapter=self.adapter);self.assertFalse(result['pending']);self.assertFalse(self.adapter.calls)
+ def test_older_automatic_installation_schedules_library_after_update(self):
+  self.state.mkdir(exist_ok=True)
+  (self.state/'setup-choices.json').write_text('{"mode":"automatic","components":{"decky":true}}')
+  with patch.object(art.threading,'Thread') as worker:art.start_setup_worker(self.plugin,self.home,self.state)
+  self.assertTrue(art.read_json(self.state/'library-artwork/setup.json')['pending']);worker.return_value.start.assert_called_once();art._SETUP_WORKERS.discard(str(self.state.resolve()))
+ def test_custom_or_opted_out_installation_does_not_add_library_on_update(self):
+  self.state.mkdir(exist_ok=True)
+  for choices in ({'mode':'custom','components':{}},{'mode':'automatic','components':{'steam':False}}):
+   (self.state/'setup-choices.json').write_text(json.dumps(choices))
+   with patch.object(art.threading,'Thread') as worker:art.start_setup_worker(self.plugin,self.home,self.state)
+   worker.assert_not_called();self.assertFalse((self.state/'library-artwork/setup.json').exists())
  def test_restore_preserves_an_artwork_edit_made_after_application(self):
   self.apply();(self.grid/'42p.png').write_bytes(b'new custom picture')
   with self.assertRaisesRegex(ValueError,'preserved'):self.apply(True)
@@ -76,6 +99,6 @@ class LibraryArtworkTests(unittest.TestCase):
   finally:os.close(fd)
  def test_native_target_guard_rejects_namesakes_duplicates_and_avoids_duplicate_creation(self):
   program='''const vm=require('node:vm');const code=CODE;
-async function check(entries,create){let added=0;const apps={RegisterForAppDetails:(id,cb)=>{queueMicrotask(()=>cb({unAppID:id,strShortcutExe:entries.find(e=>e.appid===id).exe}));return {unregister(){}}},AddShortcut:async()=>{added++;return 99}};let result,error;try{result=await vm.runInNewContext(code.replace('CREATE',String(create)).replace('PAYLOAD',JSON.stringify({launchers:['/managed/deck-ai-steam'],exe:'/managed/deck-ai-steam',directory:'/managed'})),{appStore:{allApps:entries},SteamClient:{Apps:apps},window:{friendStore:{currentUserSteamID:'76561197960265851'}},setTimeout,clearTimeout,queueMicrotask});}catch(e){error=e.message}return {result,error,added};}
+async function check(entries,create){let added=0;const apps={RegisterForAppDetails:(id,cb)=>{queueMicrotask(()=>cb({unAppID:id,strShortcutExe:entries.find(e=>e.appid===id).exe}));return {unregister(){}}},AddShortcut:async()=>{added++;return 99}};let result,error;try{result=await vm.runInNewContext(code.replace('CREATE',String(create)).replace('PAYLOAD',JSON.stringify({accounts:['76561197960265851'],launchers:['/managed/deck-ai-steam'],exe:'/managed/deck-ai-steam',directory:'/managed'})),{appStore:{allApps:entries},SteamClient:{Apps:apps},window:{friendStore:{currentUserSteamID:'76561197960265851'}},setTimeout,clearTimeout,queueMicrotask});}catch(e){error=e.message}return {result,error,added};}
 (async()=>{const good={appid:42,app_type:1073741824,display_name:'Deck AI',exe:'"/managed/deck-ai-steam"'};const a=await check([good],true),b=await check([{...good,exe:'/other'}],true),c=await check([good,{...good,appid:43}],true),d=await check([],true),e=await check([],false);if(a.result.appid!==42||a.added||!b.error||!c.error||d.added!==1||!e.error||e.added)process.exit(2);console.log('guard passed')})();'''.replace('CODE',json.dumps(art.TARGET_JS))
   self.assertIn('guard passed',subprocess.check_output(['node','-e',program],text=True))

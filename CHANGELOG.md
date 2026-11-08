@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0-rc.25
+
+- Add Deck AI to the Steam library with its icon, capsule, header, hero and logo during automatic setup. Custom setup can opt out. Finish automatically when Steam/Decky becomes ready and report pending work on the completion screen.
+- Verify the active Steam account belongs to the installation profile before creating any shortcut. Keep updates idempotent and preserve artwork edited by the user after installation.
+- Recognize desktop-created empty chat drafts in Decky without requesting a nonexistent server rollout. Create the actual Codex thread on the first send.
+- Detach genuinely missing thread selections without breaking the Codex connection or deleting drafts, queue entries or saved history. Keep timeouts and other connection failures visible.
+
 ## 1.0.0-rc.24
 
 - Include the pinned official OpenAI Codex Linux x64 package and checksum manifest in the setup ZIP. The app and Codex installation no longer depend on live GitHub metadata or asset downloads after extraction.

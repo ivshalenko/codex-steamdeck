@@ -277,6 +277,18 @@ def ssh_hosts():
                 if alias not in hosts:hosts.append(alias)
     if remote_host and remote_host not in hosts:hosts.insert(0,remote_host)
     return hosts
+def local_empty_thread(ident):
+    """Desktop drafts have UUID4 IDs, but no server rollout until first send."""
+    try:
+        saved=json.loads((STATE/'empty-chats.json').read_text());thread=saved.get(ident)
+        if not isinstance(thread,dict) or thread.get('id')!=ident or thread.get('turns'):return None
+        if thread.get('localDraft') is True:return thread if thread.get('host','')==remote_host else None
+        if not remote_host and uuid.UUID(ident).version==4 and not thread.get('preview'):return thread
+    except (OSError,ValueError,TypeError,AttributeError):pass
+    return None
+def missing_thread(error):
+    message=str(error).lower()
+    return any(value in message for value in ('no rollout found for thread id','thread not found','thread does not exist'))
 def refresh_threads(force=False):
     global cache,cache_time
     key=remote_host
@@ -518,8 +530,9 @@ def _get_snapshot():
     current=next((t for t in cache if t.get('id')==thread_id),None);messages=[];history_total=0;history_warning=''
     if thread_id:
         history_key=(remote_host,thread_id)
-        thread=history_caches.get(history_key)
-        if thread is None or now-history_cache_times.get(history_key,0)>=(HISTORY_TTL_ACTIVE if active else HISTORY_TTL_IDLE):
+        draft=local_empty_thread(thread_id)
+        thread=draft or history_caches.get(history_key)
+        if not draft and (thread is None or now-history_cache_times.get(history_key,0)>=(HISTORY_TTL_ACTIVE if active else HISTORY_TTL_IDLE)):
             try:
                 if thread is None and current is None:
                     _,loaded=bridge.select_thread(thread_id)
@@ -528,8 +541,15 @@ def _get_snapshot():
                 if not isinstance(loaded,dict):raise RuntimeError('Codex вернул неверную историю диалога.')
                 thread=loaded;history_caches[history_key]=thread;history_cache_times[history_key]=now
             except Exception as exc:
-                if thread is None:raise RuntimeError('Не удалось загрузить историю диалога: '+str(exc)[:220]) from exc
-                history_warning='Не удалось обновить диалог. Показана сохранённая история; повторяю подключение. '+str(exc)[:140]
+                if missing_thread(exc) and thread is None:
+                    path=STATE/('thread-id-remote-'+remote_host if remote_host else 'thread-id')
+                    try:
+                        if read_text_state(path)==thread_id:atomic_text(path,'\n')
+                    except OSError:pass
+                    thread_id='';thread={'turns':[]}
+                    history_warning='Выбранный чат недоступен. Можно начать новый; сохранённые данные не удалены.' if interface_language()=='ru' else 'The selected chat is unavailable. Start a new chat; saved data was kept.'
+                elif thread is None:raise RuntimeError('Не удалось загрузить историю диалога: '+str(exc)[:220]) from exc
+                else:history_warning='Не удалось обновить диалог. Показана сохранённая история; повторяю подключение. '+str(exc)[:140]
         active = any(t.get("status") == "inProgress" for t in thread.get("turns", []))
         limit = history_limits.get(history_key, 40)
         window = extract_messages(thread, limit=limit + 1)
@@ -726,8 +746,8 @@ def send_message(text,images,model,effort,tier):
         submit_job(dispatch_provider_job,job)
         return {'queued':True,'threadId':ident}
     if not bridge or not bridge.connected:connected()
-    fresh_thread=not bool(thread_id)
-    if not thread_id:
+    fresh_thread=not bool(thread_id) or local_empty_thread(thread_id) is not None
+    if fresh_thread:
         result=bridge.request('thread/start',{'cwd':bridge.cwd if remote_host else str(ROOT),'ephemeral':False},timeout=35);thread=result.get('thread',result);thread_id=thread['id']
         atomic_text(STATE/('thread-id-remote-'+remote_host if remote_host else 'thread-id'),thread_id+'\n')
         try:
@@ -1026,7 +1046,8 @@ def _call(method,params):
         thread_id=str(params['id']);atomic_text(STATE/('thread-id-remote-'+remote_host if remote_host else 'thread-id'),thread_id+'\n');status='Загружаю диалог…';active=False
         connected()
         try:
-            _,thread=bridge.select_thread(thread_id)
+            thread=local_empty_thread(thread_id)
+            if thread is None:_,thread=bridge.select_thread(thread_id)
             history_caches[(remote_host,thread_id)]=thread
             history_cache_times[(remote_host,thread_id)]=time.time()
             active=any(t.get('status')=='inProgress' for t in thread.get('turns',[]))
@@ -1104,6 +1125,10 @@ def pump():
             failures+=1;delay=min(30,5*failures);retry_at=time.time()+delay;stopping.wait(delay)
 def main():
     load_state();reconcile_watchers()
+    try:
+        import library_art
+        library_art.start_setup_worker(PLUGIN_DIR,ROOT,STATE)
+    except Exception:pass
     try:get_updater().start()
     except Exception:pass
     threading.Thread(target=pump,daemon=True).start()
