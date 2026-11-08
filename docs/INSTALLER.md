@@ -18,6 +18,8 @@ English is the default, including on a fresh profile with a Russian system local
 
 Automatic setup also adds **Deck AI** to the Steam library with all five artwork assets. If Steam is still starting, the completion screen says the step is pending and Deck AI finishes it automatically when its app or Decky panel starts. Sign into Steam under the same Linux account. Custom setup can disable this option. Existing user edits to previously installed artwork are kept.
 
+App installation and updates also create an executable **Deck AI** shortcut on the Desktop (including a localized desktop folder). Open it to launch the app in Desktop Mode. The application-menu entry remains available. Existing personal or edited desktop files are kept, and repeated updates do not create duplicate shortcuts.
+
 ![Actual automatic setup on Steam Deck.](media/en/branding/installer-automatic.png)
 
 ## Custom components and access

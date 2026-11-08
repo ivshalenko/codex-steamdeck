@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('manage_install',ROOT/'scripts/manage-install.py');manager=importlib.util.module_from_spec(spec);spec.loader.exec_module(manager)
-from runtime_paths import resolve_app_dir,resolve_state_dir
+from runtime_paths import resolve_app_dir,resolve_state_dir,desktop_shortcut
 
 class InstallationTests(unittest.TestCase):
  def setUp(self):
@@ -28,6 +28,23 @@ class InstallationTests(unittest.TestCase):
    checks=preflight.check()['checks']
   self.assertTrue(checks['codex'])
   self.assertTrue(checks['claude'])
+ def test_desktop_shortcut_is_executable_and_managed_without_duplicates(self):
+  app=manager.install(ROOT,self.home);shortcut=self.home/'Desktop/Deck AI.desktop'
+  self.assertTrue(shortcut.is_file());self.assertEqual(shortcut.stat().st_mode&0o777,0o755);self.assertIn('Exec="'+str(self.home/'.local/bin/deck-ai')+'"',shortcut.read_text());self.assertIn('Icon=deck-ai',shortcut.read_text())
+  before=shortcut.read_bytes();manager.install(ROOT,self.home);self.assertEqual(shortcut.read_bytes(),before);self.assertEqual(list((self.home/'Desktop').glob('*.desktop')),[shortcut]);self.assertIn('Desktop/Deck AI.desktop',json.loads((app/'install-manifest.json').read_text())['files'])
+  manager.uninstall(self.home);self.assertFalse(shortcut.exists())
+ def test_localized_xdg_desktop_is_used(self):
+  config=self.home/'.config';config.mkdir();(config/'user-dirs.dirs').write_text('XDG_DESKTOP_DIR="$HOME/Рабочий стол"\n')
+  manager.install(ROOT,self.home);shortcut=self.home/'Рабочий стол/Deck AI.desktop';self.assertTrue(shortcut.is_file());self.assertFalse((self.home/'Desktop').exists());manager.uninstall(self.home);self.assertFalse(shortcut.exists())
+ def test_disabled_or_external_desktop_never_receives_a_shortcut(self):
+  config=self.home/'.config';config.mkdir()
+  for value in ('$HOME','/tmp/deck-ai-unowned-desktop','$(touch /tmp/unwanted)'):
+   (config/'user-dirs.dirs').write_text('XDG_DESKTOP_DIR="'+value+'"\n');self.assertIsNone(desktop_shortcut(self.home))
+  manager.install(ROOT,self.home);self.assertFalse((self.home/'Desktop').exists())
+ def test_existing_foreign_or_edited_desktop_file_is_preserved(self):
+  folder=self.home/'Desktop';folder.mkdir();shortcut=folder/'Deck AI.desktop';shortcut.write_text('personal existing file')
+  app=manager.install(ROOT,self.home);self.assertEqual(shortcut.read_text(),'personal existing file');self.assertNotIn('Desktop/Deck AI.desktop',json.loads((app/'install-manifest.json').read_text())['files'])
+  shortcut.unlink();manager.install(ROOT,self.home);shortcut.write_text(shortcut.read_text()+'# my edit\n');manager.install(ROOT,self.home);manager.uninstall(self.home);self.assertTrue(shortcut.read_text().endswith('# my edit\n'))
  def test_legacy_update_reuses_location_and_preserves_models_and_data(self):
   for name in ('deck-voice','codex-steamdeck'):
    with self.subTest(name=name):

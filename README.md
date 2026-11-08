@@ -2,7 +2,7 @@
 
 [English](README.md) · [Russian](docs/README.ru.md)
 
-[![Build](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Release candidate](https://img.shields.io/badge/release-1.0.0--rc.25-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.25) [![Steam Deck](https://img.shields.io/badge/made_for-Steam_Deck-c5d5e2?style=flat-square&labelColor=17212d)](docs/QUICKSTART.md) [![License](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](LICENSE)
+[![Build](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Release candidate](https://img.shields.io/badge/release-1.0.0--rc.26-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.26) [![Steam Deck](https://img.shields.io/badge/made_for-Steam_Deck-c5d5e2?style=flat-square&labelColor=17212d)](docs/QUICKSTART.md) [![License](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](LICENSE)
 
 **Ask for help, investigate a launch error, or send a task from your Mac.** Deck AI puts Codex in your Steam Deck's Quick Access menu, with full-screen chat, action confirmations, attachments and completion notifications. A desktop companion and SSH remote control are included.
 

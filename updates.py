@@ -2,9 +2,9 @@
 import argparse,fcntl,hashlib,http.client,importlib.util,json,os,re,shutil,stat,subprocess,sys,tarfile,tempfile,threading,time,urllib.error,urllib.parse,urllib.request,uuid,zipfile
 from pathlib import Path,PurePosixPath
 try:
- from runtime_paths import resolve_app_dir,resolve_state_dir
+ from runtime_paths import resolve_app_dir,resolve_state_dir,desktop_external_paths
 except ImportError:
- from decky.runtime_paths import resolve_app_dir,resolve_state_dir
+ from decky.runtime_paths import resolve_app_dir,resolve_state_dir,desktop_external_paths
 
 REPO='ivshalenko/codex-steamdeck'
 API='https://api.github.com/repos/'+REPO
@@ -14,6 +14,8 @@ ACTIVE={'queued','downloading','quiescing','installing','verifying','rolling-bac
 MUTATING={'quiescing','installing','verifying','rolling-back'}
 VERSION_RE=re.compile(r'^(0|[1-9]\d{0,5})\.(0|[1-9]\d{0,5})\.(0|[1-9]\d{0,5})(?:-(alpha|beta|rc)\.(0|[1-9]\d{0,5}))?$')
 EXTERNAL={'.local/bin/deck-ai','.local/bin/codex-steamdeck','.local/bin/deck-ai-steam','.local/bin/deck-ai-uninstall','.local/share/applications/codex-steamdeck.desktop','.local/share/icons/hicolor/256x256/apps/deck-ai.png'}
+
+def external_paths(home):return EXTERNAL|{str(path.relative_to(home)) for path in desktop_external_paths(home)}
 
 def version(value):
  match=VERSION_RE.fullmatch(str(value))
@@ -426,7 +428,7 @@ class DeckyAdapter:
 def safe_managed(home,app,relative):
  rel=safe_relative(relative);home=Path(home);app=Path(app)
  target=home/rel
- if relative in EXTERNAL:
+ if relative in external_paths(home):
   for parent in [target,*target.parents]:
    if parent==home:break
    if parent.is_symlink():raise ValueError('Managed launcher contains a linked path. Use the installer.')
@@ -521,7 +523,7 @@ class Worker:
   if self.job.get('updateApp'):
    old=read_json(self.app/'install-manifest.json',None)
    if not old or not isinstance(old.get('files'),dict):raise ValueError('No managed companion manifest. Run the full installer.')
-   paths=set(old['files'])|{str(self.app.relative_to(self.home)/safe_relative(rel)) for rel in self.manifest['appFiles']}|EXTERNAL|{str((self.app/'install-manifest.json').relative_to(self.home))}
+   paths=set(old['files'])|{str(self.app.relative_to(self.home)/safe_relative(rel)) for rel in self.manifest['appFiles']}|external_paths(self.home)|{str((self.app/'install-manifest.json').relative_to(self.home))}
    for index,relative in enumerate(sorted(paths)):
     target=safe_managed(self.home,self.app,relative)
     if target.exists() and not target.is_file():raise ValueError('Unexpected managed destination.')
