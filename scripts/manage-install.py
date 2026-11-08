@@ -10,6 +10,7 @@ PLUGIN_FILES+=('library_art.py','launch_repair.py','repair_remote.py','repair-we
 PLUGIN_FILES+=tuple('artwork/'+name for name in ('capsule.png','header.png','hero.png','logo.png','icon.png','manifest.json'))
 ROOT_FILES+=('docs/brand/installer.svg','updates.py','update_ui.py','keyboard_layout.py')
 SCRIPTS=('backup-state.py', 'deck-remote.py', 'download-models.sh', 'deck-ai-steam', 'check-environment.py', 'manage-install.py', 'configure-steam-input.py', 'package-plugin.py', 'install-plugin.py', 'install-decky.sh', 'setup.py', 'setup_support.py', 'setup-system.py', 'setup-voice.py', 'install-loader.py', 'connect-deck.py', 'install-codex.py')
+SCRIPTS+=('vendor/codex-install-0.166.0.sh','vendor/codex-LICENSE.md','vendor/codex-NOTICE.md')
 
 
 def source_files(source):

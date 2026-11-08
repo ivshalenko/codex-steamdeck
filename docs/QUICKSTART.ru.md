@@ -2,7 +2,7 @@
 
 ## Steam Deck — графическая установка
 
-1. Перейдите в Desktop Mode: Steam → Power → Switch to Desktop. Нужны интернет, минимум 800 МБ и собственный аккаунт ChatGPT.
+1. Перейдите в Desktop Mode: Steam → Power → Switch to Desktop. Нужны интернет, минимум 2 ГБ и собственный аккаунт ChatGPT.
 2. Откройте **[страницу загрузки](https://ivshalenko.github.io/codex-steamdeck/install/?lang=ru)** и нажмите **«Скачать для Steam Deck»**. Браузер скачает ZIP, а не откроет исходный код.
 3. Откройте ZIP в Ark и нажмите **«Извлечь»**. В Dolphin откройте распакованную папку **Deck AI Setup**, затем **Install Deck AI** и подтвердите запуск SteamOS. Оставьте файлы вместе: архив приложения проверяется перед открытием мастера.
 4. Откроется графический мастер. По умолчанию выбран **English**. Выберите **Русский** — этот язык сохранится для Deck AI и Decky.
@@ -54,4 +54,4 @@
 
 ## English
 
-Switch to Desktop Mode. Download **Install-Deck-AI.desktop** from [Releases](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.23), mark it executable/trusted in Dolphin if prompted, and open it. The wizard installs the app, offers the official Codex CLI if missing, and optionally installs the Decky plugin (Decky must already be installed). A terminal shows any SteamOS sudo password prompt. Click **Open Deck AI**, sign into ChatGPT, return to Gaming Mode, then **(…) → Decky → Deck AI → New chat**. Voice is optional and configured later in the desktop app's language settings. The ZIP plugin bundles its own core runtime, but still needs Codex installed and signed in. Follow the [remote-control guide](REMOTE-CONTROL.ru.md) for computer pairing. This is a release candidate; suspend/resume, independent fresh-device installation and physical controller testing are still listed in the release report.
+Switch to Desktop Mode. Download **Install-Deck-AI.desktop** from [Releases](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.24), mark it executable/trusted in Dolphin if prompted, and open it. The wizard installs the app, offers the official Codex CLI if missing, and optionally installs the Decky plugin (Decky must already be installed). A terminal shows any SteamOS sudo password prompt. Click **Open Deck AI**, sign into ChatGPT, return to Gaming Mode, then **(…) → Decky → Deck AI → New chat**. Voice is optional and configured later in the desktop app's language settings. The ZIP plugin bundles its own core runtime, but still needs Codex installed and signed in. Follow the [remote-control guide](REMOTE-CONTROL.ru.md) for computer pairing. This is a release candidate; suspend/resume, independent fresh-device installation and physical controller testing are still listed in the release report.

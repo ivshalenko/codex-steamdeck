@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0-rc.24
+
+- Include the pinned official OpenAI Codex Linux x64 package and checksum manifest in the setup ZIP. The app and Codex installation no longer depend on live GitHub metadata or asset downloads after extraction.
+- Vendor and verify the unmodified official installer. Serve its exact pinned release metadata locally, and verify the bundled package size and SHA-256 before its independent upstream checks run.
+- Fail safely on missing or damaged bundled files instead of silently falling back to another network download. Preserve online repair support using pinned asset identities.
+- Include upstream notices and corresponding Codex/native LGPL source archives beside release binaries. Raise the setup free-space check to 2 GB for the larger offline package.
+- Verify fresh physical-Deck Codex installations with external Python HTTP/TCP and curl blocked under forced 500 and 504 failures, including app-server initialization.
+
 ## 1.0.0-rc.23
 
 - Add a complete setup ZIP containing the app and an executable launcher. Extract it and open Install Deck AI in Dolphin; no raw-source page or manual permission editing is part of the recommended flow.

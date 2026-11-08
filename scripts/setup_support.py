@@ -60,7 +60,7 @@ def _run_install(options,root,execute,progress,home=None):
  """Execute only selected steps. Failed admin children cannot report success."""
  root=Path(root);home=Path(home) if home is not None else Path.home()
  if sys.platform!='linux':raise RuntimeError('Run this installer on Steam Deck in Desktop Mode.')
- if shutil.disk_usage(home).free<800_000_000:raise RuntimeError('Free at least 800 MB before installing.')
+ if shutil.disk_usage(home).free<2_000_000_000:raise RuntimeError('Free at least 2 GB before installing.')
  terminal=shutil.which('konsole')
  if (options.decky or options.ssh) and not terminal:raise RuntimeError('Konsole is required for the visible SteamOS administrator prompt. Select desktop-only installation or install Konsole.')
  if options.decky and not options.loader and not decky_installed(home):raise RuntimeError('Decky Loader is missing. Allow its installation or uncheck the Decky plugin.')
