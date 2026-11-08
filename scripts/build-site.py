@@ -209,6 +209,10 @@ def build(root=ROOT, out_dir=None,installer=None):
         download=DOWNLOAD_PAGE.replace('@VERSION@',html.escape(version)).replace('@FILE@',name).replace('@SIZE@',f'{len(data)/1048576:.1f}').replace('@SHA256@',digest)
         (folder/'index.html').write_text(download)
         (folder/(name+'.sha256')).write_text(digest+'  '+name+'\n')
+        # A permanent download address; each release points it at its verified ZIP.
+        short=out/'d';short.mkdir(exist_ok=True)
+        target='../install/'+name
+        (short/'index.html').write_text('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta http-equiv="refresh" content="0;url='+target+'"><title>Download Deck AI</title></head><body><p><a href="'+target+'" download>Download Deck AI / Скачать Deck AI</a></p></body></html>')
     shutil.copy(root/'deck-ai.png', out/'deck-ai.png')
     for folder in ('brand', 'images', 'media/screenshots', 'media/en'):
         source = root/'docs'/folder
