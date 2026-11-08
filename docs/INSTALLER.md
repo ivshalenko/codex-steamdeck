@@ -1,14 +1,16 @@
 # An illustrated setup, in your language
 
-[Download Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.22/Install-Deck-AI.desktop) · [Full installation guide](QUICKSTART.md) · [Russian guide](QUICKSTART.ru.md)
+[Open the download page](https://ivshalenko.github.io/codex-steamdeck/install/) · [Full installation guide](QUICKSTART.md) · [Russian guide](QUICKSTART.ru.md)
 
-The launcher opens a graphical download window, checks the release checksum, then opens the full setup. It also comes inside the repository ZIP, so you do not need to build source code. SteamOS still requires you to trust a downloaded executable once.
+1. In Desktop Mode, open the download page and click **Download for Steam Deck**. It serves the versioned setup ZIP directly from GitHub Pages, without sending the browser to raw source or the GitHub release download gateway.
+2. Open the ZIP in Ark, choose **Extract**, and keep all files together in **Deck AI Setup**.
+3. Open **Install Deck AI** from the extracted folder in Dolphin. Confirm the SteamOS launch prompt, choose your language and **Automatic**.
 
-If Dolphin offers Kate or KWrite, close that dialog. Right-click the downloaded file → **Properties → Permissions → Is executable**, apply, then double-click it and choose **Execute / Trust and launch** when prompted. Do not open the launcher in a text editor.
+The ZIP includes the checked app archive and an executable launcher. The app does not need to download again before the wizard opens. Internet is still needed for missing Codex or Decky Loader. SteamOS launch trust and your own administrator password remain personal confirmations.
 
-From rc.22, a temporary failure downloading the official Codex package at 40% also recovers through the official OpenAI GitHub release API. The checksum-pinned OpenAI installer runs unchanged and checks the package manifest again. If an older setup stopped there, close it and run the current installer; existing app settings are kept.
+If you previously downloaded a standalone `.desktop` file and Dolphin offered Kate / KWrite, close that chooser and use the ZIP route above. The setup ZIP preserves execution permissions through extraction. Do not launch the file inside the archive preview: extract all files first.
 
-If GitHub returns 504 before the file downloads, [save the alternate installer](https://raw.githubusercontent.com/ivshalenko/codex-steamdeck/main/Install-Deck-AI.desktop) with **Save link as → Install-Deck-AI.desktop**, then open it in Dolphin. If the browser displays code, save the link rather than copying the page. The rc.21 installer also recovers component downloads through the official GitHub asset API, validating the published release, asset origin, limits and SHA-256. Existing users who cannot update because of a 504 can run this installer once; later updates include the same recovery.
+The pinned official Codex installer recovers package downloads through the official OpenAI GitHub API after temporary 504 errors. Its original checksum and installation checks remain. Close an older failed setup and run this one; existing settings are retained.
 
 ## Automatic setup
 

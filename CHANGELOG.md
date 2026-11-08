@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0-rc.23
+
+- Add a complete setup ZIP containing the app and an executable launcher. Extract it and open Install Deck AI in Dolphin; no raw-source page or manual permission editing is part of the recommended flow.
+- Check the bundled app archive's pinned SHA-256 and unpack it locally before opening the graphical wizard. Preserve standalone installer compatibility and the verified official Codex download recovery.
+- Publish an English/Russian download page with a same-origin ZIP download, version, size, checksum and three installation steps. Deploy it from the published release and verify its installer asset before serving it through GitHub Pages.
+- Point the main English and Russian setup instructions to the download page. Keep launch trust and administrator prompts explicit and owned by SteamOS.
+
 ## 1.0.0-rc.22
 
 - Fix fresh installations that stop at 40% when GitHub returns 504 while downloading official Codex. Recover the pinned OpenAI package and checksum manifest through the official GitHub release asset API.

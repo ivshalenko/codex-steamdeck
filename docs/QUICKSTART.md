@@ -5,9 +5,9 @@
 ## Install on Steam Deck
 
 1. Have internet access, at least **800 MB free** and your own ChatGPT account. Voice packs need extra space. Switch to **Desktop Mode**: Steam → Power → Switch to Desktop.
-2. Download **[Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.22/Install-Deck-AI.desktop)** onto Deck. If you downloaded the project ZIP instead, extract it and open the included file with that name.
-3. Open it in Dolphin. Confirm **Execute / Trust and launch** if asked. If it opens as text, use Properties → Permissions → **Is executable** and open it again. SteamOS requires this first authorization; the app cannot grant trust to itself.
-4. The illustrated download window verifies the release, then opens the full installer. It starts in **English** regardless of the SteamOS language. You can choose **Russian** in either window; that choice is passed to the full installer and saved for Deck AI.
+2. Open the **[download page](https://ivshalenko.github.io/codex-steamdeck/install/)** and click **Download for Steam Deck**. The browser downloads a ZIP, not a page of source code.
+3. Open the downloaded ZIP in Ark and choose **Extract**. Open **Deck AI Setup** in Dolphin, then **Install Deck AI**. Confirm the SteamOS launch prompt. Keep the files together; the included app archive is checked before setup opens.
+4. The graphical wizard opens in **English**. Choose **Russian** if preferred; the app and Decky keep that selection. Choose **Automatic** or **Custom** setup.
 5. Choose **Automatic** for Deck AI, missing official Codex and the Gaming Mode plugin. If Decky Loader is absent, the selected automatic plan runs its official installer in a visible terminal. Existing Decky installations are reused.
 6. Or choose **Custom** to select Codex, the Gaming Mode plugin, permission to install missing Decky Loader, an optional dictation pack, optional SSH remote access, and Decky's action mode. Unchecked components are skipped. SSH is not enabled and voice packs are not downloaded by Automatic setup. Existing settings remain intact.
 7. Click **Install**. Follow the progress. Enter your SteamOS administrator password only in the separate terminal if asked. If no password exists, open Konsole and run `passwd`, then retry. Password characters are hidden; Deck AI does not collect or store the password.

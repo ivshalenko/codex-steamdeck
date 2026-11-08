@@ -5,6 +5,8 @@ The page is regenerated on every push, so it never drifts from the docs.
 Usage: python3 scripts/build-site.py [output-dir]   (default: build/site)
 """
 import html
+import hashlib
+import json
 import re
 import shutil
 import sys
@@ -130,10 +132,10 @@ nav{{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:8px 0 0;
 </style></head><body><main>
 <header><img src="docs/brand/hero.svg" alt="Deck AI — Your AI. Right on Deck."><h1 class="sr-only">Deck AI for Steam Deck</h1>
 <p class="tag">Chat with Codex, Claude, DeepSeek or any OpenAI-compatible AI — in Gaming Mode and on the desktop · version {version}</p>
-<div class="buttons"><a class="button primary" href="{repo}/releases/tag/v{version}">Get the installer</a><a class="button" href="{repo}">GitHub</a></div>
+<div class="buttons"><a class="button primary" href="install/">Get the installer</a><a class="button" href="{repo}">GitHub</a></div>
 <nav><a href="#quick-start">Quick start</a><a href="#documentation">Documentation</a><a href="#whats-new">What's new</a></nav></header>
 <section class="card" id="quick-start"><h2>Quick start</h2>
-<p>On Steam Deck, switch to Desktop Mode, download <strong>Install-Deck-AI.desktop</strong> from the release above, and open it in Dolphin. Allow execution if asked, follow the wizard and sign into your own ChatGPT account. Automatic setup offers the official Decky Loader installation if it is missing.</p>
+<p>On Steam Deck, switch to Desktop Mode, open <a href="install/">the download page</a> and download the setup ZIP. Extract it, open <strong>Install Deck AI</strong> inside the extracted folder, confirm the SteamOS launch prompt and choose Automatic. English and Russian are available. The app is included; Codex and Decky Loader downloads recover automatically after temporary GitHub errors.</p>
 <p>Advanced manual installation from a source checkout:</p>
 <pre><code>git clone {repo}.git
 cd codex-steamdeck
@@ -147,7 +149,48 @@ cd codex-steamdeck
 '''
 
 
-def build(root=ROOT, out_dir=None):
+DOWNLOAD_PAGE = '''<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Install Deck AI · Steam Deck</title><meta name="description" content="Download the Deck AI graphical installer for Steam Deck. English and Russian. Download, extract, open.">
+<link rel="icon" href="../deck-ai.png"><style>
+:root{color-scheme:dark;--bg:#0b1119;--fg:#f1f7fb;--muted:#a8bdce;--card:#162330;--line:#304252;--accent:#a8e1fa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.55 system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:22px 28px 45px}nav{display:flex;justify-content:space-between;align-items:center;gap:20px}a{color:var(--accent)}nav a{text-decoration:none}button{font:inherit;color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px 15px;background:var(--card);cursor:pointer}button[aria-pressed=true]{color:var(--bg);background:var(--accent)}header{padding:30px 0 20px}header img{width:100%;max-height:210px}h1{font-size:clamp(30px,5vw,45px);line-height:1.12;margin:25px 0 14px;letter-spacing:-1px}p{margin:12px 0}.muted{color:var(--muted)}.download{display:inline-flex;align-items:center;gap:15px;padding:17px 27px;margin-top:12px;background:var(--accent);border-radius:13px;color:var(--bg);font-size:21px;font-weight:700;text-decoration:none;min-height:62px}.meta{font-size:14px}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0}.step{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}.number{font-size:14px;color:var(--accent);letter-spacing:2px}h2{font-size:21px;margin:12px 0 6px}.step p{font-size:15px;color:var(--muted)}.note{border-left:3px solid var(--accent);padding:4px 18px;margin:20px 0;color:var(--muted)}details{border-top:1px solid var(--line);padding:16px 0;font-size:15px}summary{cursor:pointer;color:var(--fg)}code{overflow-wrap:anywhere;font-size:13px}footer{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-top:26px;color:var(--muted);font-size:14px}[hidden]{display:none!important}:focus-visible{outline:3px solid var(--accent);outline-offset:5px}@media(max-width:650px){main{padding:18px}.steps{grid-template-columns:1fr}header{padding-top:20px}.download{width:100%;justify-content:center}h1{font-size:34px}}
+</style></head><body><main>
+<nav><a href="../">← Deck AI</a><div aria-label="Language"><button id="en" aria-pressed="true">English</button> <button id="ru" aria-pressed="false">Русский</button></div></nav>
+<header><img src="../docs/brand/installer.svg" alt="Deck AI · Steam Deck">
+<h1 data-en="Your Deck. Ready for AI." data-ru="Ваш Deck готов к ИИ.">Your Deck. Ready for AI.</h1>
+<p class="muted" data-en="Desktop app and Gaming Mode plugin. One graphical setup, in your language." data-ru="Приложение и плагин Gaming Mode. Один графический установщик на вашем языке.">Desktop app and Gaming Mode plugin. One graphical setup, in your language.</p>
+<a class="download" id="download" href="@FILE@" download="@FILE@"><span aria-hidden="true">↓</span><span data-en="Download for Steam Deck" data-ru="Скачать для Steam Deck">Download for Steam Deck</span></a>
+<p class="meta muted">@VERSION@ · @SIZE@ MB · ZIP · SteamOS · English / Русский</p></header>
+<div class="steps">
+<section class="step"><span class="number">01</span><h2 data-en="Download" data-ru="Скачайте">Download</h2><p data-en="On the Deck, switch to Desktop Mode and press the download button above. Open the saved ZIP from Downloads." data-ru="На Deck перейдите в режим рабочего стола и нажмите кнопку выше. Откройте скачанный ZIP из папки «Загрузки».">On the Deck, switch to Desktop Mode and press the download button above. Open the saved ZIP from Downloads.</p></section>
+<section class="step"><span class="number">02</span><h2 data-en="Extract" data-ru="Распакуйте">Extract</h2><p data-en="Choose Extract in the archive window. Keep all files together in the Deck AI Setup folder. Open that folder in Dolphin." data-ru="В окне архива нажмите «Извлечь». Сохраните все файлы вместе в папке Deck AI Setup. Откройте эту папку в Dolphin.">Choose Extract in the archive window. Keep all files together in the Deck AI Setup folder. Open that folder in Dolphin.</p></section>
+<section class="step"><span class="number">03</span><h2 data-en="Open the installer" data-ru="Запустите установщик">Open the installer</h2><p data-en="Open Install Deck AI inside that folder. Confirm the SteamOS launch prompt, choose your language, then Automatic. Sign into your account when setup finishes." data-ru="Откройте Install Deck AI внутри папки. Подтвердите запуск SteamOS, выберите «Русский», затем «Автоматически». После установки войдите в свой аккаунт.">Open Install Deck AI inside that folder. Confirm the SteamOS launch prompt, choose your language, then Automatic. Sign into your account when setup finishes.</p></section>
+</div>
+<p class="note" data-en="The app is already in the ZIP. Internet is required to install Codex or a missing Decky Loader. SteamOS may ask you to confirm launch and enter your own administrator password in a separate terminal." data-ru="Приложение уже внутри ZIP. Для установки Codex или отсутствующего Decky Loader нужен интернет. SteamOS может запросить подтверждение запуска и ваш пароль администратора в отдельном терминале.">The app is already in the ZIP. Internet is required to install Codex or a missing Decky Loader. SteamOS may ask you to confirm launch and enter your own administrator password in a separate terminal.</p>
+<details><summary data-en="Already have an older version?" data-ru="Уже установлена старая версия?">Already have an older version?</summary><p data-en="Close the older installer and run this setup. Existing chats and settings are kept. Do not delete your installed app or reinstall SteamOS." data-ru="Закройте старый установщик и запустите этот. Чаты и настройки сохранятся. Удалять приложение и переустанавливать SteamOS не нужно.">Close the older installer and run this setup. Existing chats and settings are kept. Do not delete your installed app or reinstall SteamOS.</p></details>
+<details><summary data-en="Download verification" data-ru="Проверка загрузки">Download verification</summary><p>SHA-256: <code id="checksum">@SHA256@</code></p><p data-en="The launcher checks the included app archive before opening setup. Codex downloads are checked independently." data-ru="Файл запуска проверяет архив приложения перед открытием мастера. Загрузки Codex проверяются отдельно.">The launcher checks the included app archive before opening setup. Codex downloads are checked independently.</p></details>
+<footer><span data-en="Free · Preview release · Own AI account required" data-ru="Бесплатно · Предварительная версия · Нужен свой аккаунт ИИ">Free · Preview release · Own AI account required</span><a href="https://github.com/ivshalenko/codex-steamdeck">GitHub</a><a id="guide" href="https://github.com/ivshalenko/codex-steamdeck/blob/main/docs/QUICKSTART.md" data-en="Full guide" data-ru="Полная инструкция">Full guide</a></footer>
+</main><script>
+function language(code){document.documentElement.lang=code;document.querySelectorAll('[data-en]').forEach(node=>node.textContent=node.dataset[code]);['en','ru'].forEach(value=>document.getElementById(value).setAttribute('aria-pressed',String(value===code)));document.getElementById('guide').href='https://github.com/ivshalenko/codex-steamdeck/blob/main/docs/QUICKSTART'+(code==='ru'?'.ru':'')+'.md';}
+document.getElementById('en').addEventListener('click',()=>language('en'));document.getElementById('ru').addEventListener('click',()=>language('ru'));if(new URLSearchParams(location.search).get('lang')==='ru')language('ru');
+</script></body></html>'''
+
+def fetch_installer(root,destination):
+    sys.path.insert(0,str(root))
+    import updates
+    value=(Path(root)/'VERSION').read_text().strip();name='Deck-AI-Setup-'+value+'.zip'
+    release,_=updates.request_json(updates.API+'/releases/tags/v'+value)
+    if release.get('tag_name')!='v'+value or release.get('draft') or not release.get('published_at'):raise ValueError('Installer release is not published.')
+    matches=[asset for asset in release.get('assets',[]) if asset.get('name')==name]
+    if len(matches)!=1:raise ValueError('Published installer ZIP is missing or duplicated.')
+    asset=matches[0];url=updates.WEB+'/releases/download/v'+value+'/'+name;digest=asset.get('digest','')
+    if asset.get('browser_download_url')!=url or not isinstance(digest,str) or not re.fullmatch(r'sha256:[0-9a-f]{64}',digest):raise ValueError('Unexpected installer asset metadata.')
+    target=Path(destination)/name;target.parent.mkdir(parents=True,exist_ok=True)
+    updates.download(url,target,100_000_000,digest[7:]);return target
+
+def build(root=ROOT, out_dir=None,installer=None):
+    if installer is None:raise ValueError('A verified installer ZIP is required. Pass --release-installer or --installer FILE.')
     root = Path(root)
     out = Path(out_dir) if out_dir else root/'build'/'site'
     out.mkdir(parents=True, exist_ok=True)
@@ -158,6 +201,14 @@ def build(root=ROOT, out_dir=None):
     page = PAGE.format(version=(root/'VERSION').read_text().strip(), repo=REPO, readme=markdown(body, shift=0),
                        changelog_title=html.escape(title), changelog=markdown(changes))
     (out/'index.html').write_text(page)
+    if installer is not None:
+        installer=Path(installer);version=(root/'VERSION').read_text().strip();name='Deck-AI-Setup-'+version+'.zip'
+        if installer.name!=name:raise ValueError('Installer ZIP version differs from the page.')
+        folder=out/'install';folder.mkdir(exist_ok=True);shutil.copyfile(installer,folder/name)
+        data=installer.read_bytes();digest=hashlib.sha256(data).hexdigest()
+        download=DOWNLOAD_PAGE.replace('@VERSION@',html.escape(version)).replace('@FILE@',name).replace('@SIZE@',f'{len(data)/1048576:.1f}').replace('@SHA256@',digest)
+        (folder/'index.html').write_text(download)
+        (folder/(name+'.sha256')).write_text(digest+'  '+name+'\n')
     shutil.copy(root/'deck-ai.png', out/'deck-ai.png')
     for folder in ('brand', 'images', 'media/screenshots', 'media/en'):
         source = root/'docs'/folder
@@ -168,4 +219,8 @@ def build(root=ROOT, out_dir=None):
 
 
 if __name__ == '__main__':
-    print('Built', build(ROOT, sys.argv[1] if len(sys.argv) > 1 else None))
+    import argparse,tempfile
+    parser=argparse.ArgumentParser();parser.add_argument('output',nargs='?');parser.add_argument('--release-installer',action='store_true');parser.add_argument('--installer',type=Path);args=parser.parse_args()
+    with tempfile.TemporaryDirectory(prefix='deck-ai-site-') as temporary:
+        installer=fetch_installer(ROOT,temporary) if args.release_installer else args.installer
+        print('Built',build(ROOT,args.output,installer))

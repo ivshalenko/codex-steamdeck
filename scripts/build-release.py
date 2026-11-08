@@ -7,16 +7,28 @@ def module(name,file):
     spec=importlib.util.spec_from_file_location(name,ROOT/'scripts'/file);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
 package=module('release_package','check-package.py');manager=module('release_manager','manage-install.py');plugin_package=module('plugin_package','package-plugin.py')
 
-def launcher_text(version):
+def launcher_text(version,archive_digest=''):
     banner=base64.b64encode((ROOT/'docs/brand/installer.svg').read_bytes()).decode()
-    source=(ROOT/'scripts/bootstrap.py').read_text().replace('@VERSION@',version).replace('@INSTALLER_BANNER@',banner)
+    source=(ROOT/'scripts/bootstrap.py').read_text().replace('@VERSION@',version).replace('@INSTALLER_BANNER@',banner).replace('@BUNDLED_ARCHIVE_SHA256@',archive_digest)
     # Embed the reviewed downloader: the downloaded .desktop file has no local
     # Python-module dependency, while installer/updater share the same behavior.
     downloader=(ROOT/'updates.py').read_text()
     function=next(n for n in ast.parse(downloader).body if isinstance(n,ast.FunctionDef) and n.name=='release_response')
     source=source.replace('from updates import release_response',ast.get_source_segment(downloader,function))
     encoded=base64.b64encode(source.encode()).decode()
-    return '[Desktop Entry]\nType=Application\nName=Install Deck AI\nName[ru]=Установить Deck AI\nComment=Guided automatic or custom setup for Steam Deck\nExec=python3 -c "import base64;exec(base64.b64decode(\''+encoded+'\'))"\nIcon=system-software-install\nTerminal=false\nCategories=Utility;\n'
+    return '[Desktop Entry]\nType=Application\nName=Install Deck AI\nName[ru]=Установить Deck AI\nComment=Guided automatic or custom setup for Steam Deck\nExec=python3 -c "import base64;exec(base64.b64decode(\''+encoded+'\'))"'+(' %k' if archive_digest else '')+'\nIcon=system-software-install\nTerminal=false\nCategories=Utility;\n'
+
+def installer_bundle(output,version,desktop):
+    """A browser-downloadable ZIP with executable permissions and bundled app."""
+    target=Path(output)/f'Deck-AI-Setup-{version}.zip'
+    with zipfile.ZipFile(target,'w',zipfile.ZIP_STORED) as archive:
+        contents={
+            'Install Deck AI.desktop':(launcher_text(version,hashlib.sha256(desktop.read_bytes()).hexdigest()).encode(),0o100755),
+            desktop.name:(desktop.read_bytes(),0o100644),
+            'README.txt':(('Deck AI '+version+'\n\nExtract this ZIP completely. Open Install Deck AI.desktop inside the extracted folder. Confirm the SteamOS launch prompt, choose your language and Automatic. The app is included; installing Codex or Decky Loader still needs internet.\n\nРаспакуйте ZIP целиком. В распакованной папке откройте Install Deck AI.desktop, подтвердите запуск, выберите Русский и Автоматически. Приложение уже в архиве; для установки Codex или Decky Loader нужен интернет.\n').encode(),0o100644)}
+        for name,(data,mode) in contents.items():
+            info=zipfile.ZipInfo('Deck AI Setup/'+name,(2020,1,1,0,0,0));info.create_system=3;info.external_attr=mode<<16;archive.writestr(info,data)
+    return target
 
 def build(output):
     subprocess.run(['bash',str(ROOT/'scripts/check-release.sh')],cwd=ROOT,check=True,env={**os.environ,'DECK_AI_TEST_PYTHON':sys.executable})
@@ -41,6 +53,7 @@ def build(output):
             info=zipfile.ZipInfo('Deck-AI-Remote/'+name,(2020,1,1,0,0,0));info.external_attr=(0o100755 if name.endswith('.command') else 0o100644)<<16;archive.writestr(info,content)
     setup=output/'Install-Deck-AI.desktop'
     setup.write_text(launcher_text(version));setup.chmod(0o755)
+    bundle=installer_bundle(output,version,desktop)
     lgpl=module('lgpl_sources','build-lgpl-sources.py').build(ROOT,output,version,source)
     steam_artwork=output/f'deck-ai-{version}-steam-artwork.zip'
     with zipfile.ZipFile(steam_artwork,'w',zipfile.ZIP_DEFLATED) as archive:
@@ -50,7 +63,7 @@ def build(output):
     update_manifest=output/'UPDATE-MANIFEST.json'
     app_files={str(rel):hashlib.sha256((ROOT/rel).read_bytes()).hexdigest() for rel in manager.source_files(ROOT)}
     update_manifest.write_text(json.dumps({'protocol':1,'version':version,'minimumPython':[3,9],'packages':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (desktop,plugin)},'appFiles':app_files,'pluginFiles':{str(rel):hashlib.sha256(path.read_bytes()).hexdigest() for rel,path in runtime.items()},'dependency':{'name':'websockets','path':'decky/vendor/'+plugin_package.WHEEL,'version':plugin_package.WHEEL.split('-')[1]}},indent=2)+'\n')
-    checksums=output/'SHA256SUMS.txt';checksums.write_text(''.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name+'\n' for path in (desktop,plugin,remote,setup,lgpl,update_manifest,steam_artwork)))
+    checksums=output/'SHA256SUMS.txt';checksums.write_text(''.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name+'\n' for path in (desktop,plugin,remote,setup,bundle,lgpl,update_manifest,steam_artwork)))
     report={'version':version,'sourceFiles':len(source),'pluginFiles':len(runtime),'licenseSelected':(ROOT/'LICENSE').is_file(),'published':False,'checks':'compile, shell syntax, TypeScript, frontend logic, Python regression tests, package allowlist','manualChecksRequired':['Second Steam Deck/SteamOS installation','SteamOS suspend/resume during a task','Live optional providers with owner accounts','Human microphone accuracy in a running game']}
     (output/'BUILD-REPORT.json').write_text(json.dumps(report,indent=2)+'\n');return output
 
