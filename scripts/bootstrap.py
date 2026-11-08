@@ -14,11 +14,13 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+import urllib.parse
 from pathlib import Path
 from updates import release_response
 VERSION='@VERSION@'
 BASE='https://github.com/ivshalenko/codex-steamdeck/releases/download/v'+VERSION+'/'
 BANNER_SVG='@INSTALLER_BANNER@'
+BUNDLED_ARCHIVE_SHA256='@BUNDLED_ARCHIVE_SHA256@'
 DOWNLOAD_PROGRESS=None
 def download(name, destination, limit):
     destination = Path(destination)
@@ -76,11 +78,24 @@ def unpack(archive, destination):
             paths.add(path)
         options = {"filter": "data"} if sys.version_info >= (3, 12) else {}
         tar.extractall(destination, members=members, **options)
-def prepare(root):
+def prepare(root,launcher=None):
  root=Path(root);name='deck-ai-'+VERSION+'-steamdeck.tar.gz';archive=root/name
- download('SHA256SUMS.txt',root/'SHA256SUMS.txt',100_000);download(name,archive,100_000_000)
- sums={line.split('  ',1)[1]:line.split('  ',1)[0] for line in (root/'SHA256SUMS.txt').read_text().splitlines()}
- if hashlib.sha256(archive.read_bytes()).hexdigest()!=sums.get(name):raise ValueError('Release checksum mismatch. Please download again.')
+ bundled=BUNDLED_ARCHIVE_SHA256 and not BUNDLED_ARCHIVE_SHA256.startswith('@')
+ if bundled:
+  location=launcher if launcher is not None else sys.argv[1] if len(sys.argv)>1 else ''
+  if not location:raise ValueError('Extract the ZIP first, then open Install Deck AI inside the extracted folder. / Сначала распакуйте ZIP и запустите Install Deck AI из распакованной папки.')
+  parsed=urllib.parse.urlsplit(str(location))
+  if parsed.scheme:
+   if parsed.scheme!='file' or parsed.netloc not in ('','localhost'):raise ValueError('Open the extracted installer from Dolphin.')
+   location=urllib.request.url2pathname(parsed.path)
+  archive=Path(location).resolve().parent/name
+  if archive.is_symlink() or not archive.is_file() or not 0<archive.stat().st_size<=100_000_000:
+   raise ValueError('Extract all ZIP contents together before opening Install Deck AI. / Распакуйте ZIP целиком перед запуском Install Deck AI.')
+  expected=BUNDLED_ARCHIVE_SHA256
+ else:
+  download('SHA256SUMS.txt',root/'SHA256SUMS.txt',100_000);download(name,archive,100_000_000)
+  sums={line.split('  ',1)[1]:line.split('  ',1)[0] for line in (root/'SHA256SUMS.txt').read_text().splitlines()};expected=sums.get(name)
+ if hashlib.sha256(archive.read_bytes()).hexdigest()!=expected:raise ValueError('Release checksum mismatch. Please download again.')
  unpack(archive,root);return root/('deck-ai-'+VERSION)
 def graphical_setup():
     import gi
@@ -157,7 +172,11 @@ def graphical_setup():
 if __name__=='__main__':
     try:
         if sys.platform!='linux':raise ValueError('Run this installer on Steam Deck in Desktop Mode. For Mac/PC download Remote Control instead.')
-        graphical_setup()
+        if BUNDLED_ARCHIVE_SHA256 and not BUNDLED_ARCHIVE_SHA256.startswith('@'):
+            with tempfile.TemporaryDirectory(prefix='deck-ai-setup-') as directory:
+                source=prepare(directory)
+                subprocess.run([sys.executable,str(source/'scripts/setup.py')],cwd=source,check=True)
+        else:graphical_setup()
     except Exception as exc:
         message='Setup stopped: '+str(exc)+'\nHelp: https://github.com/ivshalenko/codex-steamdeck/blob/main/docs/QUICKSTART.md'
         print(message,flush=True)

@@ -683,7 +683,8 @@ class SiteAndInstallTests(unittest.TestCase):
     def test_site_is_generated_from_docs_and_is_valid_html(self):
         from html.parser import HTMLParser
         with tempfile.TemporaryDirectory() as out:
-            page = build_site.build(ROOT, out)
+            installer=Path(out)/('Deck-AI-Setup-'+(ROOT/'VERSION').read_text().strip()+'.zip');installer.write_bytes(b'installer fixture')
+            page = build_site.build(ROOT, out,installer)
             text = page.read_text()
             self.assertIn((ROOT/'VERSION').read_text().strip(), text)
             self.assertIn('id="quick-start"', text); self.assertIn('./install.sh --decky', text)

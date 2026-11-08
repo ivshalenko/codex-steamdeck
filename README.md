@@ -2,11 +2,11 @@
 
 [English](README.md) · [Russian](docs/README.ru.md)
 
-[![Build](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Release candidate](https://img.shields.io/badge/release-1.0.0--rc.22-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.22) [![Steam Deck](https://img.shields.io/badge/made_for-Steam_Deck-c5d5e2?style=flat-square&labelColor=17212d)](docs/QUICKSTART.md) [![License](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](LICENSE)
+[![Build](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml/badge.svg)](https://github.com/ivshalenko/codex-steamdeck/actions/workflows/checks.yml) [![Release candidate](https://img.shields.io/badge/release-1.0.0--rc.23-a8e1fa?style=flat-square&labelColor=17212d)](https://github.com/ivshalenko/codex-steamdeck/releases/tag/v1.0.0-rc.23) [![Steam Deck](https://img.shields.io/badge/made_for-Steam_Deck-c5d5e2?style=flat-square&labelColor=17212d)](docs/QUICKSTART.md) [![License](https://img.shields.io/badge/license-Apache_2.0-c5d5e2?style=flat-square&labelColor=17212d)](LICENSE)
 
 **Ask for help, investigate a launch error, or send a task from your Mac.** Deck AI puts Codex in your Steam Deck's Quick Access menu, with full-screen chat, action confirmations, attachments and completion notifications. A desktop companion and SSH remote control are included.
 
-[![Download the illustrated Deck AI installer.](docs/brand/install.svg)](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.22/Install-Deck-AI.desktop)
+[![Download the illustrated Deck AI installer.](docs/brand/install.svg)](https://ivshalenko.github.io/codex-steamdeck/install/)
 
 **[Installation](#install-on-your-steam-deck)** · **[See it in action](#see-it-in-action)** · **[Mac / PC connection](#your-computer-your-deck-one-conversation)** · **[Questions](#questions)** · **[All documentation](#find-your-next-step)**
 
@@ -39,8 +39,8 @@ You need a Steam Deck running SteamOS, internet access and your own ChatGPT acco
 
 | Step | What to do |
 | --- | --- |
-| **01 · Download** | Switch to **Desktop Mode**. Download **[Install-Deck-AI.desktop](https://github.com/ivshalenko/codex-steamdeck/releases/download/v1.0.0-rc.22/Install-Deck-AI.desktop)** onto the Deck. |
-| **02 · Install & sign in** | Open the file in Dolphin; allow execution/trust if asked. Choose **English** or **Russian**, then **Automatic** or **Custom** setup. Automatic installs Deck AI, missing Codex and the Gaming Mode plugin, including Decky Loader if missing. Enter any sudo password only in the SteamOS terminal; then sign into ChatGPT. |
+| **01 · Download** | Switch to **Desktop Mode** and open the **[download page](https://ivshalenko.github.io/codex-steamdeck/install/)**. Click **Download for Steam Deck** to save the setup ZIP. |
+| **02 · Install & sign in** | Extract the ZIP and open **Install Deck AI** inside **Deck AI Setup**. Confirm the SteamOS launch prompt. Choose English or Russian, then Automatic. The app is bundled; missing Codex and Decky Loader install through the wizard. Enter administrator passwords only in the SteamOS terminal, then sign into ChatGPT. |
 | **03 · Open & ask** | Return to **Gaming Mode → (…) → Decky → Deck AI → New chat**. Try: “Show the free space on my Steam Deck.” Review any requested action before approving it. |
 
 **[See the new installer →](docs/INSTALLER.md)** · **[Full illustrated setup →](docs/QUICKSTART.md)** · [Already have Decky? Manual ZIP instructions](docs/QUICKSTART.md#decky-zip-only)
@@ -51,7 +51,7 @@ If you used **Code → Download ZIP**, extract the project and open the included
 
 The installer starts in **English**. Choose **Russian** there and Deck AI starts in Russian too, including Decky menus and notification titles. Existing conversation text stays unchanged.
 
-**GitHub shows 504 before the installer downloads?** Use the [alternate installer link](https://raw.githubusercontent.com/ivshalenko/codex-steamdeck/main/Install-Deck-AI.desktop). Right-click it and choose **Save link as**, keeping the name `Install-Deck-AI.desktop`, then open the saved file in Dolphin. From rc.21, the installer and updater automatically try the official GitHub asset API when normal component downloads fail; the same checksums and archive checks still apply.
+**The download opens text or GitHub shows 504?** Use the **[download page](https://ivshalenko.github.io/codex-steamdeck/install/)** instead of a raw `.desktop` link. Its button downloads a ZIP directly from GitHub Pages, with the app included and executable permissions preserved. No copying code or editing file permissions is part of this installation route.
 
 ## The same look, inside Steam
 
